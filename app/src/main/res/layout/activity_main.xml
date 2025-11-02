@@ -37,7 +37,18 @@
             android:textColor="?android:attr/textColorSecondary"
             android:gravity="center"
             android:contentDescription="@string/your_tap_helper_for_navigation"
-            android:layout_marginBottom="32dp" />
+            android:layout_marginBottom="8dp" />
+
+        <!-- Version Info -->
+        <TextView
+            android:id="@+id/version_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Version 1.0.4"
+            android:textSize="14sp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
 
         <!-- Berechtigungen Section -->
         <LinearLayout

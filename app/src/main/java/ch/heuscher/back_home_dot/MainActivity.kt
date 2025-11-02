@@ -28,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var overlaySwitch: SwitchCompat
     private lateinit var settingsButton: Button
     private lateinit var stopServiceButton: Button
+    private lateinit var versionInfo: TextView
 
     private lateinit var settings: OverlaySettings
     private lateinit var permissionManager: PermissionManager
@@ -71,6 +72,11 @@ class MainActivity : AppCompatActivity() {
         overlaySwitch = findViewById(R.id.overlay_switch)
         settingsButton = findViewById(R.id.settings_button)
         stopServiceButton = findViewById(R.id.stop_service_button)
+        versionInfo = findViewById(R.id.version_info)
+
+        // Set version info
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        versionInfo.text = "Version ${packageInfo.versionName}"
     }
 
     private fun setupClickListeners() {
