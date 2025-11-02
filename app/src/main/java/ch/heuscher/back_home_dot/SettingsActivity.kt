@@ -9,7 +9,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -137,7 +136,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun broadcastSettingsUpdate() {
         val intent = Intent(OverlayService.ACTION_UPDATE_SETTINGS)
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+        sendBroadcast(intent)
     }
 
     private fun showColorPickerDialog() {

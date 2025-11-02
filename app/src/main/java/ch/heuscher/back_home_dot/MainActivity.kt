@@ -13,6 +13,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.cardview.widget.CardView
+import ch.heuscher.back_home_dot.di.ServiceLocator
 
 class MainActivity : AppCompatActivity() {
 
@@ -42,6 +43,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Initialize service locator for dependency injection
+        ServiceLocator.initialize(this)
 
         settings = OverlaySettings(this)
         permissionManager = PermissionManager(this)
@@ -195,7 +199,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun broadcastSettingsUpdate() {
         val intent = Intent(OverlayService.ACTION_UPDATE_SETTINGS)
-        androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+        sendBroadcast(intent)
     }
 
     private fun updateInstructionsText() {

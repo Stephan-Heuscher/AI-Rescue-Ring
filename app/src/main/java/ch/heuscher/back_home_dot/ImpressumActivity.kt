@@ -21,6 +21,6 @@ class ImpressumActivity : AppCompatActivity() {
         // Set version info
         val versionText = findViewById<TextView>(R.id.version_text)
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
-        versionText.text = "Version ${packageInfo.versionName} (Build ${packageInfo.versionCode})"
+        versionText.text = "Version ${packageInfo.versionName} (Build ${packageInfo.longVersionCode})"
     }
 }

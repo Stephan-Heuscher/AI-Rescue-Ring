@@ -40,7 +40,7 @@
             android:parentActivityName=".SettingsActivity" />
 
         <service
-            android:name=".OverlayService"
+            android:name=".service.overlay.OverlayService"
             android:enabled="true"
             android:exported="false" />
 
