@@ -59,6 +59,10 @@ class OverlayService : Service() {
     // Position before keyboard appeared
     private var positionBeforeKeyboard: DotPosition? = null
 
+    // Debounce keyboard adjustments
+    private var lastKeyboardAdjustmentTime = 0L
+    private val KEYBOARD_ADJUSTMENT_DEBOUNCE_MS = 500L
+
     // Broadcast receiver for settings changes
     private val settingsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -288,6 +292,13 @@ class OverlayService : Service() {
 
     private fun handleKeyboardChange(visible: Boolean, height: Int) {
         Log.d(TAG, "handleKeyboardChange: visible=$visible, height=$height")
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastKeyboardAdjustmentTime < KEYBOARD_ADJUSTMENT_DEBOUNCE_MS) {
+            Log.d(TAG, "handleKeyboardChange: debounced")
+            return
+        }
+        lastKeyboardAdjustmentTime = currentTime
+
         serviceScope.launch {
             val settings = settingsRepository.getAllSettings().first()
             Log.d(TAG, "handleKeyboardChange: keyboardAvoidanceEnabled=${settings.keyboardAvoidanceEnabled}")
@@ -312,16 +323,34 @@ class OverlayService : Service() {
     }
 
     private fun adjustPositionForKeyboard(settings: ch.heuscher.back_home_dot.domain.model.OverlaySettings, keyboardHeight: Int = 0) {
-        val height = if (keyboardHeight > 0) keyboardHeight else keyboardDetector.getKeyboardHeight(settings.screenHeight)
+        // Use settings screenHeight, or fallback to display metrics if not set
+        val screenHeight = if (settings.screenHeight > 0) settings.screenHeight else resources.displayMetrics.heightPixels
+        val height = if (keyboardHeight > 0) keyboardHeight else keyboardDetector.getKeyboardHeight(screenHeight)
         val dotSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
         val margin = (dotSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
 
-        // Position dot 2 diameters above the keyboard when visible
-        val keyboardTop = settings.screenHeight - height
-        val newY = (keyboardTop - 2 * dotSize - margin).coerceAtLeast(100) // 2 diameters above keyboard
+        Log.d(TAG, "adjustPositionForKeyboard: screenHeight=$screenHeight, keyboardHeight=$height, dotSize=$dotSize, margin=$margin")
+
+        // Calculate keyboard top and safe zone (2 diameters above keyboard)
+        val keyboardTop = screenHeight - height
+        val safeZoneY = keyboardTop - 2 * dotSize - margin
+
+        Log.d(TAG, "adjustPositionForKeyboard: keyboardTop=$keyboardTop, safeZoneY=$safeZoneY")
+
         val currentPos = viewManager.getCurrentPosition()
+        val currentY = currentPos?.y ?: 0
+
+        // Only move if current position would collide with keyboard area
+        val newY = if (currentY > safeZoneY) {
+            // Current position is too low, move to safe zone
+            safeZoneY.coerceAtLeast(0) // Allow positioning at top of screen if needed
+        } else {
+            // Current position is already safe, keep it
+            currentY
+        }
+
         val newPosition = DotPosition(currentPos?.x ?: 0, newY)
-        Log.d(TAG, "adjustPositionForKeyboard: screenHeight=${settings.screenHeight}, keyboardHeight=$height, keyboardTop=$keyboardTop, dotSize=$dotSize, newY=$newY, newPosition=$newPosition")
+        Log.d(TAG, "adjustPositionForKeyboard: FINAL - currentY=$currentY, safeZoneY=$safeZoneY, newY=$newY, willMove=${currentY > safeZoneY}")
         viewManager.updatePosition(newPosition)
     }
 
