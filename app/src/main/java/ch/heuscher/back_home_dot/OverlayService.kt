@@ -381,8 +381,8 @@ class OverlayService : Service() {
                     hasMoved = false
 
                     if (settings.rescueRingEnabled) {
-                        // In rescue-ring mode, any press performs home action
-                        performRescueAction()
+                        // In rescue-ring mode, start a short timer for rescue action
+                        longPressHandler.postDelayed(longPressRunnable, 200L) // Short delay for rescue action
                     } else {
                         // Normal mode - start long press timer
                         longPressHandler.postDelayed(longPressRunnable, longPressTimeout)
@@ -390,29 +390,31 @@ class OverlayService : Service() {
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    if (!settings.rescueRingEnabled) {
-                        // Only allow dragging in normal mode
-                        val deltaX = event.rawX - initialTouchX
-                        val deltaY = event.rawY - initialTouchY
-                        if (Math.abs(deltaX) > touchSlop || Math.abs(deltaY) > touchSlop) {
-                            hasMoved = true
-                            longPressHandler.removeCallbacks(longPressRunnable)
-                            val (constrainedX, constrainedY) = constrainPositionToBounds(initialX + deltaX.toInt(), initialY + deltaY.toInt())
-                            params?.x = constrainedX
-                            params?.y = constrainedY
-                            windowManager.updateViewLayout(floatingView, params)
-                        }
+                    // Allow dragging in both modes
+                    val deltaX = event.rawX - initialTouchX
+                    val deltaY = event.rawY - initialTouchY
+                    if (Math.abs(deltaX) > touchSlop || Math.abs(deltaY) > touchSlop) {
+                        hasMoved = true
+                        longPressHandler.removeCallbacks(longPressRunnable) // Cancel any pending action
+                        val (constrainedX, constrainedY) = constrainPositionToBounds(initialX + deltaX.toInt(), initialY + deltaY.toInt())
+                        params?.x = constrainedX
+                        params?.y = constrainedY
+                        windowManager.updateViewLayout(floatingView, params)
                     }
                     true
                 }
                 MotionEvent.ACTION_UP -> {
-                    if (!settings.rescueRingEnabled) {
-                        // Normal mode handling
-                        longPressHandler.removeCallbacks(longPressRunnable)
-                        if (hasMoved) {
-                            settings.positionX = params?.x ?: 0
-                            settings.positionY = params?.y ?: 0
-                        } else if (!isLongPress) {
+                    longPressHandler.removeCallbacks(longPressRunnable)
+                    if (hasMoved) {
+                        // Save new position after drag
+                        settings.positionX = params?.x ?: 0
+                        settings.positionY = params?.y ?: 0
+                    } else if (!isLongPress) {
+                        if (settings.rescueRingEnabled) {
+                            // In rescue-ring mode, perform rescue action on quick tap
+                            performRescueAction()
+                        } else {
+                            // Normal mode click handling
                             val currentTime = System.currentTimeMillis()
                             if (currentTime - lastClickTime < doubleTapTimeout) {
                                 clickCount++
