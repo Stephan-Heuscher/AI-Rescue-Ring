@@ -114,20 +114,14 @@ class OverlayService : Service() {
      */
     private fun performRescueAction() {
         try {
-            // Try to exit the current app by pressing back multiple times
-            // This simulates user pressing back to exit the app
-            val backPressCount = 3 // Try up to 3 back presses to exit the app
+            // Single back press to exit current screen, then immediately go home
+            // This provides clean UX without multiple jarring screen transitions
+            BackHomeAccessibilityService.instance?.performBackAction()
 
-            for (i in 0 until backPressCount) {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    BackHomeAccessibilityService.instance?.performBackAction()
-                }, (i * 150).toLong()) // Stagger back presses by 150ms
-            }
-
-            // After trying to exit the app, go to home screen
+            // Immediately go to home screen (no delay needed)
             Handler(Looper.getMainLooper()).postDelayed({
                 BackHomeAccessibilityService.instance?.performHomeAction()
-            }, (backPressCount * 150 + 100).toLong()) // Go home after back presses are done
+            }, 100) // Small delay to let back action complete
 
             performHapticFeedback()
         } catch (e: Exception) {
