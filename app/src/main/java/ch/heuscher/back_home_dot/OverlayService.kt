@@ -110,30 +110,25 @@ class OverlayService : Service() {
     }
 
     /**
-     * Performs the rescue action: closes all apps and goes to home.
+     * Performs the rescue action: stops current app and goes to home.
      */
     private fun performRescueAction() {
         try {
-            // Go to home screen first to background all apps
-            BackHomeAccessibilityService.instance?.performHomeAction()
+            // Try to exit the current app by pressing back multiple times
+            // This simulates user pressing back to exit the app
+            val backPressCount = 3 // Try up to 3 back presses to exit the app
 
-            // Small delay, then try to clear recents (this will remove apps from recents list)
+            for (i in 0 until backPressCount) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    BackHomeAccessibilityService.instance?.performBackAction()
+                }, (i * 150).toLong()) // Stagger back presses by 150ms
+            }
+
+            // After trying to exit the app, go to home screen
             Handler(Looper.getMainLooper()).postDelayed({
-                try {
-                    // Open recents overview
-                    BackHomeAccessibilityService.instance?.performRecentsOverviewAction()
+                BackHomeAccessibilityService.instance?.performHomeAction()
+            }, (backPressCount * 150 + 100).toLong()) // Go home after back presses are done
 
-                    // Another delay, then try to clear all (if supported)
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        // Note: Android doesn't provide a direct "clear all" global action
-                        // The recents overview should show a clear all button that user can interact with
-                        // For now, we just ensure we're on home screen
-                        BackHomeAccessibilityService.instance?.performHomeAction()
-                    }, 300)
-                } catch (e: Exception) {
-                    // If recents fails, just stay on home
-                }
-            }, 200)
             performHapticFeedback()
         } catch (e: Exception) {
             // Fallback: just go home

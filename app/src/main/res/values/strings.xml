@@ -34,7 +34,7 @@
     <string name="how_it_works">ℹ️ How it works</string>
     <string name="instructions">• Normal mode: Tap once = Back, Tap twice = Recent apps, Tap 3 times = All open apps, Tap 4 times = Open settings, Long press = Home screen\n• Rescue ring mode: Press the red ring to close all apps and go home</string>
     <string name="instructions_normal_mode">Tap once = Back\nTap twice = Recent apps\nTap 3 times = All open apps\n4 taps: Open Assistive Tap\nLong press = Home screen</string>
-    <string name="instructions_rescue_mode">Press the life ring to close all apps and go home</string>
+    <string name="instructions_rescue_mode">Press the life ring to stop current app and go home</string>
 
     <!-- Settings Screen -->
     <string name="back">Back</string>
@@ -57,7 +57,7 @@
 
     <!-- Rescue Ring -->
     <string name="rescue_ring">Life Ring</string>
-    <string name="rescue_ring_desc">Emergency mode: Close all apps and go home</string>
+    <string name="rescue_ring_desc">Emergency mode: Stop current app and go home</string>
     <string name="enable_rescue_ring">Enable life ring</string>
 
     <!-- Advanced Settings -->

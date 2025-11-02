@@ -34,7 +34,7 @@
     <string name="how_it_works">ℹ️ So funktioniert es</string>
     <string name="instructions">• Normal-Modus: 1x tippen = Zurück, 2x tippen = Letzte Apps, 3x tippen = Alle offenen Apps, 4x tippen = Einstellungen öffnen, Lang drücken = Start-Bildschirm\n• Rettungsring-Modus: Roten Ring drücken, um alle Apps zu schließen und nach Hause zu gehen</string>
     <string name="instructions_normal_mode">1x tippen = Zurück\n2x tippen = Letzte Apps\n3x tippen = Alle offenen Apps\n4x tippen: AssistiPunkt öffnen\nLang drücken = Start-Bildschirm</string>
-    <string name="instructions_rescue_mode">Rettungsring drücken, um alle Apps zu schließen und nach Hause zu gehen</string>
+    <string name="instructions_rescue_mode">Rettungsring drücken, um aktuelle App zu stoppen und nach Hause zu gehen</string>
 
     <!-- Settings Screen -->
     <string name="back">Zurück</string>
@@ -57,7 +57,7 @@
 
     <!-- Rescue Ring -->
     <string name="rescue_ring">Rettungsring</string>
-    <string name="rescue_ring_desc">Notfall-Modus: Alle Apps schließen und nach Hause</string>
+    <string name="rescue_ring_desc">Notfall-Modus: Aktuelle App stoppen und nach Hause</string>
     <string name="enable_rescue_ring">Rettungsring aktivieren</string>
 
     <!-- Advanced Settings -->
