@@ -13,9 +13,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.cardview.widget.CardView
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.MobileAds
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,7 +28,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var overlaySwitch: SwitchCompat
     private lateinit var settingsButton: Button
     private lateinit var stopServiceButton: Button
-    private lateinit var adView: AdView
 
     private lateinit var settings: OverlaySettings
     private lateinit var permissionManager: PermissionManager
@@ -47,13 +43,9 @@ class MainActivity : AppCompatActivity() {
         settings = OverlaySettings(this)
         permissionManager = PermissionManager(this)
 
-        // Initialize Mobile Ads SDK
-        MobileAds.initialize(this) {}
-
         initializeViews()
         setupClickListeners()
         updateUI()
-        loadBannerAd()
     }
 
     override fun onResume() {
@@ -79,7 +71,6 @@ class MainActivity : AppCompatActivity() {
         overlaySwitch = findViewById(R.id.overlay_switch)
         settingsButton = findViewById(R.id.settings_button)
         stopServiceButton = findViewById(R.id.stop_service_button)
-        adView = findViewById(R.id.adView)
     }
 
     private fun setupClickListeners() {
@@ -179,10 +170,5 @@ class MainActivity : AppCompatActivity() {
     private fun stopOverlayService() {
         val serviceIntent = Intent(this, OverlayService::class.java)
         stopService(serviceIntent)
-    }
-
-    private fun loadBannerAd() {
-        val adRequest = AdRequest.Builder().build()
-        adView.loadAd(adRequest)
     }
 }

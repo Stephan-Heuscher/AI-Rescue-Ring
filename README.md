@@ -87,14 +87,12 @@ AssistiPunkt/
 - **Target SDK**: 36
 - **UI Framework**: Material Design 3
 - **Architecture**: Service-basiert mit Overlay & Accessibility
-- **Ad Integration**: Google Mobile Ads (AdMob) - Rewarded Ads
 
 ### Verwendete Android-APIs
 
 - **Overlay API**: `WindowManager` für schwebenden Punkt
 - **Accessibility API**: `AccessibilityService` für Navigationsaktionen
 - **Gesture Detection**: Custom Touch-Handler mit System-Timeouts
-- **AdMob**: Rewarded Ads zur App-Unterstützung
 
 ## ♿ Barrierefreiheit
 
@@ -107,14 +105,7 @@ Die App wurde nach den **WCAG 2.1 Level AA** Richtlinien entwickelt:
 - ✅ **Einfache Sprache**: A1-Level Deutsch für maximale Verständlichkeit
 - ✅ **Dark Mode**: Automatische Anpassung an System-Theme
 
-## 💰 Monetarisierung
-
-Die App ist kostenlos und enthält:
-- **Rewarded Ads**: Freiwillige Werbung zur Unterstützung der Entwicklung
-- **Keine In-App-Käufe**: Alle Features sind kostenlos verfügbar
-- **Keine Premium-Version**: Vollständig funktional ohne Bezahlung
-
-## 🔧 Entwicklung
+##  Entwicklung
 
 ### Build-Anleitung
 
@@ -136,7 +127,6 @@ cd Back_Home_Dot
 ### ProGuard
 
 Release-Builds verwenden ProGuard für Code-Optimierung und -Verschleierung:
-- AdMob-Regeln sind bereits konfiguriert
 - Konfiguration in `app/proguard-rules.pro`
 
 ### Beitragen

@@ -50,8 +50,3 @@
     java.lang.Object writeReplace();
     java.lang.Object readResolve();
 }
-
-# Google Mobile Ads (AdMob)
--keep class com.google.android.gms.ads.** { *; }
--keep interface com.google.android.gms.ads.** { *; }
--dontwarn com.google.android.gms.ads.**

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "946112602585",
+    "project_id": "assistive-tap",
+    "storage_bucket": "assistive-tap.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:946112602585:android:4b14963cfc246ee3c0f9c8",
+        "android_client_info": {
+          "package_name": "ch.heuscher.back_home_dot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAll4arwJtakH2dmKJu8LYMHiUfVrrgBu0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

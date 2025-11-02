@@ -56,7 +56,6 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation("androidx.cardview:cardview:1.0.0")
-    implementation("com.google.android.gms:play-services-ads:24.7.0")
     implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

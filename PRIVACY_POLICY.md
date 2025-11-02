@@ -41,33 +41,6 @@ This data:
 - Is only accessible by the app itself
 - Is automatically deleted when you uninstall the app
 
-### Third-Party Services: Google AdMob
-
-Assistive Tap uses **Google AdMob** to display optional rewarded advertisements that help support development. When you choose to watch ads, AdMob may collect and process certain information:
-
-**Information AdMob May Collect:**
-- Advertising ID (a unique, user-resettable ID for advertising)
-- IP address
-- Device information (device type, operating system)
-- Ad interaction data (views, clicks)
-- General location (country/region level, not precise location)
-
-**How AdMob Uses This Information:**
-- To serve relevant advertisements
-- To measure ad performance
-- To detect and prevent fraud
-- To comply with legal obligations
-
-**Your Choices:**
-- You can reset your Advertising ID in your device settings (Settings → Google → Ads → Reset advertising ID)
-- You can opt out of personalized ads (Settings → Google → Ads → Opt out of Ads Personalization)
-- Watching ads is entirely optional; all app features are available without viewing ads
-
-**AdMob Privacy Policy:**
-For more information about how Google uses data, please review:
-- Google Privacy Policy: https://policies.google.com/privacy
-- Google AdMob Privacy Information: https://support.google.com/admob/answer/6128543
-
 ## Permissions Explained
 
 ### 1. Display Over Other Apps (SYSTEM_ALERT_WINDOW)
@@ -101,20 +74,14 @@ For more information about how Google uses data, please review:
 
 **What We DON'T Do**: We do not log, store, or transmit any app usage information.
 
-## Internet Access
-
-While the app includes AdMob (which requires internet access), **the app itself does not transmit any user data or app settings to the internet**. Internet access is used solely for:
-- Loading advertisements (when you choose to watch them)
-- AdMob's functionality as described above
-
 ## Children's Privacy
 
-Assistive Tap does not knowingly collect any personal information from children. The app is designed to be safe for users of all ages. AdMob ads are configured to comply with the Children's Online Privacy Protection Act (COPPA) and Google's policies for serving ads to children.
+Assistive Tap does not knowingly collect any personal information from children. The app is designed to be safe for users of all ages.
 
 ## Data Security
 
 - All app settings are stored locally using Android's secure SharedPreferences
-- No data is transmitted from the app to external servers (except AdMob as described)
+- No data is transmitted from the app to external servers
 - The accessibility service operates in a sandboxed environment with minimal permissions
 
 ## Your Rights and Choices
@@ -124,12 +91,6 @@ You have the right to:
 - Revoke permissions in Android Settings → Apps → Assistive Tap → Permissions
 - Disable the accessibility service in Settings → Accessibility
 - Uninstall the app (which automatically deletes all local data)
-- Opt out of personalized ads in your device settings
-- Reset your advertising ID at any time
-
-## International Data Transfers
-
-If you use Assistive Tap outside of your region, please note that AdMob (operated by Google) may transfer data internationally as described in Google's Privacy Policy. The app itself does not transfer any data internationally.
 
 ## Changes to This Privacy Policy
 
@@ -138,13 +99,11 @@ We may update this Privacy Policy from time to time. Changes will be posted on t
 ## Data Retention
 
 - **App Settings**: Stored locally until you uninstall the app
-- **AdMob Data**: Retained according to Google's policies (see AdMob Privacy Policy)
 
 ## Legal Basis for Processing (GDPR)
 
 If you are in the European Economic Area (EEA):
 - **App Settings**: Processed based on your consent and our legitimate interest in providing app functionality
-- **AdMob Data**: Processed based on consent (you choose to watch ads) and legitimate interest in app monetization
 
 ## Your GDPR Rights
 
@@ -157,11 +116,11 @@ If you are in the EEA, you have rights under the General Data Protection Regulat
 - Right to object to processing
 - Right to withdraw consent
 
-For AdMob data, please contact Google using their privacy resources. For app-related questions, contact us using the information below.
+For app-related questions, contact us using the information below.
 
 ## California Privacy Rights
 
-If you are a California resident, you have rights under the California Consumer Privacy Act (CCPA). Since we do not collect or sell personal information (beyond what AdMob collects as described), there is minimal data to request or delete. For AdMob data, please refer to Google's CCPA compliance information.
+If you are a California resident, you have rights under the California Consumer Privacy Act (CCPA). Since we do not collect or sell personal information, there is minimal data to request or delete.
 
 ## Contact Us
 
@@ -174,7 +133,6 @@ If you have questions, concerns, or requests regarding this Privacy Policy:
 
 For complete information about third-party data practices:
 - **Google Privacy Policy**: https://policies.google.com/privacy
-- **Google AdMob**: https://support.google.com/admob/answer/6128543
 - **Google GDPR Compliance**: https://privacy.google.com/businesses/compliance/
 
 ## Transparency Commitment
@@ -184,4 +142,4 @@ https://github.com/Stephan-Heuscher/Back_Home_Dot
 
 ---
 
-**Summary**: Assistive Tap itself collects no personal data. Settings are stored only on your device. Optional ads are provided by Google AdMob, which may collect limited advertising data as described in Google's policies. You have full control over permissions and can disable features or uninstall at any time.
+**Summary**: Assistive Tap itself collects no personal data. Settings are stored only on your device. You have full control over permissions and can disable features or uninstall at any time.

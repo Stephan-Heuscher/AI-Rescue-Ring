@@ -280,16 +280,6 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Banner Ad -->
-        <com.google.android.gms.ads.AdView
-            android:id="@+id/adView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="24dp"
-            app:adSize="BANNER"
-            app:adUnitId="@string/banner_ad_unit_id" />
-
         <!-- Service beenden Button -->
         <Button
             android:id="@+id/stop_service_button"

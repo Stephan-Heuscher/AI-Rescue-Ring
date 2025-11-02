@@ -34,9 +34,6 @@
     <string name="how_it_works">ℹ️ How it works</string>
     <string name="instructions">• Tap once = Back\n• Tap twice = Recent app\n• Tap 3 times = All open apps\n• Tap 4 times = Open Assistive Tap\n• Long press = Home screen</string>
 
-    <!-- AdMob ad unit ID -->
-    <string name="banner_ad_unit_id">ca-app-pub-5567609971256551/9228246659</string>
-
     <!-- Settings Screen -->
     <string name="back">Back</string>
     <string name="settings_title">Settings</string>
