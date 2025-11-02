@@ -5,7 +5,9 @@ import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import ch.heuscher.back_home_dot.util.AppConstants
 
 /**
  * Accessibility service for performing system navigation actions
@@ -32,7 +34,13 @@ class BackHomeAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // Not needed for this functionality
+        event?.let {
+            when (it.eventType) {
+                AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                    detectKeyboardState(it)
+                }
+            }
+        }
     }
 
     override fun onInterrupt() {
@@ -42,6 +50,42 @@ class BackHomeAccessibilityService : AccessibilityService() {
     override fun onUnbind(intent: Intent?): Boolean {
         instance = null
         return super.onUnbind(intent)
+    }
+
+    /**
+     * Detect keyboard state changes and broadcast to overlay service
+     */
+    private fun detectKeyboardState(event: AccessibilityEvent) {
+        val className = event.className?.toString() ?: ""
+        val packageName = event.packageName?.toString() ?: ""
+
+        // Check if this is an input method (keyboard) window
+        val isKeyboard = className.contains("InputMethod") ||
+                        packageName.contains("inputmethod") ||
+                        event.isFullScreen // IME windows are often full screen in terms of accessibility
+
+        Log.d(TAG, "Window state changed: class=$className, package=$packageName, isKeyboard=$isKeyboard")
+
+        if (isKeyboard) {
+            // Try to estimate keyboard height - this is approximate
+            val rootNode = rootInActiveWindow
+            val keyboardHeight = if (rootNode != null) {
+                // Get screen height and estimate keyboard takes bottom portion
+                val displayMetrics = resources.displayMetrics
+                val screenHeight = displayMetrics.heightPixels
+                (screenHeight * 0.4f).toInt() // Estimate 40% of screen height
+            } else {
+                800 // Fallback height
+            }
+
+            Log.d(TAG, "Keyboard detected, broadcasting height=$keyboardHeight")
+
+            // Send broadcast to overlay service
+            val intent = Intent(AppConstants.ACTION_UPDATE_KEYBOARD)
+            intent.putExtra("keyboard_visible", true)
+            intent.putExtra("keyboard_height", keyboardHeight)
+            sendBroadcast(intent)
+        }
     }
 
     /**
@@ -78,6 +122,7 @@ class BackHomeAccessibilityService : AccessibilityService() {
     }
 
     companion object {
+        private const val TAG = "BackHomeAccessibilityService"
         var instance: BackHomeAccessibilityService? = null
             private set
 

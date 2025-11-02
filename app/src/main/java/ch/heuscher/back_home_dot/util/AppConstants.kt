@@ -20,7 +20,7 @@ object AppConstants {
     const val KEYBOARD_CHECK_INTERVAL_MS = 100L
     const val KEYBOARD_HEIGHT_ESTIMATE_PERCENT = 0.38f
     const val KEYBOARD_THRESHOLD_PERCENT = 0.15f
-    const val KEYBOARD_MARGIN_MULTIPLIER = 1.5f
+    const val KEYBOARD_MARGIN_MULTIPLIER = 0.0f
 
     // Animation and timing
     const val RECENTS_TIMEOUT_DEFAULT_MS = 100L
@@ -48,6 +48,7 @@ object AppConstants {
 
     // Intent actions
     const val ACTION_UPDATE_SETTINGS = "ch.heuscher.back_home_dot.UPDATE_SETTINGS"
+    const val ACTION_UPDATE_KEYBOARD = "ch.heuscher.back_home_dot.UPDATE_KEYBOARD"
 
     // SharedPreferences
     const val PREFS_NAME = "overlay_settings"
@@ -68,6 +69,6 @@ object AppConstants {
     // Default values
     const val DEFAULT_COLOR = -0xBBBC // Blue: 0xFF2196F3
     const val DEFAULT_ENABLED = false
-    const val DEFAULT_KEYBOARD_AVOIDANCE = false
+    const val DEFAULT_KEYBOARD_AVOIDANCE = true
     const val DEFAULT_RESCUE_RING = false
 }

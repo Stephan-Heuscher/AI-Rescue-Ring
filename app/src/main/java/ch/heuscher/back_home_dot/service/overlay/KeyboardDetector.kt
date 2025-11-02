@@ -31,11 +31,7 @@ class KeyboardDetector(
      */
     fun isKeyboardVisible(): Boolean {
         return try {
-            // Method 1: Check if input method is active
-            val isAcceptingText = inputMethodManager.isAcceptingText
-            val hasActiveInput = inputMethodManager.isActive
-
-            // Method 2: Try to get keyboard insets (Android R+)
+            // Use keyboard insets for reliable detection
             var keyboardInsetHeight = 0
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
                 try {
@@ -48,8 +44,8 @@ class KeyboardDetector(
                 }
             }
 
-            // Determine if keyboard is visible
-            keyboardInsetHeight > 0 || (isAcceptingText && hasActiveInput)
+            // Keyboard is visible if inset height > 0
+            keyboardInsetHeight > 0
         } catch (e: Exception) {
             false
         }

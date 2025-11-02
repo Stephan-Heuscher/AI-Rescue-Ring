@@ -17,12 +17,16 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.cardview.widget.CardView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
+import ch.heuscher.back_home_dot.BackHomeAccessibilityService
+import ch.heuscher.back_home_dot.service.overlay.OverlayService
+import ch.heuscher.back_home_dot.SettingsActivity
 import ch.heuscher.back_home_dot.di.ServiceLocator
 import ch.heuscher.back_home_dot.domain.repository.SettingsRepository
-import ch.heuscher.back_home_dot.service.overlay.OverlayService
 import ch.heuscher.back_home_dot.util.AppConstants
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -58,6 +62,24 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
         Log.d(TAG, "onCreate: Content view set")
+
+        // Set up keyboard detection
+        // Note: Keyboard detection is now handled by BackHomeAccessibilityService
+        // ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insets ->
+        //     val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+        //     val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+
+        //     Log.d(TAG, "Keyboard insets: visible=$imeVisible, height=$imeHeight")
+
+        //     // Send broadcast to overlay service
+        //     val intent = Intent(AppConstants.ACTION_UPDATE_KEYBOARD)
+        //     intent.putExtra("keyboard_visible", imeVisible)
+        //     intent.putExtra("keyboard_height", imeHeight)
+        //     sendBroadcast(intent)
+
+        //     insets
+        // }
+        Log.d(TAG, "onCreate: Keyboard listener set")
 
         // Initialize service locator for dependency injection
         ServiceLocator.initialize(this)

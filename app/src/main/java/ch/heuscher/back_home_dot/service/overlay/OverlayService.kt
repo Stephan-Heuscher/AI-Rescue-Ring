@@ -5,11 +5,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Point
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import android.view.View
+import android.view.WindowManager
 import ch.heuscher.back_home_dot.BackHomeAccessibilityService
 import ch.heuscher.back_home_dot.di.ServiceLocator
 import ch.heuscher.back_home_dot.domain.model.DotPosition
@@ -31,6 +34,10 @@ import kotlinx.coroutines.launch
  */
 class OverlayService : Service() {
 
+    companion object {
+        private const val TAG = "OverlayService"
+    }
+
     // Injected dependencies (will be replaced with Hilt injection later)
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var viewManager: OverlayViewManager
@@ -49,11 +56,26 @@ class OverlayService : Service() {
         }
     }
 
+    // Position before keyboard appeared
+    private var positionBeforeKeyboard: DotPosition? = null
+
     // Broadcast receiver for settings changes
     private val settingsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == AppConstants.ACTION_UPDATE_SETTINGS) {
                 updateOverlayAppearance()
+            }
+        }
+    }
+
+    // Broadcast receiver for keyboard changes
+    private val keyboardReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == AppConstants.ACTION_UPDATE_KEYBOARD) {
+                val visible = intent.getBooleanExtra("keyboard_visible", false)
+                val height = intent.getIntExtra("keyboard_height", 0)
+                Log.d(TAG, "Keyboard broadcast received: visible=$visible, height=$height")
+                handleKeyboardChange(visible, height)
             }
         }
     }
@@ -76,11 +98,16 @@ class OverlayService : Service() {
         // Set up gesture detector callbacks
         setupGestureCallbacks()
 
-        // Register broadcast receiver
+        // Register broadcast receivers
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(
                 settingsReceiver,
                 IntentFilter(AppConstants.ACTION_UPDATE_SETTINGS),
+                Context.RECEIVER_NOT_EXPORTED
+            )
+            registerReceiver(
+                keyboardReceiver,
+                IntentFilter(AppConstants.ACTION_UPDATE_KEYBOARD),
                 Context.RECEIVER_NOT_EXPORTED
             )
         } else {
@@ -89,10 +116,18 @@ class OverlayService : Service() {
                 settingsReceiver,
                 IntentFilter(AppConstants.ACTION_UPDATE_SETTINGS)
             )
+            @Suppress("DEPRECATION")
+            registerReceiver(
+                keyboardReceiver,
+                IntentFilter(AppConstants.ACTION_UPDATE_KEYBOARD)
+            )
         }
 
         // Start observing settings changes
         observeSettings()
+
+        // Initialize screen dimensions
+        initializeScreenDimensions()
 
         // Start keyboard monitoring
         keyboardHandler.post(keyboardRunnable)
@@ -105,6 +140,7 @@ class OverlayService : Service() {
         serviceScope.cancel()
         keyboardHandler.removeCallbacks(keyboardRunnable)
         unregisterReceiver(settingsReceiver)
+        unregisterReceiver(keyboardReceiver)
         viewManager.removeOverlayView()
     }
 
@@ -132,6 +168,30 @@ class OverlayService : Service() {
                 updateOverlayAppearance()
             }
         }
+    }
+
+    private fun initializeScreenDimensions() {
+        serviceScope.launch {
+            val size = getUsableScreenSize()
+            settingsRepository.setScreenWidth(size.x)
+            settingsRepository.setScreenHeight(size.y)
+            Log.d(TAG, "initializeScreenDimensions: screenWidth=${size.x}, screenHeight=${size.y}")
+        }
+    }
+
+    private fun getUsableScreenSize(): Point {
+        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        val size = Point()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val windowMetrics = windowManager.currentWindowMetrics
+            val bounds = windowMetrics.bounds
+            size.x = bounds.width()
+            size.y = bounds.height()
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getSize(size)
+        }
+        return size
     }
 
     private fun updateOverlayAppearance() {
@@ -211,27 +271,58 @@ class OverlayService : Service() {
 
             val isVisible = keyboardDetector.isKeyboardVisible()
             if (isVisible) {
+                // Save position before adjusting
+                if (positionBeforeKeyboard == null) {
+                    positionBeforeKeyboard = viewManager.getCurrentPosition()
+                }
                 adjustPositionForKeyboard(settings)
+            } else {
+                // Restore position when keyboard hides
+                positionBeforeKeyboard?.let { originalPos ->
+                    viewManager.updatePosition(originalPos)
+                    positionBeforeKeyboard = null
+                }
             }
         }
     }
 
-    private fun adjustPositionForKeyboard(settings: ch.heuscher.back_home_dot.domain.model.OverlaySettings) {
-        val currentPos = viewManager.getCurrentPosition() ?: return
-        val keyboardHeight = keyboardDetector.getKeyboardHeight(settings.screenHeight)
-        val dotSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
+    private fun handleKeyboardChange(visible: Boolean, height: Int) {
+        Log.d(TAG, "handleKeyboardChange: visible=$visible, height=$height")
+        serviceScope.launch {
+            val settings = settingsRepository.getAllSettings().first()
+            Log.d(TAG, "handleKeyboardChange: keyboardAvoidanceEnabled=${settings.keyboardAvoidanceEnabled}")
+            if (!settings.keyboardAvoidanceEnabled) return@launch
 
-        // Check if dot would be covered by keyboard
-        val dotBottom = currentPos.y + dotSize
-        val keyboardTop = settings.screenHeight - keyboardHeight
-
-        if (dotBottom > keyboardTop) {
-            // Move dot up
-            val margin = (dotSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
-            val newY = (keyboardTop - dotSize - margin).coerceAtLeast(0)
-            val newPosition = currentPos.copy(y = newY)
-            viewManager.updatePosition(newPosition)
+            if (visible) {
+                // Save position before adjusting
+                if (positionBeforeKeyboard == null) {
+                    positionBeforeKeyboard = viewManager.getCurrentPosition()
+                    Log.d(TAG, "handleKeyboardChange: saved position=$positionBeforeKeyboard")
+                }
+                adjustPositionForKeyboard(settings, height)
+            } else {
+                // Restore position when keyboard hides
+                positionBeforeKeyboard?.let { originalPos ->
+                    Log.d(TAG, "handleKeyboardChange: restoring position=$originalPos")
+                    viewManager.updatePosition(originalPos)
+                    positionBeforeKeyboard = null
+                }
+            }
         }
+    }
+
+    private fun adjustPositionForKeyboard(settings: ch.heuscher.back_home_dot.domain.model.OverlaySettings, keyboardHeight: Int = 0) {
+        val height = if (keyboardHeight > 0) keyboardHeight else keyboardDetector.getKeyboardHeight(settings.screenHeight)
+        val dotSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
+        val margin = (dotSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
+
+        // Position dot 2 diameters above the keyboard when visible
+        val keyboardTop = settings.screenHeight - height
+        val newY = (keyboardTop - 2 * dotSize - margin).coerceAtLeast(100) // 2 diameters above keyboard
+        val currentPos = viewManager.getCurrentPosition()
+        val newPosition = DotPosition(currentPos?.x ?: 0, newY)
+        Log.d(TAG, "adjustPositionForKeyboard: screenHeight=${settings.screenHeight}, keyboardHeight=$height, keyboardTop=$keyboardTop, dotSize=$dotSize, newY=$newY, newPosition=$newPosition")
+        viewManager.updatePosition(newPosition)
     }
 
     private fun performRescueAction() {
