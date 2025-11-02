@@ -24,6 +24,8 @@ class GestureDetector(
     private var hasMoved = false
     private var initialX = 0f
     private var initialY = 0f
+    private var lastX = 0f
+    private var lastY = 0f
 
     // Configuration
     private val touchSlop = viewConfiguration.scaledTouchSlop
@@ -67,6 +69,8 @@ class GestureDetector(
     private fun handleActionDown(event: MotionEvent) {
         initialX = event.rawX
         initialY = event.rawY
+    lastX = initialX
+    lastY = initialY
         isLongPress = false
         hasMoved = false
 
@@ -75,17 +79,26 @@ class GestureDetector(
     }
 
     private fun handleActionMove(event: MotionEvent): Boolean {
-        val deltaX = event.rawX - initialX
-        val deltaY = event.rawY - initialY
+        val totalDeltaX = event.rawX - initialX
+        val totalDeltaY = event.rawY - initialY
 
-        if (Math.abs(deltaX) > touchSlop || Math.abs(deltaY) > touchSlop) {
-            hasMoved = true
-            mainHandler.removeCallbacks(longPressRunnable) // Cancel long press
-
-            // Notify position change
-            onPositionChanged?.invoke(deltaX.toInt(), deltaY.toInt())
-            onGesture?.invoke(Gesture.DRAG_MOVE)
+        if (!hasMoved) {
+            if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
+                hasMoved = true
+                mainHandler.removeCallbacks(longPressRunnable) // Cancel long press
+            } else {
+                return true
+            }
         }
+
+        val deltaX = event.rawX - lastX
+        val deltaY = event.rawY - lastY
+
+        onPositionChanged?.invoke(deltaX.toInt(), deltaY.toInt())
+        onGesture?.invoke(Gesture.DRAG_MOVE)
+
+        lastX = event.rawX
+        lastY = event.rawY
         return true
     }
 

@@ -19,7 +19,9 @@ object ServiceLocator {
     private lateinit var applicationContext: Context
 
     fun initialize(context: Context) {
-        applicationContext = context.applicationContext
+        if (!::applicationContext.isInitialized) {
+            applicationContext = context.applicationContext
+        }
     }
 
     // Lazy initialization of dependencies

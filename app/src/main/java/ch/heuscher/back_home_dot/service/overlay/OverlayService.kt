@@ -5,10 +5,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
-import android.view.MotionEvent
+import android.view.View
 import ch.heuscher.back_home_dot.BackHomeAccessibilityService
 import ch.heuscher.back_home_dot.di.ServiceLocator
 import ch.heuscher.back_home_dot.domain.model.DotPosition
@@ -69,17 +70,26 @@ class OverlayService : Service() {
         gestureDetector = ServiceLocator.gestureDetector
         keyboardDetector = ServiceLocator.keyboardDetector
 
+        // Create overlay view before attaching gesture listeners
+        viewManager.createOverlayView()
+
         // Set up gesture detector callbacks
         setupGestureCallbacks()
 
         // Register broadcast receiver
-        registerReceiver(
-            settingsReceiver,
-            IntentFilter(AppConstants.ACTION_UPDATE_SETTINGS)
-        )
-
-        // Create overlay view
-        viewManager.createOverlayView()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                settingsReceiver,
+                IntentFilter(AppConstants.ACTION_UPDATE_SETTINGS),
+                Context.RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            registerReceiver(
+                settingsReceiver,
+                IntentFilter(AppConstants.ACTION_UPDATE_SETTINGS)
+            )
+        }
 
         // Start observing settings changes
         observeSettings()
@@ -109,10 +119,11 @@ class OverlayService : Service() {
             handlePositionChange(deltaX, deltaY)
         }
 
-        // Set up touch listener on the view
-        viewManager.getTouchableView()?.setOnTouchListener { _, event ->
+        val listener = View.OnTouchListener { _, event ->
             gestureDetector.onTouch(event)
         }
+
+        viewManager.setTouchListener(listener)
     }
 
     private fun observeSettings() {
@@ -127,6 +138,7 @@ class OverlayService : Service() {
         serviceScope.launch {
             val settings = settingsRepository.getAllSettings().first()
             viewManager.updateAppearance(settings)
+            viewManager.updatePosition(settings.position)
         }
     }
 

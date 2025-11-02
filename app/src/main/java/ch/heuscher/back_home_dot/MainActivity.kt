@@ -1,11 +1,15 @@
 package ch.heuscher.back_home_dot
 
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.View
+import android.view.accessibility.AccessibilityManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -13,7 +17,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.cardview.widget.CardView
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import ch.heuscher.back_home_dot.di.ServiceLocator
+import ch.heuscher.back_home_dot.domain.repository.SettingsRepository
+import ch.heuscher.back_home_dot.service.overlay.OverlayService
+import ch.heuscher.back_home_dot.util.AppConstants
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,8 +42,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var instructionsText: TextView
     private lateinit var versionInfo: TextView
 
-    private lateinit var settings: OverlaySettings
-    private lateinit var permissionManager: PermissionManager
+    private lateinit var settingsRepository: SettingsRepository
+
+    // UI state holders for synchronous access
+    private var isOverlayEnabled = false
+    private var isRescueRingEnabled = false
 
     companion object {
         private const val TAG = "MainActivity"
@@ -42,18 +54,24 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG, "onCreate: Starting MainActivity")
+
         setContentView(R.layout.activity_main)
+        Log.d(TAG, "onCreate: Content view set")
 
         // Initialize service locator for dependency injection
         ServiceLocator.initialize(this)
+        Log.d(TAG, "onCreate: ServiceLocator initialized")
 
-        settings = OverlaySettings(this)
-        permissionManager = PermissionManager(this)
+        settingsRepository = ServiceLocator.settingsRepository
+        Log.d(TAG, "onCreate: SettingsRepository obtained")
 
         initializeViews()
         setupClickListeners()
+        observeSettings()
         updateUI()
         updateInstructionsText()
+        Log.d(TAG, "onCreate: MainActivity initialization complete")
     }
 
     override fun onResume() {
@@ -61,13 +79,15 @@ class MainActivity : AppCompatActivity() {
         updateUI()
 
         // Start service if enabled and permissions are granted
-        if (settings.isEnabled && permissionManager.hasAllRequiredPermissions()) {
+        if (isOverlayEnabled && hasAllRequiredPermissions()) {
             startOverlayService()
         }
     }
 
     private fun initializeViews() {
+        Log.d(TAG, "initializeViews: Starting view initialization")
         permissionsSection = findViewById(R.id.permissions_section)
+        Log.d(TAG, "initializeViews: permissionsSection found")
         overlayPermissionCard = findViewById(R.id.overlay_permission_card)
         overlayStatusIcon = findViewById(R.id.overlay_status_icon)
         overlayStatusText = findViewById(R.id.overlay_status_text)
@@ -82,10 +102,12 @@ class MainActivity : AppCompatActivity() {
         stopServiceButton = findViewById(R.id.stop_service_button)
         instructionsText = findViewById(R.id.instructions_text)
         versionInfo = findViewById(R.id.version_info)
+        Log.d(TAG, "initializeViews: All views found")
 
         // Set version info
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         versionInfo.text = "Version ${packageInfo.versionName}"
+        Log.d(TAG, "initializeViews: Version info set")
     }
 
     private fun setupClickListeners() {
@@ -95,8 +117,10 @@ class MainActivity : AppCompatActivity() {
         settingsButton.setOnClickListener { openSettings() }
 
         overlaySwitch.setOnCheckedChangeListener { _, isChecked ->
-            settings.isEnabled = isChecked
-            if (permissionManager.hasAllRequiredPermissions()) {
+            lifecycleScope.launch {
+                settingsRepository.setOverlayEnabled(isChecked)
+            }
+            if (hasAllRequiredPermissions()) {
                 if (isChecked) {
                     startOverlayService()
                 } else {
@@ -107,15 +131,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         rescueRingSwitch.setOnCheckedChangeListener { _, isChecked ->
-            settings.rescueRingEnabled = isChecked
+            lifecycleScope.launch {
+                settingsRepository.setRescueRingEnabled(isChecked)
+            }
             updateInstructionsText()
             broadcastSettingsUpdate()
         }
     }
 
     private fun updateUI() {
-        val hasOverlay = permissionManager.hasOverlayPermission()
-        val hasAccessibility = permissionManager.hasAccessibilityPermission()
+        val hasOverlay = hasOverlayPermission()
+        val hasAccessibility = hasAccessibilityPermission()
 
         // Show/hide individual permission cards
         overlayPermissionCard.visibility = if (hasOverlay) View.GONE else View.VISIBLE
@@ -125,11 +151,11 @@ class MainActivity : AppCompatActivity() {
         permissionsSection.visibility = if (hasOverlay && hasAccessibility) View.GONE else View.VISIBLE
 
         // Update switch
-        overlaySwitch.isChecked = settings.isEnabled
+        overlaySwitch.isChecked = isOverlayEnabled
         overlaySwitch.isEnabled = hasOverlay && hasAccessibility
 
         // Update rescue ring switch
-        rescueRingSwitch.isChecked = settings.rescueRingEnabled
+        rescueRingSwitch.isChecked = isRescueRingEnabled
         rescueRingSwitch.isEnabled = hasOverlay && hasAccessibility
 
         // Update settings button
@@ -198,16 +224,64 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun broadcastSettingsUpdate() {
-        val intent = Intent(OverlayService.ACTION_UPDATE_SETTINGS)
+        val intent = Intent(AppConstants.ACTION_UPDATE_SETTINGS)
         sendBroadcast(intent)
     }
 
+    private fun observeSettings() {
+        Log.d(TAG, "observeSettings: Starting to observe settings")
+        lifecycleScope.launch {
+            Log.d(TAG, "observeSettings: Launching overlay enabled observer")
+            try {
+                settingsRepository.isOverlayEnabled().collect { enabled ->
+                    Log.d(TAG, "observeSettings: Overlay enabled changed to $enabled")
+                    isOverlayEnabled = enabled
+                    updateUI()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "observeSettings: Error observing overlay enabled", e)
+            }
+        }
+
+        lifecycleScope.launch {
+            Log.d(TAG, "observeSettings: Launching rescue ring observer")
+            try {
+                settingsRepository.isRescueRingEnabled().collect { enabled ->
+                    Log.d(TAG, "observeSettings: Rescue ring enabled changed to $enabled")
+                    isRescueRingEnabled = enabled
+                    updateInstructionsText()
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "observeSettings: Error observing rescue ring enabled", e)
+            }
+        }
+        Log.d(TAG, "observeSettings: Observers launched")
+    }
+
     private fun updateInstructionsText() {
-        val instructions = if (settings.rescueRingEnabled) {
+        val instructions = if (isRescueRingEnabled) {
             getString(R.string.instructions_rescue_mode)
         } else {
             getString(R.string.instructions_normal_mode)
         }
         instructionsText.text = instructions
+    }
+
+    private fun hasOverlayPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Settings.canDrawOverlays(this)
+        } else {
+            true // Permission not required for older versions
+        }
+    }
+
+    private fun hasAccessibilityPermission(): Boolean {
+        val enabledServices = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
+        val serviceComponent = ComponentName(this, BackHomeAccessibilityService::class.java).flattenToString()
+        return enabledServices?.split(":")?.contains(serviceComponent) == true
+    }
+
+    private fun hasAllRequiredPermissions(): Boolean {
+        return hasOverlayPermission() && hasAccessibilityPermission()
     }
 }

@@ -29,6 +29,7 @@ class OverlayViewManager(
     private var floatingDot: View? = null
     private var rescueRing: TextView? = null
     private var layoutParams: WindowManager.LayoutParams? = null
+    private var touchListener: View.OnTouchListener? = null
 
     /**
      * Creates and adds the overlay view to the window.
@@ -42,6 +43,12 @@ class OverlayViewManager(
 
         setupLayoutParams()
         windowManager.addView(floatingView, layoutParams)
+
+        touchListener?.let { listener ->
+            floatingView?.setOnTouchListener(listener)
+            floatingDot?.setOnTouchListener(listener)
+            rescueRing?.setOnTouchListener(listener)
+        }
 
         return floatingView!!
     }
@@ -88,9 +95,14 @@ class OverlayViewManager(
     }
 
     /**
-     * Gets the touchable view for gesture detection.
+     * Registers a touch listener for gesture detection on overlay elements.
      */
-    fun getTouchableView(): View? = floatingView
+    fun setTouchListener(listener: View.OnTouchListener) {
+        touchListener = listener
+        floatingView?.setOnTouchListener(listener)
+        floatingDot?.setOnTouchListener(listener)
+        rescueRing?.setOnTouchListener(listener)
+    }
 
     /**
      * Calculates constrained position within screen bounds.
@@ -117,7 +129,8 @@ class OverlayViewManager(
             layoutType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START

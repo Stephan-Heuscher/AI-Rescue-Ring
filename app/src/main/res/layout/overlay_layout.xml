@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="false">
 
     <View
         android:id="@+id/floating_dot"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:background="@drawable/floating_dot_background"
+        android:clickable="true"
+        android:focusable="false"
         android:visibility="visible" />
 
     <TextView
@@ -18,6 +22,8 @@
         android:textSize="28sp"
         android:gravity="center"
         android:background="@drawable/life_ring_background"
+        android:clickable="true"
+        android:focusable="false"
         android:visibility="gone" />
 
 </FrameLayout>

@@ -9,6 +9,11 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
+import androidx.lifecycle.lifecycleScope
+import ch.heuscher.back_home_dot.di.ServiceLocator
+import ch.heuscher.back_home_dot.domain.repository.SettingsRepository
+import ch.heuscher.back_home_dot.util.AppConstants
+import kotlinx.coroutines.launch
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -22,16 +27,23 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var advancedArrow: TextView
     private var isAdvancedExpanded = false
 
-    private lateinit var settings: OverlaySettings
+    private lateinit var settingsRepository: SettingsRepository
+
+    // UI state holders
+    private var currentAlpha = 255
+    private var currentTimeout = 100L
+    private var currentColor = 0xFF2196F3.toInt()
+    private var keyboardAvoidanceEnabled = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
         supportActionBar?.hide()
 
-        settings = OverlaySettings(this)
+        settingsRepository = ServiceLocator.settingsRepository
 
         initializeViews()
+        observeSettings()
         setupBackButton()
         setupImpressumButton()
         setupAdvancedToggle()
@@ -74,12 +86,13 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun setupAlphaSeekBar() {
-        alphaSeekBar.progress = settings.alpha
-        updateAlphaText(settings.alpha)
         alphaSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                settings.alpha = progress
+                currentAlpha = progress
                 updateAlphaText(progress)
+                lifecycleScope.launch {
+                    settingsRepository.setAlpha(progress)
+                }
                 broadcastSettingsUpdate()
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
@@ -93,12 +106,13 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun setupTimeoutSeekBar() {
-        timeoutSeekBar.progress = settings.recentsTimeout.toInt()
-        updateTimeoutText(settings.recentsTimeout.toInt())
         timeoutSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                settings.recentsTimeout = progress.toLong()
+                currentTimeout = progress.toLong()
                 updateTimeoutText(progress)
+                lifecycleScope.launch {
+                    settingsRepository.setRecentsTimeout(progress.toLong())
+                }
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
@@ -110,9 +124,11 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun setupKeyboardAvoidanceSwitch() {
-        keyboardAvoidanceSwitch.isChecked = settings.keyboardAvoidanceEnabled
         keyboardAvoidanceSwitch.setOnCheckedChangeListener { _, isChecked ->
-            settings.keyboardAvoidanceEnabled = isChecked
+            keyboardAvoidanceEnabled = isChecked
+            lifecycleScope.launch {
+                settingsRepository.setKeyboardAvoidanceEnabled(isChecked)
+            }
             broadcastSettingsUpdate()
         }
     }
@@ -129,13 +145,47 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.color_custom).setOnClickListener { showColorPickerDialog() }
     }
 
+    private fun observeSettings() {
+        lifecycleScope.launch {
+            settingsRepository.getAlpha().collect { alpha ->
+                currentAlpha = alpha
+                alphaSeekBar.progress = alpha
+                updateAlphaText(alpha)
+            }
+        }
+
+        lifecycleScope.launch {
+            settingsRepository.getRecentsTimeout().collect { timeout ->
+                currentTimeout = timeout
+                timeoutSeekBar.progress = timeout.toInt()
+                updateTimeoutText(timeout.toInt())
+            }
+        }
+
+        lifecycleScope.launch {
+            settingsRepository.getColor().collect { color ->
+                currentColor = color
+            }
+        }
+
+        lifecycleScope.launch {
+            settingsRepository.isKeyboardAvoidanceEnabled().collect { enabled ->
+                keyboardAvoidanceEnabled = enabled
+                keyboardAvoidanceSwitch.isChecked = enabled
+            }
+        }
+    }
+
     private fun setColor(color: Int) {
-        settings.color = color
+        currentColor = color
+        lifecycleScope.launch {
+            settingsRepository.setColor(color)
+        }
         broadcastSettingsUpdate()
     }
 
     private fun broadcastSettingsUpdate() {
-        val intent = Intent(OverlayService.ACTION_UPDATE_SETTINGS)
+        val intent = Intent(AppConstants.ACTION_UPDATE_SETTINGS)
         sendBroadcast(intent)
     }
 
@@ -149,7 +199,7 @@ class SettingsActivity : AppCompatActivity() {
         val greenValue = dialogView.findViewById<TextView>(R.id.green_value)
         val blueValue = dialogView.findViewById<TextView>(R.id.blue_value)
 
-        val currentColor = settings.color
+        val currentColor = this@SettingsActivity.currentColor
         redSeekBar.progress = Color.red(currentColor)
         greenSeekBar.progress = Color.green(currentColor)
         blueSeekBar.progress = Color.blue(currentColor)
