@@ -67,11 +67,12 @@ class OverlayService : Service() {
     private var keyboardHeight = 0
     private var originalY = 0
     private var isKeyboardVisible = false
-    private var rootView: View? = null
-    private var rootViewHeight = 0
     private val keyboardCheckHandler = Handler(Looper.getMainLooper())
-    private val keyboardLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
-        checkKeyboardVisibility()
+    private val keyboardCheckRunnable = object : Runnable {
+        override fun run() {
+            checkKeyboardVisibility()
+            keyboardCheckHandler.postDelayed(this, 100) // Check every 100ms for responsiveness
+        }
     }
 
     // Runnable for long press action
@@ -92,7 +93,6 @@ class OverlayService : Service() {
             if (intent?.action == ACTION_UPDATE_SETTINGS) {
                 applyColorSettings()
                 // Re-setup keyboard detection in case the setting changed
-                rootView?.viewTreeObserver?.removeOnGlobalLayoutListener(keyboardLayoutListener)
                 keyboardCheckHandler.removeCallbacksAndMessages(null)
                 setupKeyboardDetection()
             }
@@ -114,36 +114,13 @@ class OverlayService : Service() {
     }
 
     /**
-     * Sets up keyboard detection using ViewTreeObserver.
+     * Sets up keyboard detection using polling approach.
      */
     private fun setupKeyboardDetection() {
         if (!settings.keyboardAvoidanceEnabled) return
 
-        // Try to get the decor view of the current activity
-        try {
-            val activityThread = Class.forName("android.app.ActivityThread")
-            val currentActivityThread = activityThread.getMethod("currentActivityThread").invoke(null)
-            val activities = activityThread.getMethod("getActivities").invoke(currentActivityThread) as Map<*, *>
-
-            for (activityRecord in activities.values) {
-                val activity = activityRecord?.javaClass?.getMethod("get")?.invoke(activityRecord)
-                if (activity != null) {
-                    val decorView = (activity as android.app.Activity).window.decorView
-                    rootView = decorView
-                    rootViewHeight = decorView.height
-                    decorView.viewTreeObserver.addOnGlobalLayoutListener(keyboardLayoutListener)
-                    break
-                }
-            }
-        } catch (e: Exception) {
-            // Fallback: use a polling approach if we can't access the decor view
-            keyboardCheckHandler.postDelayed(object : Runnable {
-                override fun run() {
-                    checkKeyboardVisibility()
-                    keyboardCheckHandler.postDelayed(this, 300) // Check every 300ms
-                }
-            }, 300)
-        }
+        // Start polling for keyboard visibility
+        keyboardCheckHandler.post(keyboardCheckRunnable)
     }
     private fun performRescueAction() {
         try {
@@ -168,43 +145,77 @@ class OverlayService : Service() {
      * Checks if the soft keyboard is visible and adjusts dot position accordingly.
      */
     private fun checkKeyboardVisibility() {
-        if (!settings.keyboardAvoidanceEnabled || rootView == null) return
+        if (!settings.keyboardAvoidanceEnabled) return
 
-        val screenHeight = getUsableScreenSize().y
-        val rootViewHeight = rootView?.height ?: screenHeight
+        try {
+            val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            val screenHeight = getUsableScreenSize().y
 
-        // Calculate visible area (excluding status bar and navigation bar)
-        val visibleHeight = rootViewHeight
+            // Method 1: Check if keyboard is active and estimate height
+            val isAcceptingText = inputMethodManager.isAcceptingText
+            val hasActiveInput = inputMethodManager.isActive
 
-        // If the visible height is significantly less than screen height, keyboard is likely visible
-        val keyboardThreshold = (screenHeight * 0.15).toFloat() // Keyboard must take at least 15% of screen
-        val isKeyboardNowVisible = (screenHeight - visibleHeight) > keyboardThreshold
-
-        if (isKeyboardNowVisible != isKeyboardVisible) {
-            isKeyboardVisible = isKeyboardNowVisible
-
-            if (isKeyboardVisible) {
-                // Keyboard appeared - calculate actual keyboard height and move dot up
-                keyboardHeight = screenHeight - visibleHeight
-                originalY = params?.y ?: 0
-
-                // Only move the dot if the keyboard would interfere with its current position
-                val dotSize = (48 * resources.displayMetrics.density).toInt()
-                val dotBottom = originalY + dotSize
-                val keyboardTop = screenHeight - keyboardHeight
-
-                if (dotBottom > keyboardTop) {
-                    // Dot would be covered by keyboard, move it up
-                    val newY = (keyboardTop - dotSize - 20).coerceAtLeast(0) // 20px margin
-                    params?.y = newY
-                    windowManager.updateViewLayout(floatingView, params)
+            // Method 2: Try to get keyboard insets (Android R+)
+            var keyboardInsetHeight = 0
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                try {
+                    val windowMetrics = windowManager.currentWindowMetrics
+                    val insets = windowMetrics.windowInsets
+                    val imeInset = insets.getInsets(android.view.WindowInsets.Type.ime())
+                    keyboardInsetHeight = imeInset.bottom
+                } catch (e: Exception) {
+                    // Fallback if insets API fails
                 }
-            } else {
-                // Keyboard disappeared - move dot back to original position
-                params?.y = originalY
-                windowManager.updateViewLayout(floatingView, params)
-                keyboardHeight = 0
             }
+
+            // Determine if keyboard is visible
+            val isKeyboardNowVisible = if (keyboardInsetHeight > 0) {
+                // Use insets data if available (most reliable)
+                true
+            } else if (isAcceptingText && hasActiveInput) {
+                // Fallback: assume keyboard is visible if input is active
+                // We'll estimate height based on typical keyboard size
+                true
+            } else {
+                false
+            }
+
+            if (isKeyboardNowVisible != isKeyboardVisible) {
+                isKeyboardVisible = isKeyboardNowVisible
+
+                if (isKeyboardVisible) {
+                    // Keyboard appeared
+                    originalY = params?.y ?: 0
+
+                    // Calculate keyboard height
+                    keyboardHeight = if (keyboardInsetHeight > 0) {
+                        keyboardInsetHeight
+                    } else {
+                        // Estimate keyboard height as 35-40% of screen
+                        (screenHeight * 0.38).toInt()
+                    }
+
+                    // Only move the dot if it would be covered by the keyboard
+                    val dotSize = (48 * resources.displayMetrics.density).toInt()
+                    val dotBottom = originalY + dotSize
+                    val keyboardTop = screenHeight - keyboardHeight
+
+                    if (dotBottom > keyboardTop) {
+                        // Dot would be covered by keyboard, move it up
+                        val newY = (keyboardTop - dotSize - 30).coerceAtLeast(0) // 30px margin
+                        params?.y = newY
+                        windowManager.updateViewLayout(floatingView, params)
+                    }
+                } else {
+                    // Keyboard disappeared - move dot back to original position
+                    params?.y = originalY
+                    windowManager.updateViewLayout(floatingView, params)
+                    keyboardHeight = 0
+                }
+            }
+        } catch (e: Exception) {
+            // If keyboard detection fails completely, disable it to prevent crashes
+            settings.keyboardAvoidanceEnabled = false
         }
     }
 
@@ -484,7 +495,6 @@ class OverlayService : Service() {
         floatingView?.let { windowManager.removeView(it) }
 
         // Clean up keyboard detection
-        rootView?.viewTreeObserver?.removeOnGlobalLayoutListener(keyboardLayoutListener)
         keyboardCheckHandler.removeCallbacksAndMessages(null)
 
         longPressHandler.removeCallbacks(longPressRunnable)
