@@ -18,7 +18,6 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var timeoutSeekBar: SeekBar
     private lateinit var timeoutValueText: TextView
     private lateinit var keyboardAvoidanceSwitch: androidx.appcompat.widget.SwitchCompat
-    private lateinit var rescueRingSwitch: androidx.appcompat.widget.SwitchCompat
     private lateinit var advancedToggleCard: androidx.cardview.widget.CardView
     private lateinit var advancedContent: android.widget.LinearLayout
     private lateinit var advancedArrow: TextView
@@ -40,7 +39,6 @@ class SettingsActivity : AppCompatActivity() {
         setupAlphaSeekBar()
         setupTimeoutSeekBar()
         setupKeyboardAvoidanceSwitch()
-        setupRescueRingSwitch()
         setupColorButtons()
     }
 
@@ -50,7 +48,6 @@ class SettingsActivity : AppCompatActivity() {
         timeoutSeekBar = findViewById(R.id.timeout_seekbar)
         timeoutValueText = findViewById(R.id.timeout_value_text)
         keyboardAvoidanceSwitch = findViewById(R.id.keyboard_avoidance_switch)
-        rescueRingSwitch = findViewById(R.id.rescue_ring_switch)
         advancedToggleCard = findViewById(R.id.advanced_toggle_card)
         advancedContent = findViewById(R.id.advanced_content)
         advancedArrow = findViewById(R.id.advanced_arrow)
@@ -117,14 +114,6 @@ class SettingsActivity : AppCompatActivity() {
         keyboardAvoidanceSwitch.isChecked = settings.keyboardAvoidanceEnabled
         keyboardAvoidanceSwitch.setOnCheckedChangeListener { _, isChecked ->
             settings.keyboardAvoidanceEnabled = isChecked
-            broadcastSettingsUpdate()
-        }
-    }
-
-    private fun setupRescueRingSwitch() {
-        rescueRingSwitch.isChecked = settings.rescueRingEnabled
-        rescueRingSwitch.setOnCheckedChangeListener { _, isChecked ->
-            settings.rescueRingEnabled = isChecked
             broadcastSettingsUpdate()
         }
     }

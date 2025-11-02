@@ -12,12 +12,12 @@
 
     <TextView
         android:id="@+id/rescue_ring"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:text="🛟"
-        android:textSize="24sp"
+        android:textSize="28sp"
         android:gravity="center"
-        android:background="@drawable/rescue_ring_background"
+        android:background="@drawable/life_ring_background"
         android:visibility="gone" />
 
 </FrameLayout>
