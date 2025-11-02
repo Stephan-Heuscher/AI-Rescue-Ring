@@ -21,6 +21,7 @@ class OverlaySettings(context: Context) {
         private const val KEY_ROTATION = "rotation"
         private const val KEY_RECENTS_TIMEOUT = "recents_timeout"
         private const val KEY_KEYBOARD_AVOIDANCE = "keyboard_avoidance"
+        private const val KEY_RESCUE_RING = "rescue_ring"
 
         private const val DEFAULT_COLOR = 0xFF2196F3.toInt() // Blue
         private const val DEFAULT_ALPHA = 255 // Fully opaque
@@ -54,8 +55,12 @@ class OverlaySettings(context: Context) {
         set(value) = prefs.edit().putLong(KEY_RECENTS_TIMEOUT, value.coerceIn(50, 300)).apply()
 
     var keyboardAvoidanceEnabled: Boolean
-        get() = prefs.getBoolean(KEY_KEYBOARD_AVOIDANCE, true) // Default to true (non-expert)
+        get() = prefs.getBoolean(KEY_KEYBOARD_AVOIDANCE, false) // Default to false (disabled)
         set(value) = prefs.edit().putBoolean(KEY_KEYBOARD_AVOIDANCE, value).apply()
+
+    var rescueRingEnabled: Boolean
+        get() = prefs.getBoolean(KEY_RESCUE_RING, false) // Default to false (disabled)
+        set(value) = prefs.edit().putBoolean(KEY_RESCUE_RING, value).apply()
 
     var positionXPercent: Float
         get() = prefs.getFloat(KEY_POSITION_X_PERCENT, 0.1f)

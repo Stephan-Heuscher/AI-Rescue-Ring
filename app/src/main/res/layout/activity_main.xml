@@ -234,6 +234,59 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Rettungsring Switch -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:contentPadding="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:minHeight="64dp">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/rescue_ring"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorPrimary" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/rescue_ring_desc"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/rescue_ring_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/enable_rescue_ring"
+                    android:minHeight="48dp"
+                    android:minWidth="48dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="8dp"
+                    android:scaleX="1.5"
+                    android:scaleY="1.5" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
         <!-- Einstellungen Button -->
         <Button
             android:id="@+id/settings_button"
@@ -270,6 +323,7 @@
                     android:layout_marginBottom="12dp" />
 
                 <TextView
+                    android:id="@+id/instructions_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/instructions"

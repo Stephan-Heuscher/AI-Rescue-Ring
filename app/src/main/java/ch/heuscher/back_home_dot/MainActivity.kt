@@ -26,8 +26,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var accessibilityStatusText: TextView
     private lateinit var accessibilityButton: Button
     private lateinit var overlaySwitch: SwitchCompat
+    private lateinit var rescueRingSwitch: SwitchCompat
     private lateinit var settingsButton: Button
     private lateinit var stopServiceButton: Button
+    private lateinit var instructionsText: TextView
     private lateinit var versionInfo: TextView
 
     private lateinit var settings: OverlaySettings
@@ -47,6 +49,7 @@ class MainActivity : AppCompatActivity() {
         initializeViews()
         setupClickListeners()
         updateUI()
+        updateInstructionsText()
     }
 
     override fun onResume() {
@@ -70,8 +73,10 @@ class MainActivity : AppCompatActivity() {
         accessibilityStatusText = findViewById(R.id.accessibility_status_text)
         accessibilityButton = findViewById(R.id.accessibility_button)
         overlaySwitch = findViewById(R.id.overlay_switch)
+        rescueRingSwitch = findViewById(R.id.rescue_ring_switch)
         settingsButton = findViewById(R.id.settings_button)
         stopServiceButton = findViewById(R.id.stop_service_button)
+        instructionsText = findViewById(R.id.instructions_text)
         versionInfo = findViewById(R.id.version_info)
 
         // Set version info
@@ -96,6 +101,12 @@ class MainActivity : AppCompatActivity() {
             }
             updateUI()
         }
+
+        rescueRingSwitch.setOnCheckedChangeListener { _, isChecked ->
+            settings.rescueRingEnabled = isChecked
+            updateInstructionsText()
+            broadcastSettingsUpdate()
+        }
     }
 
     private fun updateUI() {
@@ -112,6 +123,10 @@ class MainActivity : AppCompatActivity() {
         // Update switch
         overlaySwitch.isChecked = settings.isEnabled
         overlaySwitch.isEnabled = hasOverlay && hasAccessibility
+
+        // Update rescue ring switch
+        rescueRingSwitch.isChecked = settings.rescueRingEnabled
+        rescueRingSwitch.isEnabled = hasOverlay && hasAccessibility
 
         // Update settings button
         settingsButton.isEnabled = hasOverlay && hasAccessibility
@@ -176,5 +191,19 @@ class MainActivity : AppCompatActivity() {
     private fun stopOverlayService() {
         val serviceIntent = Intent(this, OverlayService::class.java)
         stopService(serviceIntent)
+    }
+
+    private fun broadcastSettingsUpdate() {
+        val intent = Intent(OverlayService.ACTION_UPDATE_SETTINGS)
+        androidx.localbroadcastmanager.content.LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+    }
+
+    private fun updateInstructionsText() {
+        val instructions = if (settings.rescueRingEnabled) {
+            getString(R.string.instructions_rescue_mode)
+        } else {
+            getString(R.string.instructions_normal_mode)
+        }
+        instructionsText.text = instructions
     }
 }

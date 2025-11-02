@@ -19,6 +19,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.WindowManager
+import android.widget.TextView
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 
 class OverlayService : Service() {
@@ -26,6 +27,8 @@ class OverlayService : Service() {
     private lateinit var windowManager: WindowManager
     private lateinit var displayManager: DisplayManager
     private var floatingView: View? = null
+    private var floatingDot: View? = null
+    private var rescueRing: TextView? = null
     private var params: WindowManager.LayoutParams? = null
     private lateinit var settings: OverlaySettings
 
@@ -107,6 +110,25 @@ class OverlayService : Service() {
     }
 
     /**
+     * Performs the rescue action: closes all apps and goes to home.
+     */
+    private fun performRescueAction() {
+        try {
+            // Close all recent apps
+            BackHomeAccessibilityService.instance?.performRecentsOverviewAction()
+            // Small delay, then go to home
+            Handler(Looper.getMainLooper()).postDelayed({
+                BackHomeAccessibilityService.instance?.performHomeAction()
+            }, 200)
+            performHapticFeedback()
+        } catch (e: Exception) {
+            // Fallback: just go home
+            BackHomeAccessibilityService.instance?.performHomeAction()
+            performHapticFeedback()
+        }
+    }
+
+    /**
      * Checks if the soft keyboard is visible and adjusts dot position accordingly.
      */
     private fun checkKeyboardVisibility() {
@@ -143,18 +165,28 @@ class OverlayService : Service() {
     }
 
     /**
-     * Applies color and alpha settings to the floating dot.
+     * Applies color settings to the floating dot or shows rescue ring.
      */
     private fun applyColorSettings() {
-        val dotView = floatingView?.findViewById<View>(R.id.floating_dot)
-        dotView?.let {
-            val drawable = GradientDrawable()
-            drawable.shape = GradientDrawable.OVAL
+        if (settings.rescueRingEnabled) {
+            // Show rescue ring
+            floatingDot?.visibility = View.GONE
+            rescueRing?.visibility = View.VISIBLE
+        } else {
+            // Show normal colored dot
+            floatingDot?.visibility = View.VISIBLE
+            rescueRing?.visibility = View.GONE
 
-            val colorWithAlpha = settings.getColorWithAlpha()
-            drawable.setColor(colorWithAlpha)
-            drawable.setStroke(3, android.graphics.Color.WHITE)
-            it.background = drawable
+            val dotView = floatingDot
+            dotView?.let {
+                val drawable = GradientDrawable()
+                drawable.shape = GradientDrawable.OVAL
+
+                val colorWithAlpha = settings.getColorWithAlpha()
+                drawable.setColor(colorWithAlpha)
+                drawable.setStroke(3, android.graphics.Color.WHITE)
+                it.background = drawable
+            }
         }
     }
 
@@ -296,6 +328,8 @@ class OverlayService : Service() {
         touchSlop = viewConfig.scaledTouchSlop
 
         floatingView = LayoutInflater.from(this).inflate(R.layout.overlay_layout, null)
+        floatingDot = floatingView?.findViewById<View>(R.id.floating_dot)
+        rescueRing = floatingView?.findViewById<TextView>(R.id.rescue_ring)
         applyColorSettings()
 
         val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -345,37 +379,50 @@ class OverlayService : Service() {
                     initialTouchY = event.rawY
                     isLongPress = false
                     hasMoved = false
-                    longPressHandler.postDelayed(longPressRunnable, longPressTimeout)
+
+                    if (settings.rescueRingEnabled) {
+                        // In rescue-ring mode, any press performs home action
+                        performRescueAction()
+                    } else {
+                        // Normal mode - start long press timer
+                        longPressHandler.postDelayed(longPressRunnable, longPressTimeout)
+                    }
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    val deltaX = event.rawX - initialTouchX
-                    val deltaY = event.rawY - initialTouchY
-                    if (Math.abs(deltaX) > touchSlop || Math.abs(deltaY) > touchSlop) {
-                        hasMoved = true
-                        longPressHandler.removeCallbacks(longPressRunnable)
-                        val (constrainedX, constrainedY) = constrainPositionToBounds(initialX + deltaX.toInt(), initialY + deltaY.toInt())
-                        params?.x = constrainedX
-                        params?.y = constrainedY
-                        windowManager.updateViewLayout(floatingView, params)
+                    if (!settings.rescueRingEnabled) {
+                        // Only allow dragging in normal mode
+                        val deltaX = event.rawX - initialTouchX
+                        val deltaY = event.rawY - initialTouchY
+                        if (Math.abs(deltaX) > touchSlop || Math.abs(deltaY) > touchSlop) {
+                            hasMoved = true
+                            longPressHandler.removeCallbacks(longPressRunnable)
+                            val (constrainedX, constrainedY) = constrainPositionToBounds(initialX + deltaX.toInt(), initialY + deltaY.toInt())
+                            params?.x = constrainedX
+                            params?.y = constrainedY
+                            windowManager.updateViewLayout(floatingView, params)
+                        }
                     }
                     true
                 }
                 MotionEvent.ACTION_UP -> {
-                    longPressHandler.removeCallbacks(longPressRunnable)
-                    if (hasMoved) {
-                        settings.positionX = params?.x ?: 0
-                        settings.positionY = params?.y ?: 0
-                    } else if (!isLongPress) {
-                        val currentTime = System.currentTimeMillis()
-                        if (currentTime - lastClickTime < doubleTapTimeout) {
-                            clickCount++
-                            clickHandler.removeCallbacks(clickTimeoutRunnable)
-                        } else {
-                            clickCount = 1
+                    if (!settings.rescueRingEnabled) {
+                        // Normal mode handling
+                        longPressHandler.removeCallbacks(longPressRunnable)
+                        if (hasMoved) {
+                            settings.positionX = params?.x ?: 0
+                            settings.positionY = params?.y ?: 0
+                        } else if (!isLongPress) {
+                            val currentTime = System.currentTimeMillis()
+                            if (currentTime - lastClickTime < doubleTapTimeout) {
+                                clickCount++
+                                clickHandler.removeCallbacks(clickTimeoutRunnable)
+                            } else {
+                                clickCount = 1
+                            }
+                            lastClickTime = currentTime
+                            clickHandler.postDelayed(clickTimeoutRunnable, doubleTapTimeout)
                         }
-                        lastClickTime = currentTime
-                        clickHandler.postDelayed(clickTimeoutRunnable, doubleTapTimeout)
                     }
                     true
                 }

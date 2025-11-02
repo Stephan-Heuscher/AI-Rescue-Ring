@@ -32,7 +32,9 @@
 
     <!-- Help Section -->
     <string name="how_it_works">ℹ️ How it works</string>
-    <string name="instructions">• Tap once = Back\n• Tap twice = Recent app\n• Tap 3 times = All open apps\n• Tap 4 times = Open Assistive Tap\n• Long press = Home screen</string>
+    <string name="instructions">• Normal mode: Tap once = Back, Tap twice = Recent apps, Tap 3 times = All open apps, Tap 4 times = Open settings, Long press = Home screen\n• Rescue ring mode: Press the red ring to close all apps and go home</string>
+    <string name="instructions_normal_mode">Tap once = Back\nTap twice = Recent apps\nTap 3 times = All open apps\nTap 4 times = Open settings\nLong press = Home screen</string>
+    <string name="instructions_rescue_mode">Press the life ring to close all apps and go home</string>
 
     <!-- Settings Screen -->
     <string name="back">Back</string>
@@ -52,6 +54,11 @@
     <string name="keyboard_avoidance">Keyboard Avoidance</string>
     <string name="keyboard_avoidance_desc">Automatically move the dot away from the on-screen keyboard</string>
     <string name="avoid_keyboard">Avoid keyboard</string>
+
+    <!-- Rescue Ring -->
+    <string name="rescue_ring">Life Ring</string>
+    <string name="rescue_ring_desc">Show a life ring that closes all apps and goes home when pressed</string>
+    <string name="enable_rescue_ring">Enable life ring</string>
 
     <!-- Advanced Settings -->
     <string name="for_experts">For experts</string>
