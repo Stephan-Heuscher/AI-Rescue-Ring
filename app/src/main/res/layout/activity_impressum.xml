@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:paddingTop="48dp"
+    android:paddingBottom="20dp"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    tools:context=".ImpressumActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Zurück Button und Titel -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="32dp">
+
+            <Button
+                android:id="@+id/back_button"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:text="←"
+                android:textSize="24sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:contentDescription="@string/back"
+                style="?android:attr/borderlessButtonStyle"
+                android:padding="0dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/impressum_title"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorPrimary"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <!-- Version Info -->
+        <TextView
+            android:id="@+id/version_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Version 1.0.4 (Build 5)"
+            android:textSize="16sp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:layout_marginBottom="24dp"
+            android:textAlignment="center" />
+
+        <!-- Impressum Content -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/impressum_content"
+            android:textSize="16sp"
+            android:lineSpacingExtra="4dp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Haftungsausschluss -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/disclaimer_title"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/disclaimer_content"
+            android:textSize="16sp"
+            android:lineSpacingExtra="4dp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Kontakt -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/contact_title"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/contact_content"
+            android:textSize="16sp"
+            android:lineSpacingExtra="4dp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Open Source -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/open_source_title"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/open_source_content"
+            android:textSize="16sp"
+            android:lineSpacingExtra="4dp"
+            android:textColor="?android:attr/textColorPrimary" />
+
+    </LinearLayout>
+</ScrollView>

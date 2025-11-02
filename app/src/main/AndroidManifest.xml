@@ -31,6 +31,13 @@
             android:theme="@style/Theme.Material3.DayNight"
             android:parentActivityName=".MainActivity" />
 
+        <activity
+            android:name=".ImpressumActivity"
+            android:exported="false"
+            android:label="Impressum"
+            android:theme="@style/Theme.Material3.DayNight"
+            android:parentActivityName=".SettingsActivity" />
+
         <service
             android:name=".OverlayService"
             android:enabled="true"

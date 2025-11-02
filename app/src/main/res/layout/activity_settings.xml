@@ -318,5 +318,17 @@
 
         </LinearLayout>
 
+        <!-- Impressum Button -->
+        <Button
+            android:id="@+id/impressum_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/impressum_title"
+            android:textSize="18sp"
+            android:contentDescription="@string/impressum_title"
+            android:minHeight="64dp"
+            android:layout_marginTop="32dp"
+            android:paddingVertical="16dp" />
+
     </LinearLayout>
 </ScrollView>

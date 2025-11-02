@@ -33,6 +33,7 @@ class SettingsActivity : AppCompatActivity() {
 
         initializeViews()
         setupBackButton()
+        setupImpressumButton()
         setupAdvancedToggle()
         setupAlphaSeekBar()
         setupTimeoutSeekBar()
@@ -52,6 +53,13 @@ class SettingsActivity : AppCompatActivity() {
     private fun setupBackButton() {
         findViewById<Button>(R.id.back_button).setOnClickListener {
             finish()
+        }
+    }
+
+    private fun setupImpressumButton() {
+        findViewById<Button>(R.id.impressum_button).setOnClickListener {
+            val intent = Intent(this, ImpressumActivity::class.java)
+            startActivity(intent)
         }
     }
 

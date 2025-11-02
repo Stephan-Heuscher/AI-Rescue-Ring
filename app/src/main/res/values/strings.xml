@@ -77,4 +77,14 @@
     <string name="choose_custom_color_desc">Choose custom color</string>
     <string name="transparency_desc">Transparency</string>
     <string name="switch_speed_desc">Switch speed</string>
+
+    <!-- Impressum -->
+    <string name="impressum_title">Impressum</string>
+    <string name="impressum_content">Angaben gemäß § 5 TMG:\n\nStephan Heuscher\n[Adresse wird auf Anfrage mitgeteilt]\n\nKontakt:\nE-Mail: s.heuscher@gmail.com\n\nVerantwortlich für den Inhalt nach § 55 Abs. 2 RStV:\nStephan Heuscher\n[Adresse wird auf Anfrage mitgeteilt]</string>
+    <string name="disclaimer_title">Haftungsausschluss</string>
+    <string name="disclaimer_content">Die Nutzung dieser App erfolgt auf eigene Gefahr. Der Entwickler übernimmt keine Haftung für Schäden, die durch die Nutzung der App entstehen.\n\nDie App ist ein Hilfsmittel und ersetzt keine professionelle Beratung oder Therapie bei motorischen Einschränkungen. Konsultieren Sie bei gesundheitlichen Fragen immer einen Arzt oder Therapeuten.</string>
+    <string name="contact_title">Kontakt</string>
+    <string name="contact_content">Bei Fragen, Problemen oder Feedback:\n\nE-Mail: s.heuscher@gmail.com\nGitHub: https://github.com/Stephan-Heuscher/Back_Home_Dot\n\nIch bemühe mich, Anfragen innerhalb von 48 Stunden zu beantworten.</string>
+    <string name="open_source_title">Open Source</string>
+    <string name="open_source_content">Diese App ist Open Source und steht unter der MIT-Lizenz. Der Quellcode ist auf GitHub verfügbar:\n\nhttps://github.com/Stephan-Heuscher/Back_Home_Dot\n\nBeiträge und Verbesserungsvorschläge sind willkommen!</string>
 </resources>
