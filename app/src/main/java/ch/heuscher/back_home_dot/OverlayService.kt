@@ -202,7 +202,8 @@ class OverlayService : Service() {
 
                     if (dotBottom > keyboardTop) {
                         // Dot would be covered by keyboard, move it up
-                        val newY = (keyboardTop - dotSize - 30).coerceAtLeast(0) // 30px margin
+                        val marginAboveKeyboard = (dotSize * 1.5).toInt() // 1.5 dot diameters above keyboard
+                        val newY = (keyboardTop - dotSize - marginAboveKeyboard).coerceAtLeast(0)
                         params?.y = newY
                         windowManager.updateViewLayout(floatingView, params)
                     }
