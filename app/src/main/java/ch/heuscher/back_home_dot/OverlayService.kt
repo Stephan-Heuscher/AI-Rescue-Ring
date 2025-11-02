@@ -29,6 +29,11 @@ class OverlayService : Service() {
     private var params: WindowManager.LayoutParams? = null
     private lateinit var settings: OverlaySettings
 
+    // System-defined gesture timeouts and slop
+    private var longPressTimeout: Long = 500L
+    private var doubleTapTimeout: Long = 300L
+    private var touchSlop: Int = 10
+
     // Touch event variables
     private var initialX: Int = 0
     private var initialY: Int = 0
@@ -54,10 +59,17 @@ class OverlayService : Service() {
         }
     }
 
-    // System-defined gesture timeouts and slop
-    private var longPressTimeout: Long = 500L
-    private var doubleTapTimeout: Long = 300L
-    private var touchSlop: Int = 10
+    // Keyboard avoidance variables
+    private var keyboardHeight = 0
+    private var originalY = 0
+    private var isKeyboardVisible = false
+    private val keyboardCheckHandler = Handler(Looper.getMainLooper())
+    private val keyboardCheckRunnable = object : Runnable {
+        override fun run() {
+            checkKeyboardVisibility()
+            keyboardCheckHandler.postDelayed(this, 200) // Check every 200ms
+        }
+    }
 
     // Runnable for long press action
     private val longPressRunnable = Runnable {
@@ -92,6 +104,42 @@ class OverlayService : Service() {
             android.view.HapticFeedbackConstants.VIRTUAL_KEY,
             android.view.HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
         )
+    }
+
+    /**
+     * Checks if the soft keyboard is visible and adjusts dot position accordingly.
+     */
+    private fun checkKeyboardVisibility() {
+        if (!settings.keyboardAvoidanceEnabled) return
+
+        val inputMethodManager = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        val hasKeyboard = inputMethodManager.isAcceptingText
+
+        // Additional check: see if keyboard is actually taking screen space
+        val screenHeight = getUsableScreenSize().y
+        val keyboardThreshold = (screenHeight * 0.2).toInt() // Assume keyboard if input method is active
+
+        val isKeyboardNowVisible = hasKeyboard
+
+        if (isKeyboardNowVisible != isKeyboardVisible) {
+            isKeyboardVisible = isKeyboardNowVisible
+
+            if (isKeyboardVisible) {
+                // Keyboard appeared - move dot up by estimated keyboard height
+                keyboardHeight = (screenHeight * 0.4).toInt() // Estimate keyboard height as 40% of screen
+                originalY = params?.y ?: 0
+                val dotSize = (48 * resources.displayMetrics.density).toInt()
+                val newY = (originalY - keyboardHeight).coerceAtLeast(0)
+
+                params?.y = newY
+                windowManager.updateViewLayout(floatingView, params)
+            } else {
+                // Keyboard disappeared - move dot back
+                params?.y = originalY
+                windowManager.updateViewLayout(floatingView, params)
+                keyboardHeight = 0
+            }
+        }
     }
 
     /**
@@ -239,6 +287,9 @@ class OverlayService : Service() {
         displayManager.registerDisplayListener(displayListener, Handler(Looper.getMainLooper()))
         LocalBroadcastManager.getInstance(this).registerReceiver(settingsReceiver, IntentFilter(ACTION_UPDATE_SETTINGS))
 
+        // Start keyboard avoidance checking
+        keyboardCheckHandler.post(keyboardCheckRunnable)
+
         val viewConfig = ViewConfiguration.get(this)
         longPressTimeout = ViewConfiguration.getLongPressTimeout().toLong()
         doubleTapTimeout = ViewConfiguration.getDoubleTapTimeout().toLong()
@@ -338,6 +389,7 @@ class OverlayService : Service() {
         displayManager.unregisterDisplayListener(displayListener)
         LocalBroadcastManager.getInstance(this).unregisterReceiver(settingsReceiver)
         floatingView?.let { windowManager.removeView(it) }
+        keyboardCheckHandler.removeCallbacks(keyboardCheckRunnable)
         longPressHandler.removeCallbacks(longPressRunnable)
         clickHandler.removeCallbacks(clickTimeoutRunnable)
     }

@@ -174,6 +174,33 @@
             android:minHeight="64dp"
             android:layout_marginBottom="32dp" />
 
+        <!-- Tastatur Vermeidung -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/keyboard_avoidance"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/keyboard_avoidance_desc"
+            android:textSize="16sp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:layout_marginBottom="12dp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/keyboard_avoidance_switch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/avoid_keyboard"
+            android:textSize="18sp"
+            android:checked="true"
+            android:layout_marginBottom="32dp" />
+
         <!-- Erweiterte Einstellungen (Ausklappbar) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/advanced_toggle_card"

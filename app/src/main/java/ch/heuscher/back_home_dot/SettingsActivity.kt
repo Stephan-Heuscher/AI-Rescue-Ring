@@ -17,6 +17,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var alphaValueText: TextView
     private lateinit var timeoutSeekBar: SeekBar
     private lateinit var timeoutValueText: TextView
+    private lateinit var keyboardAvoidanceSwitch: androidx.appcompat.widget.SwitchCompat
     private lateinit var advancedToggleCard: androidx.cardview.widget.CardView
     private lateinit var advancedContent: android.widget.LinearLayout
     private lateinit var advancedArrow: TextView
@@ -37,6 +38,7 @@ class SettingsActivity : AppCompatActivity() {
         setupAdvancedToggle()
         setupAlphaSeekBar()
         setupTimeoutSeekBar()
+        setupKeyboardAvoidanceSwitch()
         setupColorButtons()
     }
 
@@ -45,6 +47,7 @@ class SettingsActivity : AppCompatActivity() {
         alphaValueText = findViewById(R.id.alpha_value_text)
         timeoutSeekBar = findViewById(R.id.timeout_seekbar)
         timeoutValueText = findViewById(R.id.timeout_value_text)
+        keyboardAvoidanceSwitch = findViewById(R.id.keyboard_avoidance_switch)
         advancedToggleCard = findViewById(R.id.advanced_toggle_card)
         advancedContent = findViewById(R.id.advanced_content)
         advancedArrow = findViewById(R.id.advanced_arrow)
@@ -105,6 +108,14 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun updateTimeoutText(timeout: Int) {
         timeoutValueText.text = "$timeout ms"
+    }
+
+    private fun setupKeyboardAvoidanceSwitch() {
+        keyboardAvoidanceSwitch.isChecked = settings.keyboardAvoidanceEnabled
+        keyboardAvoidanceSwitch.setOnCheckedChangeListener { _, isChecked ->
+            settings.keyboardAvoidanceEnabled = isChecked
+            broadcastSettingsUpdate()
+        }
     }
 
     private fun setupColorButtons() {

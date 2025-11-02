@@ -48,6 +48,11 @@
     <string name="color_gray">Gray</string>
     <string name="custom_color">Custom color</string>
 
+    <!-- Keyboard Avoidance -->
+    <string name="keyboard_avoidance">Keyboard Avoidance</string>
+    <string name="keyboard_avoidance_desc">Automatically move the dot away from the on-screen keyboard</string>
+    <string name="avoid_keyboard">Avoid keyboard</string>
+
     <!-- Advanced Settings -->
     <string name="for_experts">For experts</string>
     <string name="transparency">Transparency</string>
