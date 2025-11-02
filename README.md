@@ -13,13 +13,16 @@
 
 ### ✨ Hauptfunktionen
 
+- **🎯 Zwei Modi**: Normaler Navigationspunkt oder Rettungsring für Notfälle
+- **🛟 Rettungsring-Modus**: Großer Rettungsring (🛟) schließt aktuelle App und geht zur Startseite
 - **🎯 Schwebender Punkt**: Frei positionierbarer, anpassbarer Navigationspunkt über allen Apps
-- **👆 Intuitive Gesten**:
+- **👆 Intuitive Gesten** (Normal-Modus):
   - 1x tippen → Zurück
   - 2x tippen → Letzte App
   - 3x tippen → Alle offenen Apps
   - 4x tippen → App öffnen
   - Lang drücken → Startseite
+- **⌨️ Tastatur-Vermeidung**: Punkt weicht automatisch der Bildschirmtastatur aus
 - **🎨 Anpassbar**: Farbe, Durchsichtigkeit und Position frei wählbar
 - **⚡ Konfigurierbar**: App-Wechsel-Geschwindigkeit einstellbar (50-300ms)
 - **♿ Barrierefrei**: Nach WCAG 2.1 Level AA optimiert
@@ -55,10 +58,32 @@
 
 ## 🎮 Verwendung
 
-1. **Punkt aktivieren**: Ein/Aus-Schalter in der App
-2. **Punkt positionieren**: Punkt gedrückt halten und verschieben
-3. **Navigation**: Mit verschiedenen Tipp-Gesten navigieren
-4. **Anpassen**: Über "⚙ Einstellungen" Farbe und Verhalten ändern
+### Modi auswählen
+
+**AssistiPunkt** bietet zwei Modi für verschiedene Situationen:
+
+#### 🟢 Normal-Modus (Navigation)
+- Gefärbter Punkt für alltägliche Navigation
+- Alle Gesten-Steuerungen verfügbar
+- Ideal für präzise Steuerung
+
+#### 🔴 Rettungsring-Modus (Notfall)
+- Großer weißer Rettungsring mit roter Emoji (🛟)
+- Einfache Notfall-Funktion: Tippen schließt aktuelle App und geht zur Startseite
+- Perfekt für schnelle Flucht aus schwierigen Situationen
+
+### Grundlegende Nutzung
+
+1. **Modus wählen**: Rettungsring-Schalter auf dem Hauptbildschirm aktivieren/deaktivieren
+2. **Punkt aktivieren**: Ein/Aus-Schalter in der App
+3. **Punkt positionieren**: Punkt gedrückt halten und verschieben
+4. **Navigation**: Mit verschiedenen Tipp-Gesten navigieren (im Normal-Modus)
+5. **Anpassen**: Über "⚙ Einstellungen" Farbe und Verhalten ändern
+
+### Automatische Funktionen
+
+- **Tastatur-Vermeidung**: Der Punkt bewegt sich automatisch nach oben, wenn die Bildschirmtastatur erscheint
+- **Bildschirm-Rotation**: Der Punkt bleibt an der gleichen physischen Position
 
 ### Erweiterte Einstellungen (für Experten)
 

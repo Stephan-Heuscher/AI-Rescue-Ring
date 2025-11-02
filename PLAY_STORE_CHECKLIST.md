@@ -70,21 +70,33 @@ Back Home Dot - Schnelle Navigation
 
 **Kurzbeschreibung** (max 80 Zeichen):
 ```
-Verschiebbarer Punkt für einfache Navigation - Zurück, Home & App-Wechsel
+Navigation mit Punkt oder Rettungsring - Zurück, Home & App-Wechsel
 ```
 
 **Ausführliche Beschreibung** (max 4000 Zeichen):
 ```
-Back Home Dot ist ein praktisches Tool für schnelle Navigation auf Android.
+Back Home Dot ist ein praktisches Tool für schnelle Navigation auf Android mit zwei Modi.
 
 🎯 FUNKTIONEN
 
+• Zwei Modi: Normaler Navigationspunkt oder Rettungsring für Notfälle
+• Rettungsring-Modus: Großer weißer Ring mit 🛟 für schnelle Flucht
 • Verschiebbarer Punkt, immer sichtbar
-• Einfacher Klick = Zurück
-• Doppelklick = Zur vorherigen App wechseln
-• Dreifachklick = App-Übersicht (Multitasking)
-• Vierfachklick = Einstellungen öffnen
-• Langes Drücken = Home-Bildschirm
+• Einfacher Klick = Zurück (Normal-Modus)
+• Doppelklick = Zur vorherigen App wechseln (Normal-Modus)
+• Dreifachklick = App-Übersicht (Multitasking) (Normal-Modus)
+• Vierfachklick = Einstellungen öffnen (Normal-Modus)
+• Langes Drücken = Home-Bildschirm (Normal-Modus)
+• Tastatur-Vermeidung: Punkt weicht automatisch der Tastatur aus
+
+⚙️ ANPASSBAR
+
+• Farbe frei wählbar (Farbwähler + Theme-Farben)
+• Deckkraft einstellbar (0-100%)
+• Position frei verschiebbar
+• Ein/Aus-Schalter
+• Service-Stop Button für einfaches Beenden
+• Rettungsring-Modus per Schalter aktivierbar
 
 ⚙️ ANPASSBAR
 
@@ -126,7 +138,35 @@ Back Home Dot - Quick Navigation
 
 **Short Description**:
 ```
-Floating button for easy navigation - Back, Home & App switching
+**Short Description**:
+```
+Navigation with dot or rescue ring - Back, Home & App switching
+```
+
+**Full Description**: (Übersetzung der deutschen Beschreibung)
+```
+Back Home Dot is a practical tool for quick navigation on Android with two modes.
+
+🎯 FEATURES
+
+• Two modes: Normal navigation dot or rescue ring for emergencies
+• Rescue ring mode: Large white ring with 🛟 for quick escape
+• Movable dot, always visible
+• Single tap = Back (Normal mode)
+• Double tap = Switch to previous app (Normal mode)
+• Triple tap = App overview (Multitasking) (Normal mode)
+• Quadruple tap = Open settings (Normal mode)
+• Long press = Home screen (Normal mode)
+• Keyboard avoidance: Dot automatically moves away from keyboard
+
+⚙️ CUSTOMIZABLE
+
+• Color freely selectable (Color picker + theme colors)
+• Transparency adjustable (0-100%)
+• Position freely movable
+• On/Off switch
+• Service stop button for easy termination
+• Rescue ring mode activatable via switch
 ```
 
 **Full Description**: (Übersetzung der deutschen Beschreibung)

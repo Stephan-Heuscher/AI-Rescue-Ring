@@ -1,5 +1,29 @@
 # Release Notes - Assistive Tap
 
+## Version 1.1.0 (2025-10-30)
+
+### New Features
+
+We are excited to announce **Assistive Tap v1.1.0** with two major new features that enhance accessibility and emergency response capabilities!
+
+#### 🛟 Rescue Ring Mode
+- **Emergency Navigation**: New rescue ring mode with large white ring and red life ring emoji (🛟)
+- **Quick Escape**: Single tap closes current app and returns to home screen
+- **Main Screen Toggle**: Easy access to rescue mode from the main screen
+- **Visual Distinction**: Clear visual difference between normal navigation dot and rescue ring
+
+#### ⌨️ Keyboard Avoidance
+- **Automatic Positioning**: Floating dot automatically moves up when keyboard appears
+- **Smart Detection**: Detects keyboard visibility and adjusts position accordingly
+- **Seamless Experience**: No manual repositioning needed when typing
+
+#### 🎨 User Experience Improvements
+- **Mode-Specific Instructions**: Dynamic instructions that change based on selected mode
+- **Improved Touch Handling**: Better gesture recognition in rescue ring mode
+- **Enhanced Accessibility**: Updated strings and descriptions for both modes
+
+---
+
 ## Version 1.0.0 (2025-10-27)
 
 ### Initial Release

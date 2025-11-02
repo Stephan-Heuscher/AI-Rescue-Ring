@@ -1,5 +1,29 @@
 # Release Notes - AssistiPunkt
 
+## Version 1.1.0 (2025-10-30)
+
+### Neue Funktionen
+
+Wir freuen uns, **AssistiPunkt v1.1.0** mit zwei wichtigen neuen Funktionen vorzustellen, die die Barrierefreiheit und Notfall-Reaktionsfähigkeiten verbessern!
+
+#### 🛟 Rettungsring-Modus
+- **Notfall-Navigation**: Neuer Rettungsring-Modus mit großem weißen Ring und roter Rettungsring-Emoji (🛟)
+- **Schnelle Flucht**: Einfacher Tipp schließt aktuelle App und kehrt zur Startseite zurück
+- **Hauptbildschirm-Schalter**: Einfacher Zugriff auf den Rettungsmodus vom Hauptbildschirm
+- **Visuelle Unterscheidung**: Klare visuelle Unterscheidung zwischen normalem Navigationspunkt und Rettungsring
+
+#### ⌨️ Tastatur-Vermeidung
+- **Automatische Positionierung**: Schwebender Punkt bewegt sich automatisch nach oben, wenn Tastatur erscheint
+- **Intelligente Erkennung**: Erkennt Tastatur-Sichtbarkeit und passt Position entsprechend an
+- **Nahtloses Erlebnis**: Kein manuelles Neupositionieren beim Tippen nötig
+
+#### 🎨 Verbesserungen der Benutzerfreundlichkeit
+- **Modus-spezifische Anweisungen**: Dynamische Anweisungen, die sich je nach gewähltem Modus ändern
+- **Verbesserte Touch-Verarbeitung**: Bessere Gesten-Erkennung im Rettungsring-Modus
+- **Erweiterte Barrierefreiheit**: Aktualisierte Texte und Beschreibungen für beide Modi
+
+---
+
 ## Version 1.0.0 (2025-10-27)
 
 ### Erstveröffentlichung
