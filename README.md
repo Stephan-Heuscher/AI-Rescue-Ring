@@ -13,15 +13,12 @@
 
 ### ✨ Hauptfunktionen
 
-- **🎯 Zwei Modi**: Normaler Navigationspunkt oder Rettungsring für Notfälle
-- **🛟 Rettungsring-Modus**: Großer Rettungsring (🛟) schließt aktuelle App und geht zur Startseite
+- **🎯 Zwei Tipp-Verhalten**: Standard-Modus oder Zurück-Modus wählbar
 - **🎯 Schwebender Punkt**: Frei positionierbarer, anpassbarer Navigationspunkt über allen Apps
-- **👆 Intuitive Gesten** (Normal-Modus):
-  - 1x tippen → Zurück
-  - 2x tippen → Letzte App
-  - 3x tippen → Alle offenen Apps
-  - 4x tippen → App öffnen
-  - Lang drücken → Startseite
+- **👆 Intuitive Gesten**:
+  - **Standard-Modus**: 1x tippen → Home, 2x tippen → Zurück
+  - **Zurück-Modus**: 1x tippen → Zurück, 2x tippen → Zu vorheriger App wechseln
+  - **Immer verfügbar**: 3x tippen → Alle offenen Apps, 4x tippen → App öffnen, Lang drücken → Startseite
 - **⌨️ Tastatur-Vermeidung**: Punkt weicht automatisch der Bildschirmtastatur aus
 - **🎨 Anpassbar**: Farbe, Durchsichtigkeit und Position frei wählbar
 - **⚡ Konfigurierbar**: App-Wechsel-Geschwindigkeit einstellbar (50-300ms)
@@ -30,14 +27,13 @@
 ## 🖼️ Screenshots
 
 <p align="center">
-  <img src="screenshots/Screenshot_20251102_173223_Assistive Tap.jpg" width="30%" alt="Hauptbildschirm" />
-  <img src="screenshots/Screenshot_20251102_173243_Assistive Tap.jpg" width="30%" alt="Hauptbildschirm mit Retungsring" />
-  <img src="screenshots/Screenshot_20251102_173305_Assistive Tap.jpg" width="30%" alt="Einstellungen" />
+  <img src="screenshots/Screenshot_20251103_212422_Assistive Tap.jpg" width="30%" alt="Hauptbildschirm" />
+  <img src="screenshots/Screenshot_20251103_212431_Assistive Tap.jpg" width="30%" alt="Einstellungen" />
   <img src="screenshots/floating_dot.jpg" width="30%" alt="AssistiPunkt in Aktion" />
 </p>
 
 <p align="center">
-  <em>Hauptbildschirm • Rettungsring • Einstellungen • AssistiPunkt in Aktion</em>
+  <em>Hauptbildschirm • Einstellungen • AssistiPunkt in Aktion</em>
 </p>
 
 ## 🚀 Installation
@@ -59,26 +55,26 @@
 
 ## 🎮 Verwendung
 
-### Modi auswählen
+### Tipp-Verhalten auswählen
 
-**AssistiPunkt** bietet zwei Modi für verschiedene Situationen:
+**AssistiPunkt** bietet zwei Tipp-Verhalten für verschiedene Vorlieben:
 
-#### 🟢 Normal-Modus (Navigation)
-- Gefärbter Punkt für alltägliche Navigation
-- Alle Gesten-Steuerungen verfügbar
-- Ideal für präzise Steuerung
+#### 🏠 Standard-Modus (empfohlen)
+- **1x tippen** → Home (Startseite)
+- **2x tippen** → Zurück
+- Ideal für intuitive Navigation ähnlich zu Android-Standards
 
-#### 🔴 Rettungsring-Modus (Notfall)
-- Großer weißer Rettungsring mit roter Emoji (🛟)
-- Einfache Notfall-Funktion: Tippen schließt aktuelle App und geht zur Startseite
-- Perfekt für schnelle Flucht aus schwierigen Situationen
+#### � Zurück-Modus
+- **1x tippen** → Zurück
+- **2x tippen** → Zu vorheriger App wechseln
+- Traditionelle Navigation für erfahrene Benutzer
 
 ### Grundlegende Nutzung
 
-1. **Modus wählen**: Rettungsring-Schalter auf dem Hauptbildschirm aktivieren/deaktivieren
+1. **Verhalten wählen**: In den Einstellungen das gewünschte Tipp-Verhalten auswählen
 2. **Punkt aktivieren**: Ein/Aus-Schalter in der App
 3. **Punkt positionieren**: Punkt gedrückt halten und verschieben
-4. **Navigation**: Mit verschiedenen Tipp-Gesten navigieren (im Normal-Modus)
+4. **Navigation**: Mit verschiedenen Tipp-Gesten navigieren
 5. **Anpassen**: Über "⚙ Einstellungen" Farbe und Verhalten ändern
 
 ### Automatische Funktionen
@@ -177,7 +173,7 @@ data class OverlaySettings(
     val positionPercent: DotPositionPercent,
     val recentsTimeout: Long,
     val keyboardAvoidanceEnabled: Boolean,
-    val rescueRingEnabled: Boolean,
+    val tapBehavior: String,  // "STANDARD" or "BACK"
     val screenWidth: Int,
     val screenHeight: Int,
     val rotation: Int
@@ -300,6 +296,10 @@ Beiträge sind willkommen! Bitte:
 - ✅ **Reaktive Datenströme**: Kotlin Flows für Echtzeit-Updates
 - ✅ **Dependency Injection**: ServiceLocator-Pattern (Hilt-ready)
 - ✅ **Deprecation Fixes**: Alle veralteten APIs aktualisiert (LocalBroadcastManager, versionCode, etc.)
+- ✅ **Tipp-Verhalten Modi**: Standard- und Zurück-Modi implementiert
+- ✅ **Life Ring entfernt**: Rettungsring-Feature vollständig entfernt
+- ✅ **Dynamische Anweisungen**: Hauptbildschirm zeigt kontextabhängige Anweisungen
+- ✅ **Einstellungen-Optimierung**: Tipp-Verhalten an oberste Stelle der Einstellungen verschoben
 
 ### 🚀 **Geplante Features**
 
