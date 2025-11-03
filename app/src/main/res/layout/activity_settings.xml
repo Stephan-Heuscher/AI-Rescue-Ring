@@ -46,6 +46,50 @@
                 android:layout_marginStart="8dp" />
         </LinearLayout>
 
+        <!-- Tap Behavior Selection -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tap_behavior"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tap_behavior_desc"
+            android:textSize="16sp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:layout_marginBottom="12dp" />
+
+        <RadioGroup
+            android:id="@+id/tap_behavior_radio_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp">
+
+            <RadioButton
+                android:id="@+id/tap_behavior_standard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/tap_behavior_standard"
+                android:textSize="18sp"
+                android:checked="true"
+                android:minHeight="48dp"
+                android:paddingVertical="8dp" />
+
+            <RadioButton
+                android:id="@+id/tap_behavior_back"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/tap_behavior_back"
+                android:textSize="18sp"
+                android:minHeight="48dp"
+                android:paddingVertical="8dp" />
+        </RadioGroup>
+
         <!-- Farbe Auswahl -->
         <TextView
             android:layout_width="match_parent"
@@ -200,50 +244,6 @@
             android:textSize="18sp"
             android:checked="false"
             android:layout_marginBottom="32dp" />
-
-        <!-- Tap Behavior Selection -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/tap_behavior"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/tap_behavior_desc"
-            android:textSize="16sp"
-            android:textColor="?android:attr/textColorSecondary"
-            android:layout_marginBottom="12dp" />
-
-        <RadioGroup
-            android:id="@+id/tap_behavior_radio_group"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp">
-
-            <RadioButton
-                android:id="@+id/tap_behavior_standard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/tap_behavior_standard"
-                android:textSize="18sp"
-                android:checked="true"
-                android:minHeight="48dp"
-                android:paddingVertical="8dp" />
-
-            <RadioButton
-                android:id="@+id/tap_behavior_back"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/tap_behavior_back"
-                android:textSize="18sp"
-                android:minHeight="48dp"
-                android:paddingVertical="8dp" />
-        </RadioGroup>
 
         <!-- Erweiterte Einstellungen (Ausklappbar) -->
         <androidx.cardview.widget.CardView
