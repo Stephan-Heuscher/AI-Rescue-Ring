@@ -1,26 +1,44 @@
 # Release Notes - Assistive Tap
 
-## Version 1.1.0 (2025-10-30)
+## Version 1.1.1 (2025-11-03)
 
 ### New Features
 
-We are excited to announce **Assistive Tap v1.1.0** with two major new features that enhance accessibility and emergency response capabilities!
+We are excited to announce **Assistive Tap v1.1.1** with major enhancements to accessibility, navigation customization, and user experience!
 
-#### 🛟 Rescue Ring Mode
-- **Emergency Navigation**: New rescue ring mode with large white ring and red life ring emoji (🛟)
-- **Quick Escape**: Single tap closes current app and returns to home screen
-- **Main Screen Toggle**: Easy access to rescue mode from the main screen
-- **Visual Distinction**: Clear visual difference between normal navigation dot and rescue ring
+#### 🎯 Tap Behavior Modes
+- **Two Behavior Options**: Choose between STANDARD and BACK tap behavior modes
+- **STANDARD Mode** (recommended): 1 tap = Home, 2 taps = Back (intuitive Android navigation)
+- **BACK Mode**: 1 tap = Back, 2 taps = Switch to previous app (traditional behavior)
+- **Always Available**: 3 taps = All open apps, 4 taps = Open app, long press = Home screen
 
 #### ⌨️ Keyboard Avoidance
 - **Automatic Positioning**: Floating dot automatically moves up when keyboard appears
 - **Smart Detection**: Detects keyboard visibility and adjusts position accordingly
 - **Seamless Experience**: No manual repositioning needed when typing
 
-#### 🎨 User Experience Improvements
-- **Mode-Specific Instructions**: Dynamic instructions that change based on selected mode
-- **Improved Touch Handling**: Better gesture recognition in rescue ring mode
-- **Enhanced Accessibility**: Updated strings and descriptions for both modes
+#### 🎨 Dynamic User Interface
+- **Context-Aware Instructions**: Main screen instructions automatically update based on selected tap behavior
+- **Settings Optimization**: Tap behavior selection moved to top of settings for better discoverability
+- **Enhanced Accessibility**: Updated strings and descriptions for improved usability
+
+#### 🔧 Technical Improvements
+- **Automatic Versioning**: Release builds now automatically increment version numbers
+- **Build Process Enhancement**: Version code and patch version increment automatically for each release
+- **Improved Build Scripts**: Gradle build process optimized with dynamic versioning
+
+### Changes
+
+#### ✅ Enhanced Features
+- **Tap Behavior Selection**: Radio buttons in settings for easy mode switching
+- **Real-time Instructions**: Main screen text updates immediately when behavior changes
+- **Settings Reorganization**: Most important setting (tap behavior) moved to top
+- **Keyboard Avoidance**: Automatic dot repositioning when typing
+
+#### ✅ Technical Updates
+- **Version Properties**: New `version.properties` file for automatic version management
+- **Build Automation**: Release builds automatically increment version numbers
+- **Documentation Updates**: README and technical docs updated to reflect changes
 
 ---
 

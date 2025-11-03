@@ -1,5 +1,45 @@
 # Release Notes - AssistiPunkt
 
+## Version 1.1.1 (2025-11-03)
+
+### Neue Funktionen
+
+Wir freuen uns, **AssistiPunkt v1.1.1** mit bedeutenden Verbesserungen der Tipp-Verhaltens-Anpassung und einem optimierten Benutzererlebnis vorzustellen!
+
+#### 🎯 Tipp-Verhaltens-Modi
+- **Zwei Verhaltensoptionen**: Wählen Sie zwischen STANDARD und ZURÜCK Tipp-Verhaltens-Modi
+- **STANDARD-Modus** (empfohlen): 1x tippen = Home, 2x tippen = Zurück (intuitive Android-Navigation)
+- **ZURÜCK-Modus**: 1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln (traditionelles Verhalten)
+- **Immer verfügbar**: 3x tippen = Alle offenen Apps, 4x tippen = App öffnen, langes Drücken = Startseite
+
+#### 🎨 Dynamische Benutzeroberfläche
+- **Kontextabhängige Anweisungen**: Hauptbildschirm-Anweisungen aktualisieren sich automatisch basierend auf gewähltem Tipp-Verhalten
+- **Einstellungs-Optimierung**: Tipp-Verhaltens-Auswahl an oberste Stelle der Einstellungen verschoben für bessere Auffindbarkeit
+- **Optimierte Erfahrung**: Rettungsring-Funktion entfernt für saubere, fokussierte Benutzeroberfläche
+
+#### 🔧 Technische Verbesserungen
+- **Automatische Versionierung**: Release-Builds erhöhen nun automatisch Versionsnummern
+- **Build-Prozess-Verbesserung**: Versionscode und Patch-Version werden automatisch bei jedem Release erhöht
+- **Verbesserte Build-Scripts**: Gradle Build-Prozess mit dynamischer Versionierung optimiert
+
+### Änderungen
+
+#### ✅ Entfernte Funktionen
+- **Rettungsring-Modus**: Notfall-Rettungsring-Funktion vollständig entfernt für vereinfachtes Benutzererlebnis
+- **Rettungsring-Schalter**: Hauptbildschirm-Schalter entfernt, Benutzeroberfläche fokussiert sich nun auf Kern-Navigation
+
+#### ✅ Erweiterte Funktionen
+- **Tipp-Verhaltens-Auswahl**: Radio-Buttons in Einstellungen für einfache Modus-Umschaltung
+- **Echtzeit-Anweisungen**: Hauptbildschirm-Text aktualisiert sich sofort bei Verhaltensänderung
+- **Einstellungs-Neustrukturierung**: Wichtigste Einstellung (Tipp-Verhalten) an oberste Stelle verschoben
+
+#### ✅ Technische Aktualisierungen
+- **Versions-Eigenschaften**: Neue `version.properties` Datei für automatische Versionsverwaltung
+- **Build-Automatisierung**: Release-Builds erhöhen automatisch Versionsnummern
+- **Dokumentations-Aktualisierungen**: README und technische Dokumentation aktualisiert
+
+---
+
 ## Version 1.1.0 (2025-10-30)
 
 ### Neue Funktionen
