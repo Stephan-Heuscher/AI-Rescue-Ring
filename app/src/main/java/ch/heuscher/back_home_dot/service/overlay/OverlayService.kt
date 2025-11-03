@@ -270,14 +270,31 @@ class OverlayService : Service() {
 
     private fun handleTap(mode: OverlayMode) {
         when (mode) {
-            OverlayMode.NORMAL -> BackHomeAccessibilityService.instance?.performBackAction()
+            OverlayMode.NORMAL -> {
+                // Check tap behavior setting
+                serviceScope.launch {
+                    val tapBehavior = settingsRepository.getTapBehavior().first()
+                    when (tapBehavior) {
+                        "STANDARD" -> BackHomeAccessibilityService.instance?.performHomeAction()
+                        "BACK" -> BackHomeAccessibilityService.instance?.performBackAction()
+                        else -> BackHomeAccessibilityService.instance?.performBackAction()
+                    }
+                }
+            }
             OverlayMode.RESCUE_RING -> performRescueAction()
         }
     }
 
     private fun handleDoubleTap(mode: OverlayMode) {
         if (mode == OverlayMode.NORMAL) {
-            BackHomeAccessibilityService.instance?.performRecentsAction()
+            serviceScope.launch {
+                val tapBehavior = settingsRepository.getTapBehavior().first()
+                when (tapBehavior) {
+                    "STANDARD" -> BackHomeAccessibilityService.instance?.performBackAction()
+                    "BACK" -> BackHomeAccessibilityService.instance?.performRecentsAction()
+                    else -> BackHomeAccessibilityService.instance?.performRecentsAction()
+                }
+            }
         }
     }
 

@@ -21,6 +21,7 @@ data class OverlaySettings(
     val recentsTimeout: Long = AppConstants.RECENTS_TIMEOUT_DEFAULT_MS,
     val keyboardAvoidanceEnabled: Boolean = AppConstants.DEFAULT_KEYBOARD_AVOIDANCE,
     val rescueRingEnabled: Boolean = AppConstants.DEFAULT_RESCUE_RING,
+    val tapBehavior: String = AppConstants.DEFAULT_TAP_BEHAVIOR,
     val screenWidth: Int = AppConstants.DEFAULT_SCREEN_WIDTH,
     val screenHeight: Int = AppConstants.DEFAULT_SCREEN_HEIGHT,
     val rotation: Int = 0

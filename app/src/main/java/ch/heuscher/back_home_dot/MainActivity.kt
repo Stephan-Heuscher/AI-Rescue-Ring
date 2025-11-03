@@ -40,7 +40,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var accessibilityStatusText: TextView
     private lateinit var accessibilityButton: Button
     private lateinit var overlaySwitch: SwitchCompat
-    private lateinit var rescueRingSwitch: SwitchCompat
     private lateinit var settingsButton: Button
     private lateinit var stopServiceButton: Button
     private lateinit var instructionsText: TextView
@@ -50,7 +49,6 @@ class MainActivity : AppCompatActivity() {
 
     // UI state holders for synchronous access
     private var isOverlayEnabled = false
-    private var isRescueRingEnabled = false
 
     companion object {
         private const val TAG = "MainActivity"
@@ -92,7 +90,10 @@ class MainActivity : AppCompatActivity() {
         setupClickListeners()
         observeSettings()
         updateUI()
-        updateInstructionsText()
+        
+        // Set instructions text to always show normal mode
+        instructionsText.text = getString(R.string.instructions_normal_mode)
+        
         Log.d(TAG, "onCreate: MainActivity initialization complete")
     }
 
@@ -119,7 +120,6 @@ class MainActivity : AppCompatActivity() {
         accessibilityStatusText = findViewById(R.id.accessibility_status_text)
         accessibilityButton = findViewById(R.id.accessibility_button)
         overlaySwitch = findViewById(R.id.overlay_switch)
-        rescueRingSwitch = findViewById(R.id.rescue_ring_switch)
         settingsButton = findViewById(R.id.settings_button)
         stopServiceButton = findViewById(R.id.stop_service_button)
         instructionsText = findViewById(R.id.instructions_text)
@@ -151,14 +151,6 @@ class MainActivity : AppCompatActivity() {
             }
             updateUI()
         }
-
-        rescueRingSwitch.setOnCheckedChangeListener { _, isChecked ->
-            lifecycleScope.launch {
-                settingsRepository.setRescueRingEnabled(isChecked)
-            }
-            updateInstructionsText()
-            broadcastSettingsUpdate()
-        }
     }
 
     private fun updateUI() {
@@ -176,11 +168,7 @@ class MainActivity : AppCompatActivity() {
         overlaySwitch.isChecked = isOverlayEnabled
         overlaySwitch.isEnabled = hasOverlay && hasAccessibility
 
-        // Update rescue ring switch
-        rescueRingSwitch.isChecked = isRescueRingEnabled
-        rescueRingSwitch.isEnabled = hasOverlay && hasAccessibility
-
-        // Update settings button
+        // Update Settings and Stop buttons
         settingsButton.isEnabled = hasOverlay && hasAccessibility
     }
 
@@ -264,29 +252,7 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "observeSettings: Error observing overlay enabled", e)
             }
         }
-
-        lifecycleScope.launch {
-            Log.d(TAG, "observeSettings: Launching rescue ring observer")
-            try {
-                settingsRepository.isRescueRingEnabled().collect { enabled ->
-                    Log.d(TAG, "observeSettings: Rescue ring enabled changed to $enabled")
-                    isRescueRingEnabled = enabled
-                    updateInstructionsText()
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "observeSettings: Error observing rescue ring enabled", e)
-            }
-        }
         Log.d(TAG, "observeSettings: Observers launched")
-    }
-
-    private fun updateInstructionsText() {
-        val instructions = if (isRescueRingEnabled) {
-            getString(R.string.instructions_rescue_mode)
-        } else {
-            getString(R.string.instructions_normal_mode)
-        }
-        instructionsText.text = instructions
     }
 
     private fun hasOverlayPermission(): Boolean {

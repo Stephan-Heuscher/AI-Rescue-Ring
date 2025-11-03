@@ -65,10 +65,12 @@ object AppConstants {
     const val KEY_RECENTS_TIMEOUT = "recents_timeout"
     const val KEY_KEYBOARD_AVOIDANCE = "keyboard_avoidance"
     const val KEY_RESCUE_RING = "rescue_ring"
+    const val KEY_TAP_BEHAVIOR = "tap_behavior"
 
     // Default values
     const val DEFAULT_COLOR = -0xBBBC // Blue: 0xFF2196F3
     const val DEFAULT_ENABLED = false
     const val DEFAULT_KEYBOARD_AVOIDANCE = true
     const val DEFAULT_RESCUE_RING = false
+    const val DEFAULT_TAP_BEHAVIOR = "STANDARD"
 }

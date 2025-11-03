@@ -32,9 +32,8 @@
 
     <!-- Help Section -->
     <string name="how_it_works">ℹ️ How it works</string>
-    <string name="instructions">• Normal mode: Tap once = Back, Tap twice = Recent apps, Tap 3 times = All open apps, Tap 4 times = Open settings, Long press = Home screen\n• Rescue ring mode: Press the red ring to close all apps and go home</string>
-    <string name="instructions_normal_mode">Tap once = Back\nTap twice = Recent apps\nTap 3 times = All open apps\n4 taps: Open Assistive Tap\nLong press = Home screen</string>
-    <string name="instructions_rescue_mode">Press the life ring to stop current app and go home</string>
+    <string name="instructions">• Tap once = Home\n• Tap twice = Back\n• Tap 3 times = All open apps\n• Tap 4 times = Open Assistive Tap\n• Long press = Home screen</string>
+    <string name="instructions_normal_mode">• Tap once = Home\n• Tap twice = Back\n• Tap 3 times = All open apps\n• Tap 4 times = Open Assistive Tap\n• Long press = Home screen</string>
 
     <!-- Settings Screen -->
     <string name="back">Back</string>
@@ -54,6 +53,12 @@
     <string name="keyboard_avoidance">Keyboard Avoidance</string>
     <string name="keyboard_avoidance_desc">Automatically move the dot away from the on-screen keyboard</string>
     <string name="avoid_keyboard">Avoid keyboard</string>
+
+    <!-- Tap Behavior -->
+    <string name="tap_behavior">Tap Behavior</string>
+    <string name="tap_behavior_desc">Choose what happens when you tap the dot</string>
+    <string name="tap_behavior_standard">Standard: 1 tap = Home, 2 taps = Back</string>
+    <string name="tap_behavior_back">Back: 1 tap = Back, 2 taps = Switch to previous app</string>
 
     <!-- Rescue Ring -->
     <string name="rescue_ring">Life Ring</string>

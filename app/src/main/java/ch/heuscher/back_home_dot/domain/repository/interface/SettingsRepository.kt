@@ -40,6 +40,9 @@ interface SettingsRepository {
     fun isRescueRingEnabled(): Flow<Boolean>
     suspend fun setRescueRingEnabled(enabled: Boolean)
 
+    fun getTapBehavior(): Flow<String>
+    suspend fun setTapBehavior(behavior: String)
+
     // Screen information
     fun getScreenWidth(): Flow<Int>
     suspend fun setScreenWidth(width: Int)

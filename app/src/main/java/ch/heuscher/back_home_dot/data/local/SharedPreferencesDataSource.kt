@@ -134,6 +134,15 @@ class SharedPreferencesDataSource(
         prefs.edit().putBoolean(AppConstants.KEY_RESCUE_RING, enabled).apply()
     }
 
+    override fun getTapBehavior(): Flow<String> =
+        getPreferenceFlow(AppConstants.KEY_TAP_BEHAVIOR, AppConstants.DEFAULT_TAP_BEHAVIOR) { prefs, key, default ->
+            prefs.getString(key, default) ?: default
+        }
+
+    override suspend fun setTapBehavior(behavior: String) {
+        prefs.edit().putString(AppConstants.KEY_TAP_BEHAVIOR, behavior).apply()
+    }
+
     override fun getScreenWidth(): Flow<Int> =
         getPreferenceFlow(AppConstants.KEY_SCREEN_WIDTH, AppConstants.DEFAULT_SCREEN_WIDTH) { prefs, key, default ->
             prefs.getInt(key, default)
