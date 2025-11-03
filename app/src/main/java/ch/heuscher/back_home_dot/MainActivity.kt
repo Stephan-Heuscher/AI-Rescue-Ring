@@ -91,9 +91,6 @@ class MainActivity : AppCompatActivity() {
         observeSettings()
         updateUI()
         
-        // Set instructions text to always show normal mode
-        instructionsText.text = getString(R.string.instructions_normal_mode)
-        
         Log.d(TAG, "onCreate: MainActivity initialization complete")
     }
 
@@ -252,7 +249,28 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "observeSettings: Error observing overlay enabled", e)
             }
         }
+
+        lifecycleScope.launch {
+            Log.d(TAG, "observeSettings: Launching tap behavior observer")
+            try {
+                settingsRepository.getTapBehavior().collect { behavior ->
+                    Log.d(TAG, "observeSettings: Tap behavior changed to $behavior")
+                    updateInstructionsText(behavior)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "observeSettings: Error observing tap behavior", e)
+            }
+        }
         Log.d(TAG, "observeSettings: Observers launched")
+    }
+
+    private fun updateInstructionsText(tapBehavior: String) {
+        val instructions = when (tapBehavior) {
+            "STANDARD" -> getString(R.string.instructions_normal_mode)
+            "BACK" -> getString(R.string.instructions_back_mode)
+            else -> getString(R.string.instructions_normal_mode)
+        }
+        instructionsText.text = instructions
     }
 
     private fun hasOverlayPermission(): Boolean {

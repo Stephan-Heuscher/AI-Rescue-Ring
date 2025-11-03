@@ -34,6 +34,7 @@
     <string name="how_it_works">ℹ️ How it works</string>
     <string name="instructions">• Tap once = Home\n• Tap twice = Back\n• Tap 3 times = All open apps\n• Tap 4 times = Open Assistive Tap\n• Long press = Home screen</string>
     <string name="instructions_normal_mode">• Tap once = Home\n• Tap twice = Back\n• Tap 3 times = All open apps\n• Tap 4 times = Open Assistive Tap\n• Long press = Home screen</string>
+    <string name="instructions_back_mode">• Tap once = Back\n• Tap twice = Switch to previous app\n• Tap 3 times = All open apps\n• Tap 4 times = Open Assistive Tap\n• Long press = Home screen</string>
 
     <!-- Settings Screen -->
     <string name="back">Back</string>
