@@ -1,5 +1,8 @@
 package ch.heuscher.back_home_dot.service.overlay
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -13,6 +16,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.view.animation.AccelerateDecelerateInterpolator
 import ch.heuscher.back_home_dot.BackHomeAccessibilityService
 import ch.heuscher.back_home_dot.di.ServiceLocator
 import ch.heuscher.back_home_dot.domain.model.DotPosition
@@ -62,6 +66,10 @@ class OverlayService : Service() {
     // Keyboard state for movement constraints
     private var keyboardVisible = false
     private var currentKeyboardHeight = 0
+    private var isUserDragging = false
+
+    // Active animation state
+    private var positionAnimator: ValueAnimator? = null
 
     // Debounce keyboard adjustments
     private var lastKeyboardAdjustmentTime = 0L
@@ -211,6 +219,40 @@ class OverlayService : Service() {
     }
 
     private fun handleGesture(gesture: Gesture) {
+        when (gesture) {
+            Gesture.DRAG_START -> {
+                cancelPositionAnimation()
+                isUserDragging = true
+                return
+            }
+
+            Gesture.DRAG_MOVE -> {
+                if (!isUserDragging) {
+                    cancelPositionAnimation()
+                    isUserDragging = true
+                }
+                return
+            }
+
+            Gesture.DRAG_END -> {
+                cancelPositionAnimation()
+                isUserDragging = false
+                serviceScope.launch {
+                    if (keyboardVisible) {
+                        val settings = settingsRepository.getAllSettings().first()
+                        adjustPositionForKeyboard(settings, currentKeyboardHeight)
+                    } else {
+                        viewManager.getCurrentPosition()?.let { finalPos ->
+                            settingsRepository.setPosition(finalPos)
+                        }
+                    }
+                }
+                return
+            }
+
+            else -> { /* continue */ }
+        }
+
         serviceScope.launch {
             val settings = settingsRepository.getAllSettings().first()
             val mode = if (settings.rescueRingEnabled) OverlayMode.RESCUE_RING else OverlayMode.NORMAL
@@ -221,7 +263,7 @@ class OverlayService : Service() {
                 Gesture.TRIPLE_TAP -> handleTripleTap(mode)
                 Gesture.QUADRUPLE_TAP -> handleQuadrupleTap()
                 Gesture.LONG_PRESS -> handleLongPress()
-                else -> { /* Other gestures handled elsewhere */ }
+                else -> { /* No-op for drag gestures */ }
             }
         }
     }
@@ -274,6 +316,7 @@ class OverlayService : Service() {
 
     private fun checkKeyboardAvoidance() {
         serviceScope.launch {
+            if (isUserDragging) return@launch
             val settings = settingsRepository.getAllSettings().first()
             if (!settings.keyboardAvoidanceEnabled) return@launch
 
@@ -287,7 +330,7 @@ class OverlayService : Service() {
             } else {
                 // Restore position when keyboard hides
                 positionBeforeKeyboard?.let { originalPos ->
-                    viewManager.updatePosition(originalPos)
+                    animatePosition(originalPos)
                     positionBeforeKeyboard = null
                 }
             }
@@ -318,12 +361,16 @@ class OverlayService : Service() {
                     positionBeforeKeyboard = viewManager.getCurrentPosition()
                     Log.d(TAG, "handleKeyboardChange: saved position=$positionBeforeKeyboard")
                 }
-                adjustPositionForKeyboard(settings, height)
+                if (!isUserDragging) {
+                    adjustPositionForKeyboard(settings, height)
+                } else {
+                    Log.d(TAG, "handleKeyboardChange: skipping adjust due to active drag")
+                }
             } else {
                 // Restore position when keyboard hides
                 positionBeforeKeyboard?.let { originalPos ->
                     Log.d(TAG, "handleKeyboardChange: restoring position=$originalPos")
-                    viewManager.updatePosition(originalPos)
+                    animatePosition(originalPos)
                     positionBeforeKeyboard = null
                 }
             }
@@ -359,7 +406,7 @@ class OverlayService : Service() {
 
         val newPosition = DotPosition(currentPos?.x ?: 0, newY)
         Log.d(TAG, "adjustPositionForKeyboard: FINAL - currentY=$currentY, safeZoneY=$safeZoneY, newY=$newY, willMove=${currentY > safeZoneY}")
-        viewManager.updatePosition(newPosition)
+        animatePosition(newPosition)
     }
 
     private fun constrainPositionWithKeyboard(x: Int, y: Int): Pair<Int, Int> {
@@ -400,5 +447,46 @@ class OverlayService : Service() {
             // Fallback: just go home
             BackHomeAccessibilityService.instance?.performHomeAction()
         }
+    }
+
+    private fun cancelPositionAnimation() {
+        positionAnimator?.cancel()
+        positionAnimator = null
+    }
+
+    private fun animatePosition(targetPosition: DotPosition, duration: Long = 250L) {
+        val startPosition = viewManager.getCurrentPosition() ?: return
+        if (startPosition == targetPosition) {
+            serviceScope.launch { settingsRepository.setPosition(targetPosition) }
+            return
+        }
+
+        cancelPositionAnimation()
+
+        val animator = ValueAnimator.ofFloat(0f, 1f)
+        animator.duration = duration
+        animator.interpolator = AccelerateDecelerateInterpolator()
+
+        animator.addUpdateListener { animation ->
+            val fraction = animation.animatedValue as Float
+            val currentX = (startPosition.x + ((targetPosition.x - startPosition.x) * fraction)).toInt()
+            val currentY = (startPosition.y + ((targetPosition.y - startPosition.y) * fraction)).toInt()
+            viewManager.updatePosition(DotPosition(currentX, currentY))
+        }
+
+        animator.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+                viewManager.updatePosition(targetPosition)
+                serviceScope.launch { settingsRepository.setPosition(targetPosition) }
+                positionAnimator = null
+            }
+
+            override fun onAnimationCancel(animation: Animator) {
+                positionAnimator = null
+            }
+        })
+
+        positionAnimator = animator
+        animator.start()
     }
 }

@@ -20,7 +20,7 @@ object AppConstants {
     const val KEYBOARD_CHECK_INTERVAL_MS = 100L
     const val KEYBOARD_HEIGHT_ESTIMATE_PERCENT = 0.38f
     const val KEYBOARD_THRESHOLD_PERCENT = 0.15f
-    const val KEYBOARD_MARGIN_MULTIPLIER = 2.0f
+    const val KEYBOARD_MARGIN_MULTIPLIER = 1.0f
 
     // Animation and timing
     const val RECENTS_TIMEOUT_DEFAULT_MS = 100L
