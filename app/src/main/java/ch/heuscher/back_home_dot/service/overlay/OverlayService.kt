@@ -59,6 +59,10 @@ class OverlayService : Service() {
     // Position before keyboard appeared
     private var positionBeforeKeyboard: DotPosition? = null
 
+    // Keyboard state for movement constraints
+    private var keyboardVisible = false
+    private var currentKeyboardHeight = 0
+
     // Debounce keyboard adjustments
     private var lastKeyboardAdjustmentTime = 0L
     private val KEYBOARD_ADJUSTMENT_DEBOUNCE_MS = 500L
@@ -258,7 +262,7 @@ class OverlayService : Service() {
         val newX = currentPos.x + deltaX
         val newY = currentPos.y + deltaY
 
-        val (constrainedX, constrainedY) = viewManager.constrainPositionToBounds(newX, newY)
+        val (constrainedX, constrainedY) = constrainPositionWithKeyboard(newX, newY)
         val newPosition = DotPosition(constrainedX, constrainedY)
         viewManager.updatePosition(newPosition)
 
@@ -299,6 +303,10 @@ class OverlayService : Service() {
         }
         lastKeyboardAdjustmentTime = currentTime
 
+        // Update keyboard state for movement constraints
+        keyboardVisible = visible
+        currentKeyboardHeight = height
+
         serviceScope.launch {
             val settings = settingsRepository.getAllSettings().first()
             Log.d(TAG, "handleKeyboardChange: keyboardAvoidanceEnabled=${settings.keyboardAvoidanceEnabled}")
@@ -331,9 +339,9 @@ class OverlayService : Service() {
 
         Log.d(TAG, "adjustPositionForKeyboard: screenHeight=$screenHeight, keyboardHeight=$height, dotSize=$dotSize, margin=$margin")
 
-        // Calculate keyboard top and safe zone (2 diameters above keyboard)
+        // Calculate keyboard top and safe zone (margin above keyboard)
         val keyboardTop = screenHeight - height
-        val safeZoneY = keyboardTop - 2 * dotSize - margin
+        val safeZoneY = keyboardTop - dotSize - margin
 
         Log.d(TAG, "adjustPositionForKeyboard: keyboardTop=$keyboardTop, safeZoneY=$safeZoneY")
 
@@ -352,6 +360,30 @@ class OverlayService : Service() {
         val newPosition = DotPosition(currentPos?.x ?: 0, newY)
         Log.d(TAG, "adjustPositionForKeyboard: FINAL - currentY=$currentY, safeZoneY=$safeZoneY, newY=$newY, willMove=${currentY > safeZoneY}")
         viewManager.updatePosition(newPosition)
+    }
+
+    private fun constrainPositionWithKeyboard(x: Int, y: Int): Pair<Int, Int> {
+        // First constrain to screen bounds
+        val (boundedX, boundedY) = viewManager.constrainPositionToBounds(x, y)
+
+        // If keyboard is not visible, return screen-bounded position
+        if (!keyboardVisible || currentKeyboardHeight == 0) {
+            return Pair(boundedX, boundedY)
+        }
+
+        // Apply keyboard constraints
+        val screenHeight = resources.displayMetrics.heightPixels
+        val dotSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
+        val margin = (dotSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
+
+        // Calculate the maximum Y position allowed (above keyboard with margin)
+        val keyboardTop = screenHeight - currentKeyboardHeight
+        val maxY = keyboardTop - dotSize - margin
+
+        // Constrain Y to be above the keyboard area
+        val constrainedY = boundedY.coerceAtMost(maxY)
+
+        return Pair(boundedX, constrainedY)
     }
 
     private fun performRescueAction() {

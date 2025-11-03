@@ -20,11 +20,11 @@ object AppConstants {
     const val KEYBOARD_CHECK_INTERVAL_MS = 100L
     const val KEYBOARD_HEIGHT_ESTIMATE_PERCENT = 0.38f
     const val KEYBOARD_THRESHOLD_PERCENT = 0.15f
-    const val KEYBOARD_MARGIN_MULTIPLIER = 0.0f
+    const val KEYBOARD_MARGIN_MULTIPLIER = 2.0f
 
     // Animation and timing
     const val RECENTS_TIMEOUT_DEFAULT_MS = 100L
-    const val RECENTS_TIMEOUT_MIN_MS = 50L
+    const val RECENTS_TIMEOUT_MIN_MS = 0L
     const val RECENTS_TIMEOUT_MAX_MS = 300L
 
     // Accessibility delays
