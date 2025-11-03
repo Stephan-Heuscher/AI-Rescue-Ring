@@ -229,12 +229,21 @@ cd Back_Home_Dot
 # Debug-Build erstellen
 ./gradlew assembleDebug
 
+# Release-Build erstellen (Version wird automatisch erhöht)
+./gradlew assembleRelease
+
 # Unit-Tests ausführen
 ./gradlew testDebugUnitTest
-
-# Release-Build erstellen (signiert)
-./gradlew assembleRelease
 ```
+
+#### 🔢 Automatische Versionierung
+
+Release-Builds erhöhen automatisch die Versionsnummer:
+- **Version Code**: Wird bei jedem Release-Build um 1 erhöht
+- **Version Name**: Patch-Version (letzte Zahl) wird um 1 erhöht
+- **Beispiel**: `1.1.0` (Code: 6) → `1.1.1` (Code: 7)
+
+Die Version wird in `version.properties` gespeichert und vor jedem Release-Build aktualisiert.
 
 ### 🏗️ Projekt-Struktur & Clean Architecture
 
