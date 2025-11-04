@@ -50,6 +50,8 @@ class SettingsRepositoryImpl(
         dataSource.setScreenWidth(position.screenWidth)
         dataSource.setScreenHeight(position.screenHeight)
         dataSource.setRotation(position.rotation)
+        val percent = position.toPercentages()
+        setPositionPercent(percent)
     }
 
     override fun getPositionPercent(): Flow<DotPositionPercent> = combine(

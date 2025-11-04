@@ -75,6 +75,9 @@ class OverlayService : Service() {
     private var lastKeyboardAdjustmentTime = 0L
     private val KEYBOARD_ADJUSTMENT_DEBOUNCE_MS = 500L
 
+    // Handler for delayed updates
+    private val updateHandler = Handler(Looper.getMainLooper())
+
     // Broadcast receiver for settings changes
     private val settingsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -92,6 +95,41 @@ class OverlayService : Service() {
                 val height = intent.getIntExtra("keyboard_height", 0)
                 Log.d(TAG, "Keyboard broadcast received: visible=$visible, height=$height")
                 handleKeyboardChange(visible, height)
+            }
+        }
+    }
+
+    // Broadcast receiver for configuration changes (e.g., orientation)
+    private val configurationReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == Intent.ACTION_CONFIGURATION_CHANGED) {
+                Log.d(TAG, "Configuration changed, hiding overlay during transition")
+                // Hide the overlay during orientation change to prevent flicker
+                viewManager.setVisibility(View.GONE)
+                updateHandler.postDelayed({
+                    serviceScope.launch {
+                        val oldSettings = settingsRepository.getAllSettings().first()
+                        val newSize = getUsableScreenSize()
+                        val newRotation = getCurrentRotation()
+                        if (newRotation != oldSettings.rotation) {
+                            val dotSizePx = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
+                            val half = dotSizePx / 2
+                            val centerX = oldSettings.position.x + half
+                            val centerY = oldSettings.position.y + half
+                            val centerPosition = DotPosition(centerX, centerY, oldSettings.screenWidth, oldSettings.screenHeight, oldSettings.rotation)
+                            val transformedCenter = transformPosition(centerPosition, oldSettings.screenWidth, oldSettings.screenHeight, oldSettings.rotation, newRotation)
+                            val newTopLeftX = transformedCenter.x - half
+                            val newTopLeftY = transformedCenter.y - half
+                            val transformedPosition = DotPosition(newTopLeftX, newTopLeftY, newSize.x, newSize.y, newRotation)
+                            settingsRepository.setPosition(transformedPosition)
+                        }
+                        settingsRepository.setScreenWidth(newSize.x)
+                        settingsRepository.setScreenHeight(newSize.y)
+                        settingsRepository.setRotation(newRotation)
+                        // Show the overlay after update
+                        viewManager.setVisibility(View.VISIBLE)
+                    }
+                }, 500) // Delay to allow orientation animation to complete
             }
         }
     }
@@ -126,6 +164,11 @@ class OverlayService : Service() {
                 IntentFilter(AppConstants.ACTION_UPDATE_KEYBOARD),
                 Context.RECEIVER_NOT_EXPORTED
             )
+            registerReceiver(
+                configurationReceiver,
+                IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED),
+                Context.RECEIVER_NOT_EXPORTED
+            )
         } else {
             @Suppress("DEPRECATION")
             registerReceiver(
@@ -136,6 +179,11 @@ class OverlayService : Service() {
             registerReceiver(
                 keyboardReceiver,
                 IntentFilter(AppConstants.ACTION_UPDATE_KEYBOARD)
+            )
+            @Suppress("DEPRECATION")
+            registerReceiver(
+                configurationReceiver,
+                IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED)
             )
         }
 
@@ -155,8 +203,10 @@ class OverlayService : Service() {
         // Clean up
         serviceScope.cancel()
         keyboardHandler.removeCallbacks(keyboardRunnable)
+        updateHandler.removeCallbacksAndMessages(null)
         unregisterReceiver(settingsReceiver)
         unregisterReceiver(keyboardReceiver)
+        unregisterReceiver(configurationReceiver)
         viewManager.removeOverlayView()
     }
 
@@ -189,9 +239,34 @@ class OverlayService : Service() {
     private fun initializeScreenDimensions() {
         serviceScope.launch {
             val size = getUsableScreenSize()
+            val rotation = getCurrentRotation()
             settingsRepository.setScreenWidth(size.x)
             settingsRepository.setScreenHeight(size.y)
-            Log.d(TAG, "initializeScreenDimensions: screenWidth=${size.x}, screenHeight=${size.y}")
+            settingsRepository.setRotation(rotation)
+            Log.d(TAG, "initializeScreenDimensions: screenWidth=${size.x}, screenHeight=${size.y}, rotation=$rotation")
+        }
+    }
+
+    private fun transformPosition(position: DotPosition, oldW: Int, oldH: Int, oldRot: Int, newRot: Int): DotPosition {
+        val delta = (newRot - oldRot + 4) % 4  // 0,1,2,3 for 0,90,180,270 degrees clockwise
+        val x = position.x
+        val y = position.y
+        return when (delta) {
+            0 -> DotPosition(x, y)
+            1 -> DotPosition(y, oldW - x)  // 90 deg clockwise
+            2 -> DotPosition(oldW - x, oldH - y)  // 180 deg
+            3 -> DotPosition(oldH - y, x)  // 270 deg clockwise
+            else -> DotPosition(x, y)
+        }
+    }
+
+    private fun getCurrentRotation(): Int {
+        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            windowManager.defaultDisplay.rotation
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.rotation
         }
     }
 
@@ -214,7 +289,12 @@ class OverlayService : Service() {
         serviceScope.launch {
             val settings = settingsRepository.getAllSettings().first()
             viewManager.updateAppearance(settings)
-            viewManager.updatePosition(settings.position)
+            val screenSize = getUsableScreenSize()
+            val dotSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
+            val constrainedX = settings.position.x.coerceIn(0, screenSize.x - dotSize)
+            val constrainedY = settings.position.y.coerceIn(0, screenSize.y - dotSize)
+            val constrainedPosition = DotPosition(constrainedX, constrainedY)
+            viewManager.updatePosition(constrainedPosition)
         }
     }
 
@@ -243,7 +323,9 @@ class OverlayService : Service() {
                         adjustPositionForKeyboard(settings, currentKeyboardHeight)
                     } else {
                         viewManager.getCurrentPosition()?.let { finalPos ->
-                            settingsRepository.setPosition(finalPos)
+                            val settings = settingsRepository.getAllSettings().first()
+                            val positionWithScreen = DotPosition(finalPos.x, finalPos.y, settings.screenWidth, settings.screenHeight)
+                            settingsRepository.setPosition(positionWithScreen)
                         }
                     }
                 }
@@ -327,7 +409,9 @@ class OverlayService : Service() {
 
         // Save new position
         serviceScope.launch {
-            settingsRepository.setPosition(newPosition)
+            val settings = settingsRepository.getAllSettings().first()
+            val positionWithScreen = DotPosition(constrainedX, constrainedY, settings.screenWidth, settings.screenHeight)
+            settingsRepository.setPosition(positionWithScreen)
         }
     }
 
@@ -494,7 +578,11 @@ class OverlayService : Service() {
         animator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
                 viewManager.updatePosition(targetPosition)
-                serviceScope.launch { settingsRepository.setPosition(targetPosition) }
+                serviceScope.launch {
+                    val settings = settingsRepository.getAllSettings().first()
+                    val positionWithScreen = DotPosition(targetPosition.x, targetPosition.y, settings.screenWidth, settings.screenHeight)
+                    settingsRepository.setPosition(positionWithScreen)
+                }
                 positionAnimator = null
             }
 

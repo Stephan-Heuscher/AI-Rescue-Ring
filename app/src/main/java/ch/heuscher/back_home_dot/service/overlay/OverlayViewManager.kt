@@ -95,6 +95,13 @@ class OverlayViewManager(
     }
 
     /**
+     * Sets the visibility of the overlay view.
+     */
+    fun setVisibility(visibility: Int) {
+        floatingView?.visibility = visibility
+    }
+
+    /**
      * Registers a touch listener for gesture detection on overlay elements.
      */
     fun setTouchListener(listener: View.OnTouchListener) {
