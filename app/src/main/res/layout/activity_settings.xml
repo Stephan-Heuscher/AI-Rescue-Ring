@@ -5,10 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:paddingTop="48dp"
+    android:paddingTop="16dp"
     android:paddingBottom="20dp"
-    android:paddingStart="20dp"
-    android:paddingEnd="20dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
     tools:context=".SettingsActivity">
 
     <LinearLayout
@@ -16,13 +16,14 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Zurück Button und Titel -->
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="32dp">
+            android:layout_marginBottom="24dp"
+            android:layout_marginTop="16dp">
 
             <Button
                 android:id="@+id/back_button"
@@ -46,213 +47,305 @@
                 android:layout_marginStart="8dp" />
         </LinearLayout>
 
-        <!-- Tap Behavior Selection -->
-        <TextView
+        <!-- Section: Tap Behavior -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/tap_behavior"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:contentPadding="20dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/tap_behavior_desc"
-            android:textSize="16sp"
-            android:textColor="?android:attr/textColorSecondary"
-            android:layout_marginBottom="12dp" />
-
-        <RadioGroup
-            android:id="@+id/tap_behavior_radio_group"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp">
-
-            <RadioButton
-                android:id="@+id/tap_behavior_standard"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/tap_behavior_standard"
-                android:textSize="18sp"
-                android:checked="true"
-                android:minHeight="48dp"
-                android:paddingVertical="8dp" />
+                android:orientation="vertical">
 
-            <RadioButton
-                android:id="@+id/tap_behavior_back"
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tap_behavior"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="8dp"
+                    android:importantForAccessibility="yes" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tap_behavior_desc"
+                    android:textSize="16sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:layout_marginBottom="16dp" />
+
+                <RadioGroup
+                    android:id="@+id/tap_behavior_radio_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <RadioButton
+                        android:id="@+id/tap_behavior_standard"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tap_behavior_standard"
+                        android:textSize="18sp"
+                        android:checked="true"
+                        android:minHeight="48dp"
+                        android:paddingVertical="8dp" />
+
+                    <RadioButton
+                        android:id="@+id/tap_behavior_back"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/tap_behavior_back"
+                        android:textSize="18sp"
+                        android:minHeight="48dp"
+                        android:paddingVertical="8dp" />
+                </RadioGroup>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Section: Color -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:contentPadding="20dp">
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/tap_behavior_back"
-                android:textSize="18sp"
-                android:minHeight="48dp"
-                android:paddingVertical="8dp" />
-        </RadioGroup>
+                android:orientation="vertical">
 
-        <!-- Farbe Auswahl -->
-        <TextView
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/color"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="16dp"
+                    android:importantForAccessibility="yes" />
+
+                <!-- First row of colors -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <Button
+                        android:id="@+id/color_blue"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:backgroundTint="#2196F3"
+                        android:contentDescription="@string/color_blue"
+                        android:minHeight="64dp"
+                        android:text=""
+                        style="@style/Widget.AppCompat.Button" />
+
+                    <Button
+                        android:id="@+id/color_red"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"
+                        android:backgroundTint="#F44336"
+                        android:contentDescription="@string/color_red"
+                        android:minHeight="64dp"
+                        android:text=""
+                        style="@style/Widget.AppCompat.Button" />
+
+                    <Button
+                        android:id="@+id/color_green"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"
+                        android:backgroundTint="#4CAF50"
+                        android:contentDescription="@string/color_green"
+                        android:minHeight="64dp"
+                        android:text=""
+                        style="@style/Widget.AppCompat.Button" />
+
+                    <Button
+                        android:id="@+id/color_orange"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:backgroundTint="#FF9800"
+                        android:contentDescription="@string/color_orange"
+                        android:minHeight="64dp"
+                        android:text=""
+                        style="@style/Widget.AppCompat.Button" />
+                </LinearLayout>
+
+                <!-- Second row of colors -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp">
+
+                    <Button
+                        android:id="@+id/color_purple"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:backgroundTint="#9C27B0"
+                        android:contentDescription="@string/color_purple"
+                        android:minHeight="64dp"
+                        android:text=""
+                        style="@style/Widget.AppCompat.Button" />
+
+                    <Button
+                        android:id="@+id/color_cyan"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"
+                        android:backgroundTint="#00BCD4"
+                        android:contentDescription="@string/color_cyan"
+                        android:minHeight="64dp"
+                        android:text=""
+                        style="@style/Widget.AppCompat.Button" />
+
+                    <Button
+                        android:id="@+id/color_yellow"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:layout_marginEnd="4dp"
+                        android:backgroundTint="#FFEB3B"
+                        android:contentDescription="@string/color_yellow"
+                        android:minHeight="64dp"
+                        android:text=""
+                        style="@style/Widget.AppCompat.Button" />
+
+                    <Button
+                        android:id="@+id/color_gray"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:backgroundTint="#607D8B"
+                        android:contentDescription="@string/color_gray"
+                        android:minHeight="64dp"
+                        android:text=""
+                        style="@style/Widget.AppCompat.Button" />
+                </LinearLayout>
+
+                <!-- Custom Color Button -->
+                <Button
+                    android:id="@+id/color_custom"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:text="@string/custom_color"
+                    android:textSize="18sp"
+                    android:contentDescription="@string/choose_custom_color_desc"
+                    android:minHeight="64dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Section: Keyboard & Rescue Ring -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/color"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:contentPadding="20dp">
 
-        <!-- Vordefinierte Farben -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-            <Button
-                android:id="@+id/color_blue"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:backgroundTint="#2196F3"
-                android:contentDescription="@string/color_blue"
-                android:minHeight="64dp"
-                android:text="" />
+                <!-- Keyboard Avoidance -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/keyboard_avoidance"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="4dp"
+                    android:importantForAccessibility="yes" />
 
-            <Button
-                android:id="@+id/color_red"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:backgroundTint="#F44336"
-                android:contentDescription="@string/color_red"
-                android:minHeight="64dp"
-                android:text="" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/keyboard_avoidance_desc"
+                    android:textSize="14sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:layout_marginBottom="8dp" />
 
-            <Button
-                android:id="@+id/color_green"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:backgroundTint="#4CAF50"
-                android:contentDescription="@string/color_green"
-                android:minHeight="64dp"
-                android:text="" />
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/keyboard_avoidance_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/avoid_keyboard"
+                    android:textSize="16sp"
+                    android:checked="false"
+                    android:minHeight="48dp"
+                    android:layout_marginBottom="24dp" />
 
-            <Button
-                android:id="@+id/color_orange"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:backgroundTint="#FF9800"
-                android:contentDescription="@string/color_orange"
-                android:minHeight="64dp"
-                android:text="" />
-        </LinearLayout>
+                <!-- Rescue Ring Divider -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?android:attr/listDivider"
+                    android:layout_marginBottom="20dp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
+                <!-- Rescue Ring / Life Ring -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rescue_ring"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="4dp"
+                    android:importantForAccessibility="yes" />
 
-            <Button
-                android:id="@+id/color_purple"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:backgroundTint="#9C27B0"
-                android:contentDescription="@string/color_purple"
-                android:minHeight="64dp"
-                android:text="" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rescue_ring_desc"
+                    android:textSize="14sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:layout_marginBottom="8dp" />
 
-            <Button
-                android:id="@+id/color_cyan"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:backgroundTint="#00BCD4"
-                android:contentDescription="@string/color_cyan"
-                android:minHeight="64dp"
-                android:text="" />
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/rescue_ring_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/enable_rescue_ring"
+                    android:textSize="16sp"
+                    android:checked="false"
+                    android:minHeight="48dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
-            <Button
-                android:id="@+id/color_yellow"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:backgroundTint="#FFEB3B"
-                android:contentDescription="@string/color_yellow"
-                android:minHeight="64dp"
-                android:text="" />
-
-            <Button
-                android:id="@+id/color_gray"
-                android:layout_width="0dp"
-                android:layout_height="64dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:backgroundTint="#607D8B"
-                android:contentDescription="@string/color_gray"
-                android:minHeight="64dp"
-                android:text="" />
-        </LinearLayout>
-
-        <!-- Eigene Farbe -->
-        <Button
-            android:id="@+id/color_custom"
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:text="@string/custom_color"
-            android:textSize="18sp"
-            android:contentDescription="@string/choose_custom_color_desc"
-            android:minHeight="64dp"
-            android:layout_marginBottom="32dp" />
-
-        <!-- Tastatur Vermeidung -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/keyboard_avoidance"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="?android:attr/textColorPrimary"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/keyboard_avoidance_desc"
-            android:textSize="16sp"
-            android:textColor="?android:attr/textColorSecondary"
-            android:layout_marginBottom="12dp" />
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/keyboard_avoidance_switch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/avoid_keyboard"
-            android:textSize="18sp"
-            android:checked="false"
-            android:layout_marginBottom="32dp" />
-
-        <!-- Erweiterte Einstellungen (Ausklappbar) -->
+        <!-- Section: Advanced Settings (Collapsible) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/advanced_toggle_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="4dp"
+            app:cardElevation="2dp"
             android:clickable="true"
             android:focusable="true"
             android:foreground="?android:attr/selectableItemBackground">
@@ -272,7 +365,8 @@
                     android:text="@string/for_experts"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary" />
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:importantForAccessibility="yes" />
 
                 <TextView
                     android:id="@+id/advanced_arrow"
@@ -280,114 +374,126 @@
                     android:layout_height="wrap_content"
                     android:text="▼"
                     android:textSize="20sp"
-                    android:textColor="?android:attr/textColorPrimary" />
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:contentDescription="@string/for_experts" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Erweiterte Einstellungen Inhalt (ausklappbar) -->
-        <LinearLayout
+        <!-- Advanced Settings Content (Collapsible) -->
+        <androidx.cardview.widget.CardView
             android:id="@+id/advanced_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:contentPadding="20dp"
             android:visibility="gone">
 
-            <!-- Deckkraft Einstellung -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/transparency"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/how_transparent_the_point_is"
-                android:textSize="16sp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:layout_marginBottom="12dp" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:minHeight="48dp"
-                android:layout_marginBottom="24dp">
+                android:orientation="vertical">
 
-                <SeekBar
-                    android:id="@+id/alpha_seekbar"
-                    android:layout_width="0dp"
+                <!-- Transparency -->
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:max="255"
-                    android:progress="255"
-                    android:contentDescription="@string/transparency_desc"
-                    android:minHeight="48dp" />
+                    android:text="@string/transparency"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="4dp"
+                    android:importantForAccessibility="yes" />
 
                 <TextView
-                    android:id="@+id/alpha_value_text"
-                    android:layout_width="60dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="100%"
+                    android:text="@string/how_transparent_the_point_is"
+                    android:textSize="14sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:minHeight="48dp"
+                    android:layout_marginBottom="24dp">
+
+                    <SeekBar
+                        android:id="@+id/alpha_seekbar"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:max="255"
+                        android:progress="255"
+                        android:contentDescription="@string/transparency_desc"
+                        android:minHeight="48dp" />
+
+                    <TextView
+                        android:id="@+id/alpha_value_text"
+                        android:layout_width="60dp"
+                        android:layout_height="wrap_content"
+                        android:text="100%"
+                        android:textSize="18sp"
+                        android:textAlignment="textEnd"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_marginStart="16dp"
+                        android:importantForAccessibility="yes" />
+                </LinearLayout>
+
+                <!-- Switch Speed -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/switch_speed"
                     android:textSize="18sp"
-                    android:textAlignment="textEnd"
+                    android:textStyle="bold"
                     android:textColor="?android:attr/textColorPrimary"
-                    android:layout_marginStart="16dp" />
-            </LinearLayout>
-
-            <!-- App-Wechsel Geschwindigkeit -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/switch_speed"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/wait_time_for_app_switch"
-                android:textSize="16sp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:layout_marginBottom="12dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:minHeight="48dp"
-                android:layout_marginBottom="24dp">
-
-                <SeekBar
-                    android:id="@+id/timeout_seekbar"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:min="50"
-                    android:max="300"
-                    android:progress="100"
-                    android:contentDescription="@string/switch_speed_desc"
-                    android:minHeight="48dp" />
+                    android:layout_marginBottom="4dp"
+                    android:importantForAccessibility="yes" />
 
                 <TextView
-                    android:id="@+id/timeout_value_text"
-                    android:layout_width="80dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="100 ms"
-                    android:textSize="18sp"
-                    android:textAlignment="textEnd"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:layout_marginStart="16dp" />
-            </LinearLayout>
+                    android:text="@string/wait_time_for_app_switch"
+                    android:textSize="14sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:layout_marginBottom="12dp" />
 
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:minHeight="48dp">
+
+                    <SeekBar
+                        android:id="@+id/timeout_seekbar"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:min="50"
+                        android:max="300"
+                        android:progress="100"
+                        android:contentDescription="@string/switch_speed_desc"
+                        android:minHeight="48dp" />
+
+                    <TextView
+                        android:id="@+id/timeout_value_text"
+                        android:layout_width="80dp"
+                        android:layout_height="wrap_content"
+                        android:text="100 ms"
+                        android:textSize="18sp"
+                        android:textAlignment="textEnd"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_marginStart="16dp"
+                        android:importantForAccessibility="yes" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <!-- Impressum Button -->
         <Button
@@ -398,7 +504,7 @@
             android:textSize="18sp"
             android:contentDescription="@string/impressum_title"
             android:minHeight="64dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="16dp"
             android:paddingVertical="16dp" />
 
     </LinearLayout>

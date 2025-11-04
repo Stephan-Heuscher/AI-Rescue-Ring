@@ -3,11 +3,11 @@
     <string name="app_name">Assistive Tap</string>
 
     <!-- Permissions -->
-    <string name="accessibility_service_description">Allows the Assistive Tap app to execute navigation buttons and app switching</string>
-    <string name="overlay_permission_needed">Overlay permission required</string>
-    <string name="accessibility_service_needed">Accessibility service required</string>
-    <string name="please_enable_overlay">Please enable the overlay permission for this app</string>
-    <string name="please_enable_accessibility">Please enable the accessibility service for this app in settings</string>
+    <string name="accessibility_service_description">Lets Assistive Tap press Back, Home and app switch buttons for you</string>
+    <string name="overlay_permission_needed">Show over apps needed</string>
+    <string name="accessibility_service_needed">Help service needed</string>
+    <string name="please_enable_overlay">Please allow this app to show over other apps</string>
+    <string name="please_enable_accessibility">Please turn on the help service for this app in settings</string>
     <string name="open_settings">Open settings</string>
 
     <!-- Main Screen -->
@@ -51,12 +51,12 @@
     <string name="custom_color">Custom color</string>
 
     <!-- Keyboard Avoidance -->
-    <string name="keyboard_avoidance">Keyboard Avoidance</string>
-    <string name="keyboard_avoidance_desc">Automatically move the dot away from the on-screen keyboard</string>
-    <string name="avoid_keyboard">Avoid keyboard</string>
+    <string name="keyboard_avoidance">Move away from keyboard</string>
+    <string name="keyboard_avoidance_desc">Move the dot away when keyboard shows up</string>
+    <string name="avoid_keyboard">Move away from keyboard</string>
 
     <!-- Tap Behavior -->
-    <string name="tap_behavior">Tap Behavior</string>
+    <string name="tap_behavior">What taps do</string>
     <string name="tap_behavior_desc">Choose what happens when you tap the dot</string>
     <string name="tap_behavior_standard">Standard: 1 tap = Home, 2 taps = Back</string>
     <string name="tap_behavior_back">Back: 1 tap = Back, 2 taps = Switch to previous app</string>
@@ -75,11 +75,11 @@
     <string name="overlay_mode_rescue_ring_description">Emergency mode for quick app closure</string>
 
     <!-- Advanced Settings -->
-    <string name="for_experts">For experts</string>
-    <string name="transparency">Transparency</string>
-    <string name="how_transparent_the_point_is">How transparent the point is</string>
-    <string name="switch_speed">Switch speed</string>
-    <string name="wait_time_for_app_switch">Wait time for app switch</string>
+    <string name="for_experts">More settings</string>
+    <string name="transparency">See-through</string>
+    <string name="how_transparent_the_point_is">How see-through the dot is</string>
+    <string name="switch_speed">Speed</string>
+    <string name="wait_time_for_app_switch">Wait time when switching apps</string>
 
     <!-- Dialogs -->
     <string name="allow_assistipoint_display">Allow Assistive Tap display</string>
