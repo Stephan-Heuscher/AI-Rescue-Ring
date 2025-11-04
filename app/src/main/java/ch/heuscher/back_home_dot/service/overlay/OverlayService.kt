@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
  * Refactored OverlayService - now focused only on lifecycle management.
  * Delegates specific responsibilities to dedicated components.
  */
+
 class OverlayService : Service() {
 
     companion object {
@@ -60,11 +61,11 @@ class OverlayService : Service() {
         }
     }
 
-    // Position before keyboard appeared
-    private var positionBeforeKeyboard: DotPosition? = null
-    private var screenDimensionsBeforeKeyboard: Point? = null
-    private var rotationBeforeKeyboard: Int? = null
+    private data class KeyboardSnapshot(val position: DotPosition, val screenSize: Point, val rotation: Int)
+
+    private var keyboardSnapshot: KeyboardSnapshot? = null
     private var isOrientationChanging = false
+    private var pendingKeyboardRestore: Runnable? = null
 
     // Keyboard state for movement constraints
     private var keyboardVisible = false
@@ -77,6 +78,7 @@ class OverlayService : Service() {
     // Debounce keyboard adjustments
     private var lastKeyboardAdjustmentTime = 0L
     private val KEYBOARD_ADJUSTMENT_DEBOUNCE_MS = 500L
+    private val KEYBOARD_RESTORE_DELAY_MS = 250L
 
     // Handler for delayed updates
     private val updateHandler = Handler(Looper.getMainLooper())
@@ -107,17 +109,15 @@ class OverlayService : Service() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_CONFIGURATION_CHANGED) {
                 Log.d(TAG, "Configuration changed, hiding overlay during transition")
-                
-                // Capture keyboard state IMMEDIATELY before anything else
-                val capturedKeyboardPosition = positionBeforeKeyboard
-                val capturedKeyboardDimensions = screenDimensionsBeforeKeyboard
-                val capturedKeyboardRotation = rotationBeforeKeyboard
-                Log.d(TAG, "Captured at config change: pos=$capturedKeyboardPosition, dims=$capturedKeyboardDimensions, rot=$capturedKeyboardRotation")
+
+                val snapshot = keyboardSnapshot
+                Log.d(TAG, "Captured at config change: snapshot=$snapshot")
                 
                 // Hide the overlay during orientation change to prevent flicker
                 viewManager.setVisibility(View.GONE)
                 
                 // Set flag to prevent clearing keyboard state during rotation
+                cancelPendingKeyboardRestore()
                 isOrientationChanging = true
                 
                 updateHandler.postDelayed({
@@ -126,45 +126,24 @@ class OverlayService : Service() {
                         val newSize = getUsableScreenSize()
                         val newRotation = getCurrentRotation()
                         
-                        // Determine which state to use for transformation
-                        // If we have captured keyboard state, use it; otherwise use saved settings
-                        val hasKeyboardState = capturedKeyboardPosition != null && capturedKeyboardDimensions != null && capturedKeyboardRotation != null
-                        
-                        val capturedPosition = if (hasKeyboardState) {
-                            capturedKeyboardPosition!!
-                        } else {
-                            oldSettings.position
-                        }
-                        
-                        val oldWidth = if (hasKeyboardState) {
-                            capturedKeyboardDimensions!!.x
-                        } else {
-                            if (oldSettings.screenWidth > 0) oldSettings.screenWidth else newSize.x
-                        }
-                        
-                        val oldHeight = if (hasKeyboardState) {
-                            capturedKeyboardDimensions!!.y
-                        } else {
+                        val baselinePosition = snapshot?.position ?: oldSettings.position
+                        val baselineSize = snapshot?.screenSize ?: Point(
+                            if (oldSettings.screenWidth > 0) oldSettings.screenWidth else newSize.x,
                             if (oldSettings.screenHeight > 0) oldSettings.screenHeight else newSize.y
-                        }
+                        )
+                        val baselineRotation = snapshot?.rotation ?: oldSettings.rotation
+
+                        Log.d(TAG, "Using state: snapshot=${snapshot != null}, pos=$baselinePosition, dims=${baselineSize.x}x${baselineSize.y}, rot=$baselineRotation")
                         
-                        val oldRot = if (hasKeyboardState) {
-                            capturedKeyboardRotation!!
-                        } else {
-                            oldSettings.rotation
-                        }
-                        
-                        Log.d(TAG, "Using state: hasKeyboardState=$hasKeyboardState, pos=$capturedPosition, dims=${oldWidth}x${oldHeight}, rot=$oldRot")
-                        
-                        if (newRotation != oldRot) {
+                        if (newRotation != baselineRotation) {
                             val dotSizePx = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
                             val half = dotSizePx / 2
                             
-                            val centerX = capturedPosition.x + half
-                            val centerY = capturedPosition.y + half
-                            Log.d(TAG, "Orientation transform - OLD: rot=$oldRot, size=${oldWidth}x${oldHeight}, center=($centerX,$centerY)")
-                            val centerPosition = DotPosition(centerX, centerY, oldWidth, oldHeight, oldRot)
-                            val transformedCenter = transformPosition(centerPosition, oldWidth, oldHeight, oldRot, newRotation)
+                            val centerX = baselinePosition.x + half
+                            val centerY = baselinePosition.y + half
+                            Log.d(TAG, "Orientation transform - OLD: rot=$baselineRotation, size=${baselineSize.x}x${baselineSize.y}, center=($centerX,$centerY)")
+                            val centerPosition = DotPosition(centerX, centerY, baselineSize.x, baselineSize.y, baselineRotation)
+                            val transformedCenter = transformPosition(centerPosition, baselineSize.x, baselineSize.y, baselineRotation, newRotation)
                             Log.d(TAG, "Orientation transform - NEW: rot=$newRotation, size=${newSize.x}x${newSize.y}, transformedCenter=(${transformedCenter.x},${transformedCenter.y})")
                             val newTopLeftX = transformedCenter.x - half
                             val newTopLeftY = transformedCenter.y - half
@@ -175,16 +154,10 @@ class OverlayService : Service() {
                         settingsRepository.setScreenWidth(newSize.x)
                         settingsRepository.setScreenHeight(newSize.y)
                         settingsRepository.setRotation(newRotation)
-                        
-                        // Clear saved keyboard state after rotation
-                        positionBeforeKeyboard = null
-                        screenDimensionsBeforeKeyboard = null
-                        rotationBeforeKeyboard = null
-                        
-                        // Clear the flag
+                        clearKeyboardSnapshot(restore = false)
+
                         isOrientationChanging = false
-                        
-                        // Show the overlay after update
+
                         viewManager.setVisibility(View.VISIBLE)
                     }
                 }, 500) // Delay to allow orientation animation to complete
@@ -492,23 +465,14 @@ class OverlayService : Service() {
 
             val isVisible = keyboardDetector.isKeyboardVisible()
             if (isVisible) {
-                // Save position before adjusting
-                if (positionBeforeKeyboard == null) {
-                    positionBeforeKeyboard = viewManager.getCurrentPosition()
-                    screenDimensionsBeforeKeyboard = getUsableScreenSize()
-                    rotationBeforeKeyboard = getCurrentRotation()
-                    Log.d(TAG, "checkKeyboardAvoidance: SAVED position=$positionBeforeKeyboard, dimensions=$screenDimensionsBeforeKeyboard, rotation=$rotationBeforeKeyboard")
-                }
+                cancelPendingKeyboardRestore()
+                captureKeyboardSnapshot()
                 adjustPositionForKeyboard(settings)
             } else {
-                // Only restore and clear if NOT in the middle of orientation change
-                if (!isOrientationChanging && positionBeforeKeyboard != null) {
-                    val originalPos = positionBeforeKeyboard!!
-                    Log.d(TAG, "checkKeyboardAvoidance: CLEARING and restoring to $originalPos")
-                    animatePosition(originalPos)
-                    positionBeforeKeyboard = null
-                    screenDimensionsBeforeKeyboard = null
-                    rotationBeforeKeyboard = null
+                if (isOrientationChanging) {
+                    Log.d(TAG, "checkKeyboardAvoidance: orientation in progress, keeping snapshot")
+                } else {
+                    scheduleKeyboardRestore()
                 }
             }
         }
@@ -533,28 +497,58 @@ class OverlayService : Service() {
             if (!settings.keyboardAvoidanceEnabled) return@launch
 
             if (visible) {
-                // Save position before adjusting
-                if (positionBeforeKeyboard == null) {
-                    positionBeforeKeyboard = viewManager.getCurrentPosition()
-                    screenDimensionsBeforeKeyboard = getUsableScreenSize()
-                    rotationBeforeKeyboard = getCurrentRotation()
-                    Log.d(TAG, "handleKeyboardChange: saved position=$positionBeforeKeyboard, dimensions=$screenDimensionsBeforeKeyboard, rotation=$rotationBeforeKeyboard")
-                }
-                if (!isUserDragging) {
-                    adjustPositionForKeyboard(settings, height)
-                } else {
-                    Log.d(TAG, "handleKeyboardChange: skipping adjust due to active drag")
-                }
+                cancelPendingKeyboardRestore()
+                captureKeyboardSnapshot()
+                adjustPositionForKeyboard(settings, height)
             } else {
-                // Restore position when keyboard hides
-                positionBeforeKeyboard?.let { originalPos ->
-                    Log.d(TAG, "handleKeyboardChange: restoring position=$originalPos")
-                    animatePosition(originalPos)
-                    positionBeforeKeyboard = null
-                    screenDimensionsBeforeKeyboard = null
-                    rotationBeforeKeyboard = null
+                if (isOrientationChanging) {
+                    Log.d(TAG, "handleKeyboardChange: orientation in progress, keeping snapshot")
+                } else {
+                    scheduleKeyboardRestore()
                 }
             }
+        }
+    }
+
+    private fun captureKeyboardSnapshot() {
+        if (keyboardSnapshot != null) return
+        cancelPendingKeyboardRestore()
+        val position = viewManager.getCurrentPosition() ?: return
+        val screenSize = getUsableScreenSize().let { Point(it.x, it.y) }
+        val rotation = getCurrentRotation()
+        keyboardSnapshot = KeyboardSnapshot(position, screenSize, rotation)
+        Log.d(TAG, "captureKeyboardSnapshot: saved position=$position, size=$screenSize, rotation=$rotation")
+    }
+
+    private fun clearKeyboardSnapshot(restore: Boolean) {
+        cancelPendingKeyboardRestore()
+        val snapshot = keyboardSnapshot ?: return
+        if (restore) {
+            Log.d(TAG, "clearKeyboardSnapshot: restoring position=${snapshot.position}")
+            animatePosition(snapshot.position)
+        } else {
+            Log.d(TAG, "clearKeyboardSnapshot: dropping snapshot without restore")
+        }
+        keyboardSnapshot = null
+    }
+
+    private fun scheduleKeyboardRestore() {
+        if (keyboardSnapshot == null) return
+        if (pendingKeyboardRestore != null) return
+        val runnable = Runnable {
+            pendingKeyboardRestore = null
+            clearKeyboardSnapshot(restore = true)
+        }
+        pendingKeyboardRestore = runnable
+        keyboardHandler.postDelayed(runnable, KEYBOARD_RESTORE_DELAY_MS)
+        Log.d(TAG, "scheduleKeyboardRestore: will restore in ${KEYBOARD_RESTORE_DELAY_MS}ms")
+    }
+
+    private fun cancelPendingKeyboardRestore() {
+        pendingKeyboardRestore?.let {
+            keyboardHandler.removeCallbacks(it)
+            pendingKeyboardRestore = null
+            Log.d(TAG, "cancelPendingKeyboardRestore: cancelled pending restore")
         }
     }
 
