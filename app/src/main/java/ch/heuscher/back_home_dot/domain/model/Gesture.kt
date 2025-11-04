@@ -19,15 +19,5 @@ enum class Gesture {
  */
 enum class OverlayMode {
     NORMAL,
-    RESCUE_RING;
-
-    fun getDisplayName(): String = when (this) {
-        NORMAL -> "Normal Mode"
-        RESCUE_RING -> "Rescue Ring Mode"
-    }
-
-    fun getDescription(): String = when (this) {
-        NORMAL -> "Standard navigation with gesture controls"
-        RESCUE_RING -> "Emergency mode for quick app closure"
-    }
+    RESCUE_RING
 }

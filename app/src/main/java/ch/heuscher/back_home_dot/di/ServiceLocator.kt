@@ -73,7 +73,9 @@ object ServiceLocator {
         onAdjustPosition: (DotPosition) -> Unit,
         getCurrentPosition: () -> DotPosition?,
         getCurrentRotation: () -> Int,
-        getUsableScreenSize: () -> Point
+        getUsableScreenSize: () -> Point,
+        getSettings: suspend () -> ch.heuscher.back_home_dot.domain.model.OverlaySettings,
+        isUserDragging: () -> Boolean
     ): KeyboardManager {
         return KeyboardManager(
             context = context,
@@ -81,7 +83,9 @@ object ServiceLocator {
             onAdjustPosition = onAdjustPosition,
             getCurrentPosition = getCurrentPosition,
             getCurrentRotation = getCurrentRotation,
-            getUsableScreenSize = getUsableScreenSize
+            getUsableScreenSize = getUsableScreenSize,
+            getSettings = getSettings,
+            isUserDragging = isUserDragging
         )
     }
 

@@ -105,7 +105,9 @@ class OverlayService : Service() {
             onAdjustPosition = { position -> animateToPosition(position) },
             getCurrentPosition = { viewManager.getCurrentPosition() },
             getCurrentRotation = { orientationHandler.getCurrentRotation() },
-            getUsableScreenSize = { orientationHandler.getUsableScreenSize() }
+            getUsableScreenSize = { orientationHandler.getUsableScreenSize() },
+            getSettings = { settingsRepository.getAllSettings().first() },
+            isUserDragging = { isUserDragging }
         )
 
         positionAnimator = ServiceLocator.createPositionAnimator(

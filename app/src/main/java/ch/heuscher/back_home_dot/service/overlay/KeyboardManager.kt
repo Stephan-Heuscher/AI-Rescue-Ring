@@ -8,6 +8,11 @@ import android.util.Log
 import ch.heuscher.back_home_dot.domain.model.DotPosition
 import ch.heuscher.back_home_dot.domain.model.OverlaySettings
 import ch.heuscher.back_home_dot.util.AppConstants
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * Manages keyboard avoidance functionality for the overlay dot.
@@ -19,7 +24,9 @@ class KeyboardManager(
     private val onAdjustPosition: (DotPosition) -> Unit,
     private val getCurrentPosition: () -> DotPosition?,
     private val getCurrentRotation: () -> Int,
-    private val getUsableScreenSize: () -> Point
+    private val getUsableScreenSize: () -> Point,
+    private val getSettings: suspend () -> OverlaySettings,
+    private val isUserDragging: () -> Boolean
 ) {
     companion object {
         private const val TAG = "KeyboardManager"
@@ -44,6 +51,9 @@ class KeyboardManager(
     private var isOrientationChanging = false
     private var lastKeyboardAdjustmentTime = 0L
 
+    // Coroutine scope for async operations
+    private val managerScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     // Handlers for scheduling
     private val keyboardHandler = Handler(Looper.getMainLooper())
     private var pendingKeyboardRestore: Runnable? = null
@@ -51,7 +61,9 @@ class KeyboardManager(
     // Periodic keyboard check
     private val keyboardCheckRunnable = object : Runnable {
         override fun run() {
-            checkKeyboardAvoidance()
+            managerScope.launch {
+                checkKeyboardAvoidance()
+            }
             keyboardHandler.postDelayed(this, AppConstants.KEYBOARD_CHECK_INTERVAL_MS)
         }
     }
@@ -69,6 +81,7 @@ class KeyboardManager(
     fun stopMonitoring() {
         keyboardHandler.removeCallbacks(keyboardCheckRunnable)
         cancelPendingKeyboardRestore()
+        managerScope.cancel()
     }
 
     /**
@@ -121,16 +134,17 @@ class KeyboardManager(
     /**
      * Check keyboard state and adjust position if needed
      */
-    fun checkKeyboardAvoidance(settings: OverlaySettings? = null) {
-        if (settings != null && !settings.keyboardAvoidanceEnabled) return
+    suspend fun checkKeyboardAvoidance() {
+        if (isUserDragging()) return
+
+        val settings = getSettings()
+        if (!settings.keyboardAvoidanceEnabled) return
 
         val isVisible = keyboardDetector.isKeyboardVisible()
         if (isVisible) {
             cancelPendingKeyboardRestore()
             captureKeyboardSnapshot()
-            if (settings != null) {
-                adjustPositionForKeyboard(settings)
-            }
+            adjustPositionForKeyboard(settings)
         } else {
             if (!isOrientationChanging) {
                 scheduleKeyboardRestore()

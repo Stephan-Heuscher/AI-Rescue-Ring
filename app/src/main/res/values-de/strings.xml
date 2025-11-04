@@ -3,11 +3,11 @@
     <string name="app_name">Assistive Tap</string>
 
     <!-- Permissions -->
-    <string name="accessibility_service_description">Ermöglicht der Assistive Tap App, Navigationstasten und App-Wechsel auszuführen</string>
-    <string name="overlay_permission_needed">Overlay-Berechtigung erforderlich</string>
-    <string name="accessibility_service_needed">Accessibility Service erforderlich</string>
-    <string name="please_enable_overlay">Bitte aktivieren Sie die Overlay-Berechtigung für diese App</string>
-    <string name="please_enable_accessibility">Bitte aktivieren Sie den Accessibility Service für diese App in den Einstellungen</string>
+    <string name="accessibility_service_description">Lässt Assistive Tap für Sie Zurück, Home und App-Wechsel drücken</string>
+    <string name="overlay_permission_needed">Über Apps anzeigen nötig</string>
+    <string name="accessibility_service_needed">Hilfe-Dienst nötig</string>
+    <string name="please_enable_overlay">Bitte erlauben Sie dieser App, über anderen Apps zu erscheinen</string>
+    <string name="please_enable_accessibility">Bitte schalten Sie den Hilfe-Dienst für diese App in den Einstellungen ein</string>
     <string name="open_settings">Einstellungen öffnen</string>
 
     <!-- Main Screen -->
@@ -51,26 +51,34 @@
     <string name="custom_color">Eigene Farbe</string>
 
     <!-- Keyboard Avoidance -->
-    <string name="keyboard_avoidance">Tastatur Vermeidung</string>
-    <string name="keyboard_avoidance_desc">Den Punkt automatisch von der Bildschirmtastatur wegbewegen</string>
-    <string name="avoid_keyboard">Tastatur vermeiden</string>
+    <string name="keyboard_avoidance">Weg von Tastatur</string>
+    <string name="keyboard_avoidance_desc">Punkt wegbewegen wenn Tastatur erscheint</string>
+    <string name="avoid_keyboard">Weg von Tastatur</string>
 
     <!-- Tap Behavior -->
-    <string name="tap_behavior">Tipp-Verhalten</string>
-    <string name="tap_behavior_desc">Wählen Sie, was passiert, wenn Sie den Punkt antippen</string>
+    <string name="tap_behavior">Was Tippen macht</string>
+    <string name="tap_behavior_desc">Wählen Sie, was passiert wenn Sie den Punkt antippen</string>
     <string name="tap_behavior_standard">Standard: 1x tippen = Home, 2x tippen = Zurück</string>
     <string name="tap_behavior_back">Zurück: 1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
+    <string name="tap_behavior_standard_name">Standard</string>
+    <string name="tap_behavior_back_name">Zurück</string>
+    <string name="tap_behavior_standard_description">1x tippen = Home, 2x tippen = Zurück</string>
+    <string name="tap_behavior_back_description">1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
 
-    <!-- Rescue Ring -->
+    <!-- Rescue Ring / Overlay Modes -->
     <string name="rescue_ring">Rettungsring</string>
     <string name="rescue_ring_desc">Notfall-Modus: Aktuelle App stoppen und nach Hause</string>
     <string name="enable_rescue_ring">Rettungsring aktivieren</string>
+    <string name="overlay_mode_normal">Normal-Modus</string>
+    <string name="overlay_mode_normal_description">Standard-Navigation mit Gestensteuerung</string>
+    <string name="overlay_mode_rescue_ring">Rettungsring-Modus</string>
+    <string name="overlay_mode_rescue_ring_description">Notfall-Modus zum schnellen App-Schließen</string>
 
     <!-- Advanced Settings -->
-    <string name="for_experts">Für Experten</string>
-    <string name="transparency">Durchsichtigkeit</string>
+    <string name="for_experts">Mehr Einstellungen</string>
+    <string name="transparency">Durchsichtig</string>
     <string name="how_transparent_the_point_is">Wie durchsichtig der Punkt ist</string>
-    <string name="switch_speed">Wechsel-Geschwindigkeit</string>
+    <string name="switch_speed">Geschwindigkeit</string>
     <string name="wait_time_for_app_switch">Wartezeit beim App-Wechsel</string>
 
     <!-- Dialogs -->
@@ -82,6 +90,11 @@
     <string name="cancel">Abbrechen</string>
     <string name="choose_custom_color">Eigene Farbe wählen</string>
     <string name="ok">OK</string>
+
+    <!-- Color Picker -->
+    <string name="color_component_red">Rot</string>
+    <string name="color_component_green">Grün</string>
+    <string name="color_component_blue">Blau</string>
 
     <!-- Content Descriptions -->
     <string name="assistipoint_app">AssistiPunkt App</string>

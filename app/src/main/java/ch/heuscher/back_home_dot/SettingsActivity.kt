@@ -26,7 +26,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var tapBehaviorStandard: android.widget.RadioButton
     private lateinit var tapBehaviorBack: android.widget.RadioButton
     private lateinit var advancedToggleCard: androidx.cardview.widget.CardView
-    private lateinit var advancedContent: android.widget.LinearLayout
+    private lateinit var advancedContent: androidx.cardview.widget.CardView
     private lateinit var advancedArrow: TextView
     private var isAdvancedExpanded = false
 
