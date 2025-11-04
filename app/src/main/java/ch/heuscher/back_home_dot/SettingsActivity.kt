@@ -22,7 +22,6 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var timeoutSeekBar: SeekBar
     private lateinit var timeoutValueText: TextView
     private lateinit var keyboardAvoidanceSwitch: androidx.appcompat.widget.SwitchCompat
-    private lateinit var rescueRingSwitch: androidx.appcompat.widget.SwitchCompat
     private lateinit var tapBehaviorRadioGroup: android.widget.RadioGroup
     private lateinit var tapBehaviorStandard: android.widget.RadioButton
     private lateinit var tapBehaviorBack: android.widget.RadioButton
@@ -38,7 +37,6 @@ class SettingsActivity : AppCompatActivity() {
     private var currentTimeout = 100L
     private var currentColor = 0xFF2196F3.toInt()
     private var keyboardAvoidanceEnabled = false
-    private var rescueRingEnabled = false
     private var currentTapBehavior = "BACK"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +54,6 @@ class SettingsActivity : AppCompatActivity() {
         setupAlphaSeekBar()
         setupTimeoutSeekBar()
         setupKeyboardAvoidanceSwitch()
-        setupRescueRingSwitch()
         setupTapBehaviorRadioGroup()
         setupColorButtons()
     }
@@ -67,7 +64,6 @@ class SettingsActivity : AppCompatActivity() {
         timeoutSeekBar = findViewById(R.id.timeout_seekbar)
         timeoutValueText = findViewById(R.id.timeout_value_text)
         keyboardAvoidanceSwitch = findViewById(R.id.keyboard_avoidance_switch)
-        rescueRingSwitch = findViewById(R.id.rescue_ring_switch)
         tapBehaviorRadioGroup = findViewById(R.id.tap_behavior_radio_group)
         tapBehaviorStandard = findViewById(R.id.tap_behavior_standard)
         tapBehaviorBack = findViewById(R.id.tap_behavior_back)
@@ -145,16 +141,6 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupRescueRingSwitch() {
-        rescueRingSwitch.setOnCheckedChangeListener { _, isChecked ->
-            rescueRingEnabled = isChecked
-            lifecycleScope.launch {
-                settingsRepository.setRescueRingEnabled(isChecked)
-            }
-            broadcastSettingsUpdate()
-        }
-    }
-
     private fun setupTapBehaviorRadioGroup() {
         tapBehaviorRadioGroup.setOnCheckedChangeListener { _, checkedId ->
             val behavior = when (checkedId) {
@@ -209,13 +195,6 @@ class SettingsActivity : AppCompatActivity() {
             settingsRepository.isKeyboardAvoidanceEnabled().collect { enabled ->
                 keyboardAvoidanceEnabled = enabled
                 keyboardAvoidanceSwitch.isChecked = enabled
-            }
-        }
-
-        lifecycleScope.launch {
-            settingsRepository.isRescueRingEnabled().collect { enabled ->
-                rescueRingEnabled = enabled
-                rescueRingSwitch.isChecked = enabled
             }
         }
 

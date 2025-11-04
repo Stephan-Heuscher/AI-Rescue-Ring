@@ -258,7 +258,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Section: Keyboard & Rescue Ring -->
+        <!-- Section: Keyboard -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -296,42 +296,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/avoid_keyboard"
-                    android:textSize="16sp"
-                    android:checked="false"
-                    android:minHeight="48dp"
-                    android:layout_marginBottom="24dp" />
-
-                <!-- Rescue Ring Divider -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?android:attr/listDivider"
-                    android:layout_marginBottom="20dp" />
-
-                <!-- Rescue Ring / Life Ring -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/rescue_ring"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:layout_marginBottom="4dp"
-                    android:importantForAccessibility="yes" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/rescue_ring_desc"
-                    android:textSize="14sp"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:layout_marginBottom="8dp" />
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/rescue_ring_switch"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/enable_rescue_ring"
                     android:textSize="16sp"
                     android:checked="false"
                     android:minHeight="48dp" />
