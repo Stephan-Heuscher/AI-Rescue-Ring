@@ -60,11 +60,19 @@
     <string name="tap_behavior_desc">Choose what happens when you tap the dot</string>
     <string name="tap_behavior_standard">Standard: 1 tap = Home, 2 taps = Back</string>
     <string name="tap_behavior_back">Back: 1 tap = Back, 2 taps = Switch to previous app</string>
+    <string name="tap_behavior_standard_name">Standard</string>
+    <string name="tap_behavior_back_name">Back</string>
+    <string name="tap_behavior_standard_description">1 tap = Home, 2 taps = Back</string>
+    <string name="tap_behavior_back_description">1 tap = Back, 2 taps = Switch to previous app</string>
 
-    <!-- Rescue Ring -->
+    <!-- Rescue Ring / Overlay Modes -->
     <string name="rescue_ring">Life Ring</string>
     <string name="rescue_ring_desc">Emergency mode: Stop current app and go home</string>
     <string name="enable_rescue_ring">Enable life ring</string>
+    <string name="overlay_mode_normal">Normal Mode</string>
+    <string name="overlay_mode_normal_description">Standard navigation with gesture controls</string>
+    <string name="overlay_mode_rescue_ring">Rescue Ring Mode</string>
+    <string name="overlay_mode_rescue_ring_description">Emergency mode for quick app closure</string>
 
     <!-- Advanced Settings -->
     <string name="for_experts">For experts</string>
@@ -82,6 +90,11 @@
     <string name="cancel">Cancel</string>
     <string name="choose_custom_color">Choose custom color</string>
     <string name="ok">OK</string>
+
+    <!-- Color Picker -->
+    <string name="color_component_red">Red</string>
+    <string name="color_component_green">Green</string>
+    <string name="color_component_blue">Blue</string>
 
     <!-- Content Descriptions -->
     <string name="assistipoint_app">Assistive Tap app</string>

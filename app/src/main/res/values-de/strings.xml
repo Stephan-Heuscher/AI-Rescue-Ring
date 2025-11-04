@@ -60,11 +60,19 @@
     <string name="tap_behavior_desc">Wählen Sie, was passiert, wenn Sie den Punkt antippen</string>
     <string name="tap_behavior_standard">Standard: 1x tippen = Home, 2x tippen = Zurück</string>
     <string name="tap_behavior_back">Zurück: 1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
+    <string name="tap_behavior_standard_name">Standard</string>
+    <string name="tap_behavior_back_name">Zurück</string>
+    <string name="tap_behavior_standard_description">1x tippen = Home, 2x tippen = Zurück</string>
+    <string name="tap_behavior_back_description">1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
 
-    <!-- Rescue Ring -->
+    <!-- Rescue Ring / Overlay Modes -->
     <string name="rescue_ring">Rettungsring</string>
     <string name="rescue_ring_desc">Notfall-Modus: Aktuelle App stoppen und nach Hause</string>
     <string name="enable_rescue_ring">Rettungsring aktivieren</string>
+    <string name="overlay_mode_normal">Normal-Modus</string>
+    <string name="overlay_mode_normal_description">Standard-Navigation mit Gestensteuerung</string>
+    <string name="overlay_mode_rescue_ring">Rettungsring-Modus</string>
+    <string name="overlay_mode_rescue_ring_description">Notfall-Modus zum schnellen App-Schließen</string>
 
     <!-- Advanced Settings -->
     <string name="for_experts">Für Experten</string>
@@ -82,6 +90,11 @@
     <string name="cancel">Abbrechen</string>
     <string name="choose_custom_color">Eigene Farbe wählen</string>
     <string name="ok">OK</string>
+
+    <!-- Color Picker -->
+    <string name="color_component_red">Rot</string>
+    <string name="color_component_green">Grün</string>
+    <string name="color_component_blue">Blau</string>
 
     <!-- Content Descriptions -->
     <string name="assistipoint_app">AssistiPunkt App</string>
