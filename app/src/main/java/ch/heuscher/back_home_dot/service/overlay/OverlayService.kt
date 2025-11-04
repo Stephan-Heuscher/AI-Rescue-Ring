@@ -62,6 +62,9 @@ class OverlayService : Service() {
 
     // Position before keyboard appeared
     private var positionBeforeKeyboard: DotPosition? = null
+    private var screenDimensionsBeforeKeyboard: Point? = null
+    private var rotationBeforeKeyboard: Int? = null
+    private var isOrientationChanging = false
 
     // Keyboard state for movement constraints
     private var keyboardVisible = false
@@ -104,28 +107,83 @@ class OverlayService : Service() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_CONFIGURATION_CHANGED) {
                 Log.d(TAG, "Configuration changed, hiding overlay during transition")
+                
+                // Capture keyboard state IMMEDIATELY before anything else
+                val capturedKeyboardPosition = positionBeforeKeyboard
+                val capturedKeyboardDimensions = screenDimensionsBeforeKeyboard
+                val capturedKeyboardRotation = rotationBeforeKeyboard
+                Log.d(TAG, "Captured at config change: pos=$capturedKeyboardPosition, dims=$capturedKeyboardDimensions, rot=$capturedKeyboardRotation")
+                
                 // Hide the overlay during orientation change to prevent flicker
                 viewManager.setVisibility(View.GONE)
+                
+                // Set flag to prevent clearing keyboard state during rotation
+                isOrientationChanging = true
+                
                 updateHandler.postDelayed({
                     serviceScope.launch {
                         val oldSettings = settingsRepository.getAllSettings().first()
                         val newSize = getUsableScreenSize()
                         val newRotation = getCurrentRotation()
-                        if (newRotation != oldSettings.rotation) {
+                        
+                        // Determine which state to use for transformation
+                        // If we have captured keyboard state, use it; otherwise use saved settings
+                        val hasKeyboardState = capturedKeyboardPosition != null && capturedKeyboardDimensions != null && capturedKeyboardRotation != null
+                        
+                        val capturedPosition = if (hasKeyboardState) {
+                            capturedKeyboardPosition!!
+                        } else {
+                            oldSettings.position
+                        }
+                        
+                        val oldWidth = if (hasKeyboardState) {
+                            capturedKeyboardDimensions!!.x
+                        } else {
+                            if (oldSettings.screenWidth > 0) oldSettings.screenWidth else newSize.x
+                        }
+                        
+                        val oldHeight = if (hasKeyboardState) {
+                            capturedKeyboardDimensions!!.y
+                        } else {
+                            if (oldSettings.screenHeight > 0) oldSettings.screenHeight else newSize.y
+                        }
+                        
+                        val oldRot = if (hasKeyboardState) {
+                            capturedKeyboardRotation!!
+                        } else {
+                            oldSettings.rotation
+                        }
+                        
+                        Log.d(TAG, "Using state: hasKeyboardState=$hasKeyboardState, pos=$capturedPosition, dims=${oldWidth}x${oldHeight}, rot=$oldRot")
+                        
+                        if (newRotation != oldRot) {
                             val dotSizePx = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
                             val half = dotSizePx / 2
-                            val centerX = oldSettings.position.x + half
-                            val centerY = oldSettings.position.y + half
-                            val centerPosition = DotPosition(centerX, centerY, oldSettings.screenWidth, oldSettings.screenHeight, oldSettings.rotation)
-                            val transformedCenter = transformPosition(centerPosition, oldSettings.screenWidth, oldSettings.screenHeight, oldSettings.rotation, newRotation)
+                            
+                            val centerX = capturedPosition.x + half
+                            val centerY = capturedPosition.y + half
+                            Log.d(TAG, "Orientation transform - OLD: rot=$oldRot, size=${oldWidth}x${oldHeight}, center=($centerX,$centerY)")
+                            val centerPosition = DotPosition(centerX, centerY, oldWidth, oldHeight, oldRot)
+                            val transformedCenter = transformPosition(centerPosition, oldWidth, oldHeight, oldRot, newRotation)
+                            Log.d(TAG, "Orientation transform - NEW: rot=$newRotation, size=${newSize.x}x${newSize.y}, transformedCenter=(${transformedCenter.x},${transformedCenter.y})")
                             val newTopLeftX = transformedCenter.x - half
                             val newTopLeftY = transformedCenter.y - half
+                            Log.d(TAG, "Orientation transform - FINAL: topLeft=($newTopLeftX,$newTopLeftY)")
                             val transformedPosition = DotPosition(newTopLeftX, newTopLeftY, newSize.x, newSize.y, newRotation)
                             settingsRepository.setPosition(transformedPosition)
                         }
                         settingsRepository.setScreenWidth(newSize.x)
                         settingsRepository.setScreenHeight(newSize.y)
                         settingsRepository.setRotation(newRotation)
+                        
+                        // Clear saved keyboard state after rotation
+                        positionBeforeKeyboard = null
+                        screenDimensionsBeforeKeyboard = null
+                        rotationBeforeKeyboard = null
+                        
+                        // Clear the flag
+                        isOrientationChanging = false
+                        
                         // Show the overlay after update
                         viewManager.setVisibility(View.VISIBLE)
                     }
@@ -251,13 +309,16 @@ class OverlayService : Service() {
         val delta = (newRot - oldRot + 4) % 4  // 0,1,2,3 for 0,90,180,270 degrees clockwise
         val x = position.x
         val y = position.y
-        return when (delta) {
+        Log.d(TAG, "transformPosition: delta=$delta, oldRot=$oldRot, newRot=$newRot, input=($x,$y), oldSize=${oldW}x${oldH}")
+        val result = when (delta) {
             0 -> DotPosition(x, y)
             1 -> DotPosition(y, oldW - x)  // 90 deg clockwise
             2 -> DotPosition(oldW - x, oldH - y)  // 180 deg
             3 -> DotPosition(oldH - y, x)  // 270 deg clockwise
             else -> DotPosition(x, y)
         }
+        Log.d(TAG, "transformPosition: result=(${result.x},${result.y})")
+        return result
     }
 
     private fun getCurrentRotation(): Int {
@@ -323,9 +384,13 @@ class OverlayService : Service() {
                         adjustPositionForKeyboard(settings, currentKeyboardHeight)
                     } else {
                         viewManager.getCurrentPosition()?.let { finalPos ->
-                            val settings = settingsRepository.getAllSettings().first()
-                            val positionWithScreen = DotPosition(finalPos.x, finalPos.y, settings.screenWidth, settings.screenHeight)
+                            val screenSize = getUsableScreenSize()
+                            val positionWithScreen = DotPosition(finalPos.x, finalPos.y, screenSize.x, screenSize.y)
                             settingsRepository.setPosition(positionWithScreen)
+                            // Also update screen dimensions
+                            settingsRepository.setScreenWidth(screenSize.x)
+                            settingsRepository.setScreenHeight(screenSize.y)
+                            settingsRepository.setRotation(getCurrentRotation())
                         }
                     }
                 }
@@ -407,11 +472,15 @@ class OverlayService : Service() {
         val newPosition = DotPosition(constrainedX, constrainedY)
         viewManager.updatePosition(newPosition)
 
-        // Save new position
+        // Save new position with current screen dimensions
         serviceScope.launch {
-            val settings = settingsRepository.getAllSettings().first()
-            val positionWithScreen = DotPosition(constrainedX, constrainedY, settings.screenWidth, settings.screenHeight)
+            val screenSize = getUsableScreenSize()
+            val positionWithScreen = DotPosition(constrainedX, constrainedY, screenSize.x, screenSize.y)
             settingsRepository.setPosition(positionWithScreen)
+            // Also update screen dimensions
+            settingsRepository.setScreenWidth(screenSize.x)
+            settingsRepository.setScreenHeight(screenSize.y)
+            settingsRepository.setRotation(getCurrentRotation())
         }
     }
 
@@ -426,13 +495,20 @@ class OverlayService : Service() {
                 // Save position before adjusting
                 if (positionBeforeKeyboard == null) {
                     positionBeforeKeyboard = viewManager.getCurrentPosition()
+                    screenDimensionsBeforeKeyboard = getUsableScreenSize()
+                    rotationBeforeKeyboard = getCurrentRotation()
+                    Log.d(TAG, "checkKeyboardAvoidance: SAVED position=$positionBeforeKeyboard, dimensions=$screenDimensionsBeforeKeyboard, rotation=$rotationBeforeKeyboard")
                 }
                 adjustPositionForKeyboard(settings)
             } else {
-                // Restore position when keyboard hides
-                positionBeforeKeyboard?.let { originalPos ->
+                // Only restore and clear if NOT in the middle of orientation change
+                if (!isOrientationChanging && positionBeforeKeyboard != null) {
+                    val originalPos = positionBeforeKeyboard!!
+                    Log.d(TAG, "checkKeyboardAvoidance: CLEARING and restoring to $originalPos")
                     animatePosition(originalPos)
                     positionBeforeKeyboard = null
+                    screenDimensionsBeforeKeyboard = null
+                    rotationBeforeKeyboard = null
                 }
             }
         }
@@ -460,7 +536,9 @@ class OverlayService : Service() {
                 // Save position before adjusting
                 if (positionBeforeKeyboard == null) {
                     positionBeforeKeyboard = viewManager.getCurrentPosition()
-                    Log.d(TAG, "handleKeyboardChange: saved position=$positionBeforeKeyboard")
+                    screenDimensionsBeforeKeyboard = getUsableScreenSize()
+                    rotationBeforeKeyboard = getCurrentRotation()
+                    Log.d(TAG, "handleKeyboardChange: saved position=$positionBeforeKeyboard, dimensions=$screenDimensionsBeforeKeyboard, rotation=$rotationBeforeKeyboard")
                 }
                 if (!isUserDragging) {
                     adjustPositionForKeyboard(settings, height)
@@ -473,6 +551,8 @@ class OverlayService : Service() {
                     Log.d(TAG, "handleKeyboardChange: restoring position=$originalPos")
                     animatePosition(originalPos)
                     positionBeforeKeyboard = null
+                    screenDimensionsBeforeKeyboard = null
+                    rotationBeforeKeyboard = null
                 }
             }
         }
