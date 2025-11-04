@@ -1,14 +1,19 @@
 package ch.heuscher.back_home_dot.di
 
 import android.content.Context
+import android.graphics.Point
 import android.view.ViewConfiguration
 import ch.heuscher.back_home_dot.data.local.SettingsDataSource
 import ch.heuscher.back_home_dot.data.local.SharedPreferencesDataSource
 import ch.heuscher.back_home_dot.data.repository.SettingsRepositoryImpl
+import ch.heuscher.back_home_dot.domain.model.DotPosition
 import ch.heuscher.back_home_dot.domain.repository.SettingsRepository
 import ch.heuscher.back_home_dot.service.overlay.GestureDetector
 import ch.heuscher.back_home_dot.service.overlay.KeyboardDetector
+import ch.heuscher.back_home_dot.service.overlay.KeyboardManager
+import ch.heuscher.back_home_dot.service.overlay.OrientationHandler
 import ch.heuscher.back_home_dot.service.overlay.OverlayViewManager
+import ch.heuscher.back_home_dot.service.overlay.PositionAnimator
 
 /**
  * Simple service locator for dependency injection.
@@ -24,7 +29,7 @@ object ServiceLocator {
         }
     }
 
-    // Lazy initialization of dependencies
+    // Lazy initialization of singletons
     val settingsRepository: SettingsRepository by lazy {
         SettingsRepositoryImpl(settingsDataSource)
     }
@@ -45,6 +50,10 @@ object ServiceLocator {
         OverlayViewManager(applicationContext, windowManager)
     }
 
+    val orientationHandler: OrientationHandler by lazy {
+        OrientationHandler(applicationContext)
+    }
+
     // System services
     private val windowManager by lazy {
         applicationContext.getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager
@@ -52,5 +61,48 @@ object ServiceLocator {
 
     private val inputMethodManager by lazy {
         applicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+    }
+
+    // Factory methods for per-instance components
+
+    /**
+     * Create a new KeyboardManager instance for a service
+     */
+    fun createKeyboardManager(
+        context: Context,
+        onAdjustPosition: (DotPosition) -> Unit,
+        getCurrentPosition: () -> DotPosition?,
+        getCurrentRotation: () -> Int,
+        getUsableScreenSize: () -> Point
+    ): KeyboardManager {
+        return KeyboardManager(
+            context = context,
+            keyboardDetector = keyboardDetector,
+            onAdjustPosition = onAdjustPosition,
+            getCurrentPosition = getCurrentPosition,
+            getCurrentRotation = getCurrentRotation,
+            getUsableScreenSize = getUsableScreenSize
+        )
+    }
+
+    /**
+     * Create a new PositionAnimator instance for a service
+     */
+    fun createPositionAnimator(
+        onPositionUpdate: (DotPosition) -> Unit,
+        onAnimationComplete: (DotPosition) -> Unit
+    ): PositionAnimator {
+        return PositionAnimator(
+            onPositionUpdate = onPositionUpdate,
+            onAnimationComplete = onAnimationComplete
+        )
+    }
+
+    /**
+     * Helper method to get repository from any context
+     */
+    fun getRepository(context: Context): SettingsRepository {
+        initialize(context)
+        return settingsRepository
     }
 }

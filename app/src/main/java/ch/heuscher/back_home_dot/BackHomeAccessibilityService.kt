@@ -7,7 +7,15 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import ch.heuscher.back_home_dot.di.ServiceLocator
+import ch.heuscher.back_home_dot.domain.repository.SettingsRepository
 import ch.heuscher.back_home_dot.util.AppConstants
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.cancel
 
 /**
  * Accessibility service for performing system navigation actions
@@ -15,12 +23,25 @@ import ch.heuscher.back_home_dot.util.AppConstants
 class BackHomeAccessibilityService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
-    private lateinit var settings: OverlaySettings
+    private lateinit var repository: SettingsRepository
+    private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
+
+    // Cache settings values for synchronous access
+    private var recentsTimeout: Long = AppConstants.RECENTS_TIMEOUT_DEFAULT_MS
 
     override fun onServiceConnected() {
         super.onServiceConnected()
 
-        settings = OverlaySettings(this)
+        // Initialize repository through ServiceLocator
+        repository = ServiceLocator.getRepository(this)
+
+        // Observe recentsTimeout changes
+        repository.getRecentsTimeout()
+            .onEach { timeout ->
+                recentsTimeout = timeout
+                Log.d(TAG, "Recents timeout updated: $timeout ms")
+            }
+            .launchIn(serviceScope)
 
         // Configure service info
         serviceInfo = AccessibilityServiceInfo().apply {
@@ -49,6 +70,7 @@ class BackHomeAccessibilityService : AccessibilityService() {
 
     override fun onUnbind(intent: Intent?): Boolean {
         instance = null
+        serviceScope.cancel()
         return super.onUnbind(intent)
     }
 
@@ -108,10 +130,9 @@ class BackHomeAccessibilityService : AccessibilityService() {
      */
     fun performRecentsAction() {
         performGlobalAction(GLOBAL_ACTION_RECENTS)
-        val delay = settings.recentsTimeout
         handler.postDelayed({
             performGlobalAction(GLOBAL_ACTION_RECENTS)
-        }, delay)
+        }, recentsTimeout)
     }
 
     /**
