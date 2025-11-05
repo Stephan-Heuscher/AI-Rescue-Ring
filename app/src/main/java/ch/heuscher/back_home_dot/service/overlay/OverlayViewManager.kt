@@ -5,6 +5,7 @@ import android.graphics.PixelFormat
 import android.graphics.Point
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -24,6 +25,9 @@ class OverlayViewManager(
     private val context: Context,
     private val windowManager: WindowManager
 ) {
+    companion object {
+        private const val TAG = "OverlayViewManager"
+    }
 
     private var floatingView: View? = null
     private var floatingDot: View? = null
@@ -106,13 +110,20 @@ class OverlayViewManager(
      */
     fun fadeIn(duration: Long = 300L) {
         floatingView?.apply {
+            Log.d(TAG, "fadeIn: Starting fade-in animation, duration=${duration}ms, current alpha=$alpha")
             alpha = 0f
             visibility = View.VISIBLE
             animate()
                 .alpha(1f)
                 .setDuration(duration)
+                .withStartAction {
+                    Log.d(TAG, "fadeIn: Animation started")
+                }
+                .withEndAction {
+                    Log.d(TAG, "fadeIn: Animation completed, final alpha=$alpha")
+                }
                 .start()
-        }
+        } ?: Log.w(TAG, "fadeIn: floatingView is null, cannot animate")
     }
 
     /**

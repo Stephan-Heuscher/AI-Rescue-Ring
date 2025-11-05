@@ -410,10 +410,12 @@ class OverlayService : Service() {
                 val dimensionsChanged = (newSize.x != oldWidth || newSize.y != oldHeight)
                 val rotationChanged = (newRotation != oldRotation)
 
+                Log.d(TAG, "Orientation check attempt $attempt: dimensions=${newSize.x}x${newSize.y} (changed=$dimensionsChanged), rotation=$newRotation (changed=$rotationChanged)")
+
                 if (dimensionsChanged || rotationChanged) {
                     // Screen has changed! Apply transformation now
-                    val elapsedMs = (attempt + 1) * ORIENTATION_CHANGE_RETRY_DELAY_MS
-                    Log.d(TAG, "Orientation detected after ${elapsedMs}ms: rot=$oldRotation→$newRotation, size=${oldWidth}x${oldHeight}→${newSize.x}x${newSize.y}")
+                    val elapsedMs = ORIENTATION_CHANGE_INITIAL_DELAY_MS + (attempt * ORIENTATION_CHANGE_RETRY_DELAY_MS)
+                    Log.d(TAG, "Orientation detected after ${elapsedMs}ms (attempt $attempt): rot=$oldRotation→$newRotation, size=${oldWidth}x${oldHeight}→${newSize.x}x${newSize.y}")
 
                     applyOrientationTransformation(oldRotation, oldWidth, oldHeight, newRotation, newSize)
                 } else {
@@ -458,7 +460,8 @@ class OverlayService : Service() {
 
             // Update position and fade in smoothly
             viewManager.updatePosition(transformedPosition)
-            viewManager.fadeIn(300L)
+            Log.d(TAG, "Starting 2000ms fade-in animation")
+            viewManager.fadeIn(2000L)
             settingsRepository.setPosition(transformedPosition)
         }
 
