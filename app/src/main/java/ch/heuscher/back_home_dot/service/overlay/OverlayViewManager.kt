@@ -111,18 +111,28 @@ class OverlayViewManager(
     fun fadeIn(duration: Long = 300L) {
         floatingView?.apply {
             Log.d(TAG, "fadeIn: Starting fade-in animation, duration=${duration}ms, current alpha=$alpha")
+
+            // Cancel any ongoing animations
+            animate().cancel()
+
+            // Set initial alpha to 0
             alpha = 0f
             visibility = View.VISIBLE
-            animate()
-                .alpha(1f)
-                .setDuration(duration)
-                .withStartAction {
-                    Log.d(TAG, "fadeIn: Animation started")
-                }
-                .withEndAction {
-                    Log.d(TAG, "fadeIn: Animation completed, final alpha=$alpha")
-                }
-                .start()
+
+            // Post the animation to run after layout
+            post {
+                Log.d(TAG, "fadeIn: Posted animation starting, current alpha=$alpha")
+                animate()
+                    .alpha(1f)
+                    .setDuration(duration)
+                    .withStartAction {
+                        Log.d(TAG, "fadeIn: Animation started, alpha=$alpha")
+                    }
+                    .withEndAction {
+                        Log.d(TAG, "fadeIn: Animation completed, final alpha=$alpha")
+                    }
+                    .start()
+            }
         } ?: Log.w(TAG, "fadeIn: floatingView is null, cannot animate")
     }
 
