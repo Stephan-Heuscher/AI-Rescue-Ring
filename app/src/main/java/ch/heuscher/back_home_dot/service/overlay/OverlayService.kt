@@ -456,8 +456,9 @@ class OverlayService : Service() {
 
             Log.d(TAG, "Position transformed: (${baselinePosition.x},${baselinePosition.y}) → ($newTopLeftX,$newTopLeftY)")
 
-            // Update position immediately (no animation to avoid jump)
+            // Update position and fade in smoothly
             viewManager.updatePosition(transformedPosition)
+            viewManager.fadeIn(300L)
             settingsRepository.setPosition(transformedPosition)
         }
 

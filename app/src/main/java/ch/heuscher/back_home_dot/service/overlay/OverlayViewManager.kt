@@ -102,6 +102,20 @@ class OverlayViewManager(
     }
 
     /**
+     * Fades in the overlay view over the specified duration.
+     */
+    fun fadeIn(duration: Long = 300L) {
+        floatingView?.apply {
+            alpha = 0f
+            visibility = View.VISIBLE
+            animate()
+                .alpha(1f)
+                .setDuration(duration)
+                .start()
+        }
+    }
+
+    /**
      * Registers a touch listener for gesture detection on overlay elements.
      */
     fun setTouchListener(listener: View.OnTouchListener) {
