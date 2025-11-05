@@ -8,6 +8,9 @@ import android.graphics.PixelFormat
 import android.graphics.Point
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -38,6 +41,8 @@ class OverlayViewManager(
     private var layoutParams: WindowManager.LayoutParams? = null
     private var touchListener: View.OnTouchListener? = null
     private var fadeAnimator: ValueAnimator? = null
+    private val fadeHandler = Handler(Looper.getMainLooper())
+    private var fadeRunnable: Runnable? = null
 
     /**
      * Creates and adds the overlay view to the window.
@@ -67,6 +72,8 @@ class OverlayViewManager(
     fun removeOverlayView() {
         fadeAnimator?.cancel()
         fadeAnimator = null
+        fadeRunnable?.let { fadeHandler.removeCallbacks(it) }
+        fadeRunnable = null
         floatingView?.let { windowManager.removeView(it) }
         floatingView = null
         floatingDot = null
@@ -113,52 +120,56 @@ class OverlayViewManager(
 
     /**
      * Fades in the overlay view over the specified duration.
-     * Uses ValueAnimator to manually update alpha for reliable animation with overlay windows.
+     * Uses manual Handler-based animation to bypass system animator settings.
      */
     fun fadeIn(duration: Long = 300L) {
         floatingView?.apply {
-            Log.d(TAG, "fadeIn: Starting fade-in animation, duration=${duration}ms, current alpha=$alpha")
+            // Check animator duration scale
+            val animatorScale = try {
+                Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE)
+            } catch (e: Exception) {
+                1.0f
+            }
+
+            Log.d(TAG, "fadeIn: Starting fade-in, duration=${duration}ms, system animator scale=$animatorScale")
 
             // Cancel any ongoing animations
-            fadeAnimator?.cancel()
+            fadeRunnable?.let { fadeHandler.removeCallbacks(it) }
 
-            // Set initial alpha to 0
+            // Set initial alpha
             alpha = 0f
             visibility = View.VISIBLE
 
-            // Create ValueAnimator that manually updates alpha
-            fadeAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-                this.duration = duration
+            // Manual animation using Handler - bypasses system animator settings
+            val frameIntervalMs = 16L // ~60fps
+            val totalFrames = (duration / frameIntervalMs).toInt()
+            var currentFrame = 0
+            val startTime = System.currentTimeMillis()
 
-                Log.d(TAG, "fadeIn: Created ValueAnimator with duration=${this.duration}ms, isRunning=${this.isRunning}, isPaused=${this.isPaused}")
+            Log.d(TAG, "fadeIn: Starting manual animation, totalFrames=$totalFrames, frameInterval=${frameIntervalMs}ms")
 
-                addUpdateListener { animator ->
-                    val value = animator.animatedValue as Float
-                    floatingView?.alpha = value
-                    Log.d(TAG, "fadeIn: UPDATE listener called! alpha=$value, fraction=${animator.animatedFraction}")
+            fadeRunnable = object : Runnable {
+                override fun run() {
+                    currentFrame++
+                    val elapsed = System.currentTimeMillis() - startTime
+                    val progress = (elapsed.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
+
+                    floatingView?.alpha = progress
+
+                    if (currentFrame % 30 == 0 || progress >= 1f) {
+                        Log.d(TAG, "fadeIn: frame=$currentFrame, elapsed=${elapsed}ms, progress=$progress, alpha=${floatingView?.alpha}")
+                    }
+
+                    if (progress < 1f) {
+                        fadeHandler.postDelayed(this, frameIntervalMs)
+                    } else {
+                        floatingView?.alpha = 1f
+                        Log.d(TAG, "fadeIn: Manual animation completed, total elapsed=${elapsed}ms, final alpha=${floatingView?.alpha}")
+                    }
                 }
-
-                addListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationStart(animation: Animator) {
-                        Log.d(TAG, "fadeIn: ValueAnimator started, alpha=${floatingView?.alpha}, duration=${(animation as? ValueAnimator)?.duration}")
-                    }
-
-                    override fun onAnimationEnd(animation: Animator) {
-                        floatingView?.alpha = 1f
-                        val wasRunning = (animation as? ValueAnimator)?.isRunning ?: false
-                        Log.d(TAG, "fadeIn: ValueAnimator completed, final alpha=${floatingView?.alpha}, wasRunning=$wasRunning")
-                    }
-
-                    override fun onAnimationCancel(animation: Animator) {
-                        floatingView?.alpha = 1f
-                        Log.d(TAG, "fadeIn: ValueAnimator cancelled, reason unknown")
-                    }
-                })
-
-                Log.d(TAG, "fadeIn: About to call start() on ValueAnimator")
-                start()
-                Log.d(TAG, "fadeIn: ValueAnimator.start() called, isStarted=$isStarted, isRunning=$isRunning")
             }
+
+            fadeHandler.post(fadeRunnable!!)
         } ?: Log.w(TAG, "fadeIn: floatingView is null, cannot animate")
     }
 
