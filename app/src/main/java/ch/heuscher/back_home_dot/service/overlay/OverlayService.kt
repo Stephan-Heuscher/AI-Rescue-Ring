@@ -458,11 +458,15 @@ class OverlayService : Service() {
 
             Log.d(TAG, "Position transformed: (${baselinePosition.x},${baselinePosition.y}) → ($newTopLeftX,$newTopLeftY)")
 
-            // Update position and fade in smoothly
+            // Update position first
             viewManager.updatePosition(transformedPosition)
-            Log.d(TAG, "Starting 2000ms fade-in animation")
-            viewManager.fadeIn(2000L)
             settingsRepository.setPosition(transformedPosition)
+
+            // Post fade-in to happen after layout update completes
+            updateHandler.post {
+                Log.d(TAG, "Posted: Starting 2000ms fade-in animation")
+                viewManager.fadeIn(2000L)
+            }
         }
 
         // Update screen dimensions
