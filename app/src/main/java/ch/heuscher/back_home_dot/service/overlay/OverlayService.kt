@@ -35,7 +35,9 @@ class OverlayService : Service() {
 
     companion object {
         private const val TAG = "OverlayService"
-        private const val ORIENTATION_CHANGE_DELAY_MS = 100L
+        private const val ORIENTATION_CHANGE_INITIAL_DELAY_MS = 16L  // One frame (60fps)
+        private const val ORIENTATION_CHANGE_RETRY_DELAY_MS = 16L    // Check every frame
+        private const val ORIENTATION_CHANGE_MAX_ATTEMPTS = 20       // Max 320ms total
     }
 
     // Core dependencies
@@ -367,61 +369,111 @@ class OverlayService : Service() {
     private fun handleOrientationChange() {
         Log.d(TAG, "Configuration changed, handling orientation")
 
-        // Keep overlay visible during transition (don't hide it)
+        // Keep overlay visible during transition
         isOrientationChanging = true
         keyboardManager.setOrientationChanging(true)
 
+        serviceScope.launch {
+            val oldSettings = settingsRepository.getAllSettings().first()
+            val oldRotation = oldSettings.rotation
+            val oldWidth = oldSettings.screenWidth
+            val oldHeight = oldSettings.screenHeight
+
+            Log.d(TAG, "Orientation change started: rot=$oldRotation, size=${oldWidth}x${oldHeight}")
+
+            // Poll for screen dimension changes with dynamic timing
+            waitForOrientationComplete(oldRotation, oldWidth, oldHeight, 0)
+        }
+    }
+
+    private fun waitForOrientationComplete(
+        oldRotation: Int,
+        oldWidth: Int,
+        oldHeight: Int,
+        attempt: Int
+    ) {
+        if (attempt >= ORIENTATION_CHANGE_MAX_ATTEMPTS) {
+            Log.w(TAG, "Orientation change timeout after ${attempt * ORIENTATION_CHANGE_RETRY_DELAY_MS}ms")
+            isOrientationChanging = false
+            keyboardManager.setOrientationChanging(false)
+            return
+        }
+
+        val delay = if (attempt == 0) ORIENTATION_CHANGE_INITIAL_DELAY_MS else ORIENTATION_CHANGE_RETRY_DELAY_MS
+
         updateHandler.postDelayed({
             serviceScope.launch {
-                val oldSettings = settingsRepository.getAllSettings().first()
                 val newSize = orientationHandler.getUsableScreenSize()
                 val newRotation = orientationHandler.getCurrentRotation()
 
-                // Determine baseline state (use current settings)
-                val baselinePosition = oldSettings.position
-                val baselineWidth = if (oldSettings.screenWidth > 0) oldSettings.screenWidth else newSize.x
-                val baselineHeight = if (oldSettings.screenHeight > 0) oldSettings.screenHeight else newSize.y
-                val baselineRotation = oldSettings.rotation
+                // Check if dimensions have actually changed
+                val dimensionsChanged = (newSize.x != oldWidth || newSize.y != oldHeight)
+                val rotationChanged = (newRotation != oldRotation)
 
-                Log.d(TAG, "Orientation: old rot=$baselineRotation, new rot=$newRotation, old size=${baselineWidth}x${baselineHeight}")
+                if (dimensionsChanged || rotationChanged) {
+                    // Screen has changed! Apply transformation now
+                    val elapsedMs = (attempt + 1) * ORIENTATION_CHANGE_RETRY_DELAY_MS
+                    Log.d(TAG, "Orientation detected after ${elapsedMs}ms: rot=$oldRotation→$newRotation, size=${oldWidth}x${oldHeight}→${newSize.x}x${newSize.y}")
 
-                // Transform position if rotation changed
-                if (newRotation != baselineRotation) {
-                    val dotSizePx = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
-                    val half = dotSizePx / 2
-
-                    // Calculate center point
-                    val centerX = baselinePosition.x + half
-                    val centerY = baselinePosition.y + half
-                    val centerPosition = DotPosition(centerX, centerY, baselineWidth, baselineHeight, baselineRotation)
-
-                    // Transform center to new rotation
-                    val transformedCenter = orientationHandler.transformPosition(
-                        centerPosition, baselineWidth, baselineHeight, baselineRotation, newRotation
-                    )
-
-                    // Calculate new top-left position
-                    val newTopLeftX = transformedCenter.x - half
-                    val newTopLeftY = transformedCenter.y - half
-                    val transformedPosition = DotPosition(newTopLeftX, newTopLeftY, newSize.x, newSize.y, newRotation)
-
-                    Log.d(TAG, "Orientation transformed: (${baselinePosition.x},${baselinePosition.y}) -> ($newTopLeftX,$newTopLeftY)")
-                    settingsRepository.setPosition(transformedPosition)
+                    applyOrientationTransformation(oldRotation, oldWidth, oldHeight, newRotation, newSize)
+                } else {
+                    // Not changed yet, retry
+                    waitForOrientationComplete(oldRotation, oldWidth, oldHeight, attempt + 1)
                 }
-
-                // Update screen dimensions
-                settingsRepository.setScreenWidth(newSize.x)
-                settingsRepository.setScreenHeight(newSize.y)
-                settingsRepository.setRotation(newRotation)
-
-                // Clear keyboard snapshot without restore
-                keyboardManager.clearSnapshotForOrientationChange()
-
-                // Mark orientation change as complete
-                isOrientationChanging = false
-                keyboardManager.setOrientationChanging(false)
             }
-        }, ORIENTATION_CHANGE_DELAY_MS)
+        }, delay)
+    }
+
+    private suspend fun applyOrientationTransformation(
+        oldRotation: Int,
+        oldWidth: Int,
+        oldHeight: Int,
+        newRotation: Int,
+        newSize: Point
+    ) {
+        val oldSettings = settingsRepository.getAllSettings().first()
+        val baselinePosition = oldSettings.position
+
+        // Transform position if rotation changed
+        if (newRotation != oldRotation) {
+            val dotSizePx = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
+            val half = dotSizePx / 2
+
+            // Calculate center point
+            val centerX = baselinePosition.x + half
+            val centerY = baselinePosition.y + half
+            val centerPosition = DotPosition(centerX, centerY, oldWidth, oldHeight, oldRotation)
+
+            // Transform center to new rotation
+            val transformedCenter = orientationHandler.transformPosition(
+                centerPosition, oldWidth, oldHeight, oldRotation, newRotation
+            )
+
+            // Calculate new top-left position
+            val newTopLeftX = transformedCenter.x - half
+            val newTopLeftY = transformedCenter.y - half
+            val transformedPosition = DotPosition(newTopLeftX, newTopLeftY, newSize.x, newSize.y, newRotation)
+
+            Log.d(TAG, "Position transformed: (${baselinePosition.x},${baselinePosition.y}) → ($newTopLeftX,$newTopLeftY)")
+
+            // Update position immediately (no animation to avoid jump)
+            viewManager.updatePosition(transformedPosition)
+            settingsRepository.setPosition(transformedPosition)
+        }
+
+        // Update screen dimensions
+        settingsRepository.setScreenWidth(newSize.x)
+        settingsRepository.setScreenHeight(newSize.y)
+        settingsRepository.setRotation(newRotation)
+
+        // Clear keyboard snapshot
+        keyboardManager.clearSnapshotForOrientationChange()
+
+        // Mark orientation change as complete
+        isOrientationChanging = false
+        keyboardManager.setOrientationChanging(false)
+
+        Log.d(TAG, "Orientation change complete")
     }
 
     private fun performRescueAction() {
