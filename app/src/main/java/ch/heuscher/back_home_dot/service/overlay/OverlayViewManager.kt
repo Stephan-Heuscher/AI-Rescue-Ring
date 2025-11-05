@@ -130,32 +130,34 @@ class OverlayViewManager(
             fadeAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
                 this.duration = duration
 
+                Log.d(TAG, "fadeIn: Created ValueAnimator with duration=${this.duration}ms, isRunning=${this.isRunning}, isPaused=${this.isPaused}")
+
                 addUpdateListener { animator ->
                     val value = animator.animatedValue as Float
                     floatingView?.alpha = value
-                    if (System.currentTimeMillis() % 500 < 50) {
-                        Log.d(TAG, "fadeIn: Animating alpha=$value")
-                    }
+                    Log.d(TAG, "fadeIn: UPDATE listener called! alpha=$value, fraction=${animator.animatedFraction}")
                 }
 
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationStart(animation: Animator) {
-                        Log.d(TAG, "fadeIn: ValueAnimator started, alpha=${floatingView?.alpha}")
+                        Log.d(TAG, "fadeIn: ValueAnimator started, alpha=${floatingView?.alpha}, duration=${(animation as? ValueAnimator)?.duration}")
                     }
 
                     override fun onAnimationEnd(animation: Animator) {
                         floatingView?.alpha = 1f
-                        Log.d(TAG, "fadeIn: ValueAnimator completed, final alpha=${floatingView?.alpha}")
+                        val wasRunning = (animation as? ValueAnimator)?.isRunning ?: false
+                        Log.d(TAG, "fadeIn: ValueAnimator completed, final alpha=${floatingView?.alpha}, wasRunning=$wasRunning")
                     }
 
                     override fun onAnimationCancel(animation: Animator) {
                         floatingView?.alpha = 1f
-                        Log.d(TAG, "fadeIn: ValueAnimator cancelled")
+                        Log.d(TAG, "fadeIn: ValueAnimator cancelled, reason unknown")
                     }
                 })
 
+                Log.d(TAG, "fadeIn: About to call start() on ValueAnimator")
                 start()
-                Log.d(TAG, "fadeIn: ValueAnimator.start() called")
+                Log.d(TAG, "fadeIn: ValueAnimator.start() called, isStarted=$isStarted, isRunning=$isRunning")
             }
         } ?: Log.w(TAG, "fadeIn: floatingView is null, cannot animate")
     }
