@@ -1,5 +1,54 @@
 # Release Notes - AssistiPunkt
 
+## Version 2.0.0 (2025-11-05)
+
+### Großes Refactoring - Clean Architecture & Spezialisierte Komponenten
+
+Wir freuen uns, **AssistiPunkt v2.0.0** vorzustellen, eine vollständige Architektur-Überarbeitung die Codequalität, Wartbarkeit und Benutzererfahrung signifikant verbessert!
+
+#### 🏗️ Architektur-Verbesserungen
+- **Komponenten-Extraktion**: Spezialisierte Komponenten aus monolithischem OverlayService extrahiert
+  - **KeyboardManager** (273 Zeilen): Vollständiges Tastatur-Vermeidungs-Management mit Debouncing
+  - **PositionAnimator** (86 Zeilen): Sanfte Positions-Animationen mit ValueAnimator
+  - **OrientationHandler** (97 Zeilen): Mathematische Rotations-Transformationen für alle Ausrichtungen
+- **Code-Reduktion**: OverlayService von 670 auf ~459 Zeilen reduziert (31% Reduktion)
+- **Clean Architecture**: Strikte Trennung zwischen Domain, Data und Presentation Layern
+- **Testbarkeit**: Alle Komponenten sind nun unabhängig testbar
+- **Dependency Injection**: ServiceLocator-Pattern bereit für Hilt-Migration
+
+#### 🔄 Rotations-Handling - Kein Springen
+- **Versteckt während Rotation**: Punkt wird während Bildschirm-Rotation versteckt um sichtbares Springen zu eliminieren
+- **Intelligente Erkennung**: Dynamisches 16ms-Polling erkennt Dimensionsänderungen sofort
+- **Perfekte Positionierung**: Punkt erscheint an mathematisch korrekter Position nach Rotation
+- **Mathematische Transformation**: Präzise Mittelpunkt-Transformation für alle Rotationswinkel (0°, 90°, 180°, 270°)
+
+#### ⌨️ Tastatur-Vermeidungs-Verbesserungen
+- **Vollständig extrahiert**: Komplettes Tastatur-Management in dedizierter KeyboardManager-Klasse
+- **Intelligenter Abstand**: 1.5x Punkt-Durchmesser Abstand zur Tastatur
+- **Debouncing**: Verhindert Positions-Flackern während Tastatur-Übergängen
+- **Snapshot/Restore**: Positions-Speicher für Tastatur-Erscheinen/Verschwinden-Zyklen
+
+#### 🎨 Benutzererfahrung
+- **Kein Springen**: Punkt springt nicht mehr während Rotation
+- **Schnellere Reaktion**: Intelligente Erkennung bietet optimales Timing (~16ms auf den meisten Geräten)
+- **Nahtlose Übergänge**: Alle Animationen und Positions-Updates sind flüssig
+
+#### 🔧 Technische Details
+- **Repository-Pattern**: BackHomeAccessibilityService zu Repository-Pattern migriert
+- **Reaktive Daten**: Kotlin Flows für Echtzeit-Einstellungs-Updates
+- **Komponenten-Komposition**: Composition over Inheritance Pattern durchgehend
+- **ServiceLocator**: Factory-Methoden für alle spezialisierten Komponenten
+
+### Breaking Changes
+- Keine - alle Änderungen sind interne Architektur-Verbesserungen
+
+### Fehlerbehebungen
+- Punkt-Springen während Bildschirm-Rotation behoben
+- Verbesserte Tastatur-Vermeidungs-Zuverlässigkeit
+- Bessere Positions-Berechnungs-Genauigkeit
+
+---
+
 ## Version 1.1.1 (2025-11-03)
 
 ### Neue Funktionen

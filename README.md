@@ -110,10 +110,13 @@ AssistiPunkt/
 │       └── SettingsRepositoryImpl.kt # Repository-Implementierung
 ├── service/                   # Service-Komponenten
 │   └── overlay/
-│       ├── OverlayService.kt  # Hauptservice (Lifecycle-Management)
-│       ├── KeyboardDetector.kt # Tastatur-Erkennung
-│       ├── GestureDetector.kt  # Gesten-Erkennung
-│       └── OverlayViewManager.kt # Overlay-Verwaltung
+│       ├── OverlayService.kt       # Hauptservice (459 Zeilen - Lifecycle-Management)
+│       ├── KeyboardManager.kt      # Tastatur-Vermeidung (273 Zeilen)
+│       ├── PositionAnimator.kt     # Positions-Animationen (86 Zeilen)
+│       ├── OrientationHandler.kt   # Rotation-Transformationen (97 Zeilen)
+│       ├── KeyboardDetector.kt     # Tastatur-Erkennung
+│       ├── GestureDetector.kt      # Gesten-Erkennung
+│       └── OverlayViewManager.kt   # Overlay-Verwaltung
 ├── ui/                        # Benutzeroberfläche
 │   ├── MainActivity.kt        # Hauptansicht & Berechtigungen
 │   ├── SettingsActivity.kt    # Einstellungen
@@ -138,8 +141,26 @@ AssistiPunkt/
 
 #### OverlayService (Hauptservice)
 - **Verantwortlichkeit**: Lifecycle-Management und Komponenten-Orchestrierung
-- **Reduziert**: Von 507 auf ~194 Zeilen (62% Reduktion)
+- **Reduziert**: Von 670 auf ~459 Zeilen (31% Reduktion)
 - **Pattern**: Composition über Vererbung
+- **Rotation Handling**: Intelligente Erkennung mit 16ms Polling
+
+#### KeyboardManager (273 Zeilen)
+- **Funktion**: Vollständiges Tastatur-Vermeidungs-Management
+- **Features**: Keyboard Detection, Position Adjustment, Snapshot/Restore
+- **Debouncing**: Verhindert Position-Flackern
+- **Smart Margin**: 1.5x Punkt-Durchmesser Abstand zur Tastatur
+
+#### PositionAnimator (86 Zeilen)
+- **Funktion**: Sanfte Positions-Animationen
+- **Features**: ValueAnimator-basiert, konfigurierbare Dauer
+- **Use Cases**: Drag-End Animation, Edge-Snapping
+
+#### OrientationHandler (97 Zeilen)
+- **Funktion**: Bildschirm-Rotation-Transformationen
+- **Features**: Mathematische Position-Transformation für alle Rotationen (0°, 90°, 180°, 270°)
+- **Smart Detection**: Dynamisches Polling (16ms) bis Dimensionsänderung erkannt wird
+- **Zero Jump**: Punkt wird während Rotation versteckt, dann an korrekter Position angezeigt
 
 #### KeyboardDetector
 - **Funktion**: Tastatur-Sichtbarkeit und Höhen-Erkennung
@@ -153,7 +174,7 @@ AssistiPunkt/
 
 #### OverlayViewManager
 - **Funktion**: Overlay-Erstellung, Positionierung und Darstellung
-- **Features**: Automatische Tastatur-Vermeidung, Bildschirm-Rotation-Handling
+- **Features**: WindowManager-Integration, Sichtbarkeits-Kontrolle
 - **Rendering**: WindowManager mit TYPE_APPLICATION_OVERLAY
 
 ### 💾 Daten-Management
@@ -261,10 +282,13 @@ Das Projekt folgt **Clean Architecture** Prinzipien:
 **Major Refactoring 2025**: Umstellung auf Clean Architecture
 
 - ✅ **Architektur-Überarbeitung**: Von monolithischem Service zu komponentenbasierter Architektur
-- ✅ **Code-Reduktion**: OverlayService von 507 auf ~194 Zeilen reduziert (62%)
+- ✅ **Spezialisierte Komponenten**: Extrahierte KeyboardManager (273L), PositionAnimator (86L), OrientationHandler (97L)
+- ✅ **Code-Reduktion**: OverlayService von 670 auf ~459 Zeilen reduziert (31%)
 - ✅ **Testbarkeit**: Komponenten sind isoliert testbar
 - ✅ **Wartbarkeit**: Klare Trennung der Verantwortlichkeiten
-- ✅ **Tastatur-Vermeidung**: Verbessert mit 1.5x Punkt-Durchmesser Margin
+- ✅ **Tastatur-Vermeidung**: Vollständig extrahiert mit 1.5x Punkt-Durchmesser Margin
+- ✅ **Rotation ohne Sprung**: Punkt wird während Rotation versteckt, erscheint an korrekter Position
+- ✅ **Intelligente Rotation-Erkennung**: Dynamisches 16ms-Polling bis Dimensionsänderung erkannt
 - ✅ **Reaktive Daten**: Kotlin Flows für Echtzeit-Updates
 - ✅ **Dependency Injection**: ServiceLocator-Pattern (Hilt-ready)
 

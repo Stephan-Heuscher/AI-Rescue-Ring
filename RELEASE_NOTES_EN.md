@@ -1,5 +1,54 @@
 # Release Notes - Assistive Tap
 
+## Version 2.0.0 (2025-11-05)
+
+### Major Refactoring - Clean Architecture & Specialized Components
+
+We are excited to announce **Assistive Tap v2.0.0**, a complete architectural overhaul that significantly improves code quality, maintainability, and user experience!
+
+#### 🏗️ Architecture Improvements
+- **Component Extraction**: Extracted specialized components from monolithic OverlayService
+  - **KeyboardManager** (273 lines): Complete keyboard avoidance management with debouncing
+  - **PositionAnimator** (86 lines): Smooth position animations using ValueAnimator
+  - **OrientationHandler** (97 lines): Mathematical rotation transformations for all orientations
+- **Code Reduction**: OverlayService reduced from 670 to ~459 lines (31% reduction)
+- **Clean Architecture**: Strict separation between Domain, Data, and Presentation layers
+- **Testability**: All components are now independently testable
+- **Dependency Injection**: ServiceLocator pattern ready for Hilt migration
+
+#### 🔄 Rotation Handling - Zero Jump
+- **Hide During Rotation**: Dot is now hidden during screen rotation to eliminate visible jumping
+- **Smart Detection**: Dynamic 16ms polling detects dimension changes immediately
+- **Perfect Positioning**: Dot reappears at mathematically correct position after rotation
+- **Mathematical Transformation**: Accurate center-point transformation for all rotation angles (0°, 90°, 180°, 270°)
+
+#### ⌨️ Keyboard Avoidance Improvements
+- **Fully Extracted**: Complete keyboard management in dedicated KeyboardManager class
+- **Smart Margin**: 1.5x dot diameter distance from keyboard
+- **Debouncing**: Prevents position flickering during keyboard transitions
+- **Snapshot/Restore**: Position memory for keyboard appearance/disappearance cycles
+
+#### 🎨 User Experience
+- **Eliminated Jumping**: Dot no longer jumps during rotation
+- **Faster Response**: Intelligent detection provides optimal timing (~16ms on most devices)
+- **Seamless Transitions**: All animations and position updates are smooth
+
+#### 🔧 Technical Details
+- **Repository Pattern**: Migrated BackHomeAccessibilityService to repository pattern
+- **Reactive Data**: Kotlin Flows for real-time settings updates
+- **Component Composition**: Composition over inheritance pattern throughout
+- **ServiceLocator**: Factory methods for all specialized components
+
+### Breaking Changes
+- None - all changes are internal architecture improvements
+
+### Bug Fixes
+- Fixed dot jumping during screen rotation
+- Improved keyboard avoidance reliability
+- Better position calculation accuracy
+
+---
+
 ## Version 1.1.1 (2025-11-03)
 
 ### New Features
