@@ -1,10 +1,17 @@
 package ch.heuscher.back_home_dot.service.overlay
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.provider.Settings
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -24,12 +31,18 @@ class OverlayViewManager(
     private val context: Context,
     private val windowManager: WindowManager
 ) {
+    companion object {
+        private const val TAG = "OverlayViewManager"
+    }
 
     private var floatingView: View? = null
     private var floatingDot: View? = null
     private var rescueRing: TextView? = null
     private var layoutParams: WindowManager.LayoutParams? = null
     private var touchListener: View.OnTouchListener? = null
+    private var fadeAnimator: ValueAnimator? = null
+    private val fadeHandler = Handler(Looper.getMainLooper())
+    private var fadeRunnable: Runnable? = null
 
     /**
      * Creates and adds the overlay view to the window.
@@ -57,6 +70,10 @@ class OverlayViewManager(
      * Removes the overlay view from the window.
      */
     fun removeOverlayView() {
+        fadeAnimator?.cancel()
+        fadeAnimator = null
+        fadeRunnable?.let { fadeHandler.removeCallbacks(it) }
+        fadeRunnable = null
         floatingView?.let { windowManager.removeView(it) }
         floatingView = null
         floatingDot = null
@@ -99,6 +116,61 @@ class OverlayViewManager(
      */
     fun setVisibility(visibility: Int) {
         floatingView?.visibility = visibility
+    }
+
+    /**
+     * Fades in the overlay view over the specified duration.
+     * Uses manual Handler-based animation to bypass system animator settings.
+     */
+    fun fadeIn(duration: Long = 300L) {
+        floatingView?.apply {
+            // Check animator duration scale
+            val animatorScale = try {
+                Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE)
+            } catch (e: Exception) {
+                1.0f
+            }
+
+            Log.d(TAG, "fadeIn: Starting fade-in, duration=${duration}ms, system animator scale=$animatorScale")
+
+            // Cancel any ongoing animations
+            fadeRunnable?.let { fadeHandler.removeCallbacks(it) }
+
+            // Set initial alpha
+            alpha = 0f
+            visibility = View.VISIBLE
+
+            // Manual animation using Handler - bypasses system animator settings
+            val frameIntervalMs = 16L // ~60fps
+            val totalFrames = (duration / frameIntervalMs).toInt()
+            var currentFrame = 0
+            val startTime = System.currentTimeMillis()
+
+            Log.d(TAG, "fadeIn: Starting manual animation, totalFrames=$totalFrames, frameInterval=${frameIntervalMs}ms")
+
+            fadeRunnable = object : Runnable {
+                override fun run() {
+                    currentFrame++
+                    val elapsed = System.currentTimeMillis() - startTime
+                    val progress = (elapsed.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
+
+                    floatingView?.alpha = progress
+
+                    if (currentFrame % 30 == 0 || progress >= 1f) {
+                        Log.d(TAG, "fadeIn: frame=$currentFrame, elapsed=${elapsed}ms, progress=$progress, alpha=${floatingView?.alpha}")
+                    }
+
+                    if (progress < 1f) {
+                        fadeHandler.postDelayed(this, frameIntervalMs)
+                    } else {
+                        floatingView?.alpha = 1f
+                        Log.d(TAG, "fadeIn: Manual animation completed, total elapsed=${elapsed}ms, final alpha=${floatingView?.alpha}")
+                    }
+                }
+            }
+
+            fadeHandler.post(fadeRunnable!!)
+        } ?: Log.w(TAG, "fadeIn: floatingView is null, cannot animate")
     }
 
     /**
