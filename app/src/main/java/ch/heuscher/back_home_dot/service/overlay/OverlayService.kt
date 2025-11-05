@@ -38,6 +38,7 @@ class OverlayService : Service() {
         private const val ORIENTATION_CHANGE_INITIAL_DELAY_MS = 16L  // One frame (60fps)
         private const val ORIENTATION_CHANGE_RETRY_DELAY_MS = 16L    // Check every frame
         private const val ORIENTATION_CHANGE_MAX_ATTEMPTS = 20       // Max 320ms total
+        private const val ORIENTATION_STABILIZATION_DELAY_MS = 50L   // Wait after detection for layout to stabilize
     }
 
     // Core dependencies
@@ -413,11 +414,17 @@ class OverlayService : Service() {
                 Log.d(TAG, "Orientation check attempt $attempt: dimensions=${newSize.x}x${newSize.y} (changed=$dimensionsChanged), rotation=$newRotation (changed=$rotationChanged)")
 
                 if (dimensionsChanged || rotationChanged) {
-                    // Screen has changed! Apply transformation now
-                    val elapsedMs = ORIENTATION_CHANGE_INITIAL_DELAY_MS + (attempt * ORIENTATION_CHANGE_RETRY_DELAY_MS)
-                    Log.d(TAG, "Orientation detected after ${elapsedMs}ms (attempt $attempt): rot=$oldRotation→$newRotation, size=${oldWidth}x${oldHeight}→${newSize.x}x${newSize.y}")
+                    // Screen has changed! Wait for layout to stabilize before applying transformation
+                    val detectionTimeMs = ORIENTATION_CHANGE_INITIAL_DELAY_MS + (attempt * ORIENTATION_CHANGE_RETRY_DELAY_MS)
+                    Log.d(TAG, "Orientation detected after ${detectionTimeMs}ms (attempt $attempt): rot=$oldRotation→$newRotation, size=${oldWidth}x${oldHeight}→${newSize.x}x${newSize.y}")
+                    Log.d(TAG, "Waiting ${ORIENTATION_STABILIZATION_DELAY_MS}ms for layout to stabilize...")
 
-                    applyOrientationTransformation(oldRotation, oldWidth, oldHeight, newRotation, newSize)
+                    updateHandler.postDelayed({
+                        serviceScope.launch {
+                            Log.d(TAG, "Stabilization complete, applying transformation")
+                            applyOrientationTransformation(oldRotation, oldWidth, oldHeight, newRotation, newSize)
+                        }
+                    }, ORIENTATION_STABILIZATION_DELAY_MS)
                 } else {
                     // Not changed yet, retry
                     waitForOrientationComplete(oldRotation, oldWidth, oldHeight, attempt + 1)
@@ -458,15 +465,9 @@ class OverlayService : Service() {
 
             Log.d(TAG, "Position transformed: (${baselinePosition.x},${baselinePosition.y}) → ($newTopLeftX,$newTopLeftY)")
 
-            // Update position first
+            // Update position immediately
             viewManager.updatePosition(transformedPosition)
             settingsRepository.setPosition(transformedPosition)
-
-            // Post fade-in to happen after layout update completes
-            updateHandler.post {
-                Log.d(TAG, "Posted: Starting 2000ms fade-in animation")
-                viewManager.fadeIn(2000L)
-            }
         }
 
         // Update screen dimensions
