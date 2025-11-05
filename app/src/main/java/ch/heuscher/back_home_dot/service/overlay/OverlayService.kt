@@ -38,7 +38,6 @@ class OverlayService : Service() {
         private const val ORIENTATION_CHANGE_INITIAL_DELAY_MS = 16L  // One frame (60fps)
         private const val ORIENTATION_CHANGE_RETRY_DELAY_MS = 16L    // Check every frame
         private const val ORIENTATION_CHANGE_MAX_ATTEMPTS = 20       // Max 320ms total
-        private const val ORIENTATION_STABILIZATION_DELAY_MS = 50L   // Wait after detection for layout to stabilize
     }
 
     // Core dependencies
@@ -370,7 +369,10 @@ class OverlayService : Service() {
     private fun handleOrientationChange() {
         Log.d(TAG, "Configuration changed, handling orientation")
 
-        // Keep overlay visible during transition
+        // Hide dot immediately to prevent visible jumping
+        viewManager.setVisibility(View.INVISIBLE)
+        Log.d(TAG, "Dot hidden during rotation")
+
         isOrientationChanging = true
         keyboardManager.setOrientationChanging(true)
 
@@ -414,17 +416,11 @@ class OverlayService : Service() {
                 Log.d(TAG, "Orientation check attempt $attempt: dimensions=${newSize.x}x${newSize.y} (changed=$dimensionsChanged), rotation=$newRotation (changed=$rotationChanged)")
 
                 if (dimensionsChanged || rotationChanged) {
-                    // Screen has changed! Wait for layout to stabilize before applying transformation
+                    // Screen has changed! Apply transformation immediately
                     val detectionTimeMs = ORIENTATION_CHANGE_INITIAL_DELAY_MS + (attempt * ORIENTATION_CHANGE_RETRY_DELAY_MS)
                     Log.d(TAG, "Orientation detected after ${detectionTimeMs}ms (attempt $attempt): rot=$oldRotation→$newRotation, size=${oldWidth}x${oldHeight}→${newSize.x}x${newSize.y}")
-                    Log.d(TAG, "Waiting ${ORIENTATION_STABILIZATION_DELAY_MS}ms for layout to stabilize...")
 
-                    updateHandler.postDelayed({
-                        serviceScope.launch {
-                            Log.d(TAG, "Stabilization complete, applying transformation")
-                            applyOrientationTransformation(oldRotation, oldWidth, oldHeight, newRotation, newSize)
-                        }
-                    }, ORIENTATION_STABILIZATION_DELAY_MS)
+                    applyOrientationTransformation(oldRotation, oldWidth, oldHeight, newRotation, newSize)
                 } else {
                     // Not changed yet, retry
                     waitForOrientationComplete(oldRotation, oldWidth, oldHeight, attempt + 1)
@@ -482,7 +478,9 @@ class OverlayService : Service() {
         isOrientationChanging = false
         keyboardManager.setOrientationChanging(false)
 
-        Log.d(TAG, "Orientation change complete")
+        // Show dot at new position
+        viewManager.setVisibility(View.VISIBLE)
+        Log.d(TAG, "Orientation change complete, dot shown at new position")
     }
 
     private fun performRescueAction() {
