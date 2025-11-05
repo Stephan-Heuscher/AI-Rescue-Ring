@@ -369,7 +369,10 @@ class OverlayService : Service() {
     private fun handleOrientationChange() {
         Log.d(TAG, "Configuration changed, handling orientation")
 
-        // Keep overlay visible during transition
+        // Hide dot immediately to prevent visible jumping
+        viewManager.setVisibility(View.INVISIBLE)
+        Log.d(TAG, "Dot hidden during rotation")
+
         isOrientationChanging = true
         keyboardManager.setOrientationChanging(true)
 
@@ -413,9 +416,9 @@ class OverlayService : Service() {
                 Log.d(TAG, "Orientation check attempt $attempt: dimensions=${newSize.x}x${newSize.y} (changed=$dimensionsChanged), rotation=$newRotation (changed=$rotationChanged)")
 
                 if (dimensionsChanged || rotationChanged) {
-                    // Screen has changed! Apply transformation now
-                    val elapsedMs = ORIENTATION_CHANGE_INITIAL_DELAY_MS + (attempt * ORIENTATION_CHANGE_RETRY_DELAY_MS)
-                    Log.d(TAG, "Orientation detected after ${elapsedMs}ms (attempt $attempt): rot=$oldRotation→$newRotation, size=${oldWidth}x${oldHeight}→${newSize.x}x${newSize.y}")
+                    // Screen has changed! Apply transformation immediately
+                    val detectionTimeMs = ORIENTATION_CHANGE_INITIAL_DELAY_MS + (attempt * ORIENTATION_CHANGE_RETRY_DELAY_MS)
+                    Log.d(TAG, "Orientation detected after ${detectionTimeMs}ms (attempt $attempt): rot=$oldRotation→$newRotation, size=${oldWidth}x${oldHeight}→${newSize.x}x${newSize.y}")
 
                     applyOrientationTransformation(oldRotation, oldWidth, oldHeight, newRotation, newSize)
                 } else {
@@ -458,15 +461,9 @@ class OverlayService : Service() {
 
             Log.d(TAG, "Position transformed: (${baselinePosition.x},${baselinePosition.y}) → ($newTopLeftX,$newTopLeftY)")
 
-            // Update position first
+            // Update position immediately
             viewManager.updatePosition(transformedPosition)
             settingsRepository.setPosition(transformedPosition)
-
-            // Post fade-in to happen after layout update completes
-            updateHandler.post {
-                Log.d(TAG, "Posted: Starting 2000ms fade-in animation")
-                viewManager.fadeIn(2000L)
-            }
         }
 
         // Update screen dimensions
@@ -481,7 +478,9 @@ class OverlayService : Service() {
         isOrientationChanging = false
         keyboardManager.setOrientationChanging(false)
 
-        Log.d(TAG, "Orientation change complete")
+        // Show dot at new position
+        viewManager.setVisibility(View.VISIBLE)
+        Log.d(TAG, "Orientation change complete, dot shown at new position")
     }
 
     private fun performRescueAction() {
