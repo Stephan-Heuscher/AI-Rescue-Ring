@@ -35,7 +35,7 @@ class OverlayService : Service() {
 
     companion object {
         private const val TAG = "OverlayService"
-        private const val ORIENTATION_CHANGE_DELAY_MS = 500L
+        private const val ORIENTATION_CHANGE_DELAY_MS = 100L
     }
 
     // Core dependencies
@@ -367,8 +367,7 @@ class OverlayService : Service() {
     private fun handleOrientationChange() {
         Log.d(TAG, "Configuration changed, handling orientation")
 
-        // Hide overlay during transition
-        viewManager.setVisibility(View.GONE)
+        // Keep overlay visible during transition (don't hide it)
         isOrientationChanging = true
         keyboardManager.setOrientationChanging(true)
 
@@ -418,10 +417,9 @@ class OverlayService : Service() {
                 // Clear keyboard snapshot without restore
                 keyboardManager.clearSnapshotForOrientationChange()
 
-                // Restore visibility
+                // Mark orientation change as complete
                 isOrientationChanging = false
                 keyboardManager.setOrientationChanging(false)
-                viewManager.setVisibility(View.VISIBLE)
             }
         }, ORIENTATION_CHANGE_DELAY_MS)
     }
