@@ -2,7 +2,7 @@ package ch.heuscher.back_home_dot.service.overlay
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Point
@@ -37,7 +37,7 @@ class OverlayViewManager(
     private var rescueRing: TextView? = null
     private var layoutParams: WindowManager.LayoutParams? = null
     private var touchListener: View.OnTouchListener? = null
-    private var fadeAnimator: ObjectAnimator? = null
+    private var fadeAnimator: ValueAnimator? = null
 
     /**
      * Creates and adds the overlay view to the window.
@@ -113,6 +113,7 @@ class OverlayViewManager(
 
     /**
      * Fades in the overlay view over the specified duration.
+     * Uses ValueAnimator to manually update alpha for reliable animation with overlay windows.
      */
     fun fadeIn(duration: Long = 300L) {
         floatingView?.apply {
@@ -125,26 +126,36 @@ class OverlayViewManager(
             alpha = 0f
             visibility = View.VISIBLE
 
-            // Create and start ObjectAnimator
-            fadeAnimator = ObjectAnimator.ofFloat(this, "alpha", 0f, 1f).apply {
+            // Create ValueAnimator that manually updates alpha
+            fadeAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
                 this.duration = duration
+
+                addUpdateListener { animator ->
+                    val value = animator.animatedValue as Float
+                    floatingView?.alpha = value
+                    if (System.currentTimeMillis() % 500 < 50) {
+                        Log.d(TAG, "fadeIn: Animating alpha=$value")
+                    }
+                }
 
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationStart(animation: Animator) {
-                        Log.d(TAG, "fadeIn: ObjectAnimator started, alpha=${floatingView?.alpha}")
+                        Log.d(TAG, "fadeIn: ValueAnimator started, alpha=${floatingView?.alpha}")
                     }
 
                     override fun onAnimationEnd(animation: Animator) {
-                        Log.d(TAG, "fadeIn: ObjectAnimator completed, final alpha=${floatingView?.alpha}")
+                        floatingView?.alpha = 1f
+                        Log.d(TAG, "fadeIn: ValueAnimator completed, final alpha=${floatingView?.alpha}")
                     }
 
                     override fun onAnimationCancel(animation: Animator) {
-                        Log.d(TAG, "fadeIn: ObjectAnimator cancelled")
+                        floatingView?.alpha = 1f
+                        Log.d(TAG, "fadeIn: ValueAnimator cancelled")
                     }
                 })
 
                 start()
-                Log.d(TAG, "fadeIn: ObjectAnimator.start() called")
+                Log.d(TAG, "fadeIn: ValueAnimator.start() called")
             }
         } ?: Log.w(TAG, "fadeIn: floatingView is null, cannot animate")
     }
