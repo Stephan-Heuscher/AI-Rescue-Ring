@@ -333,7 +333,14 @@ class OverlayService : Service() {
     }
 
     private fun handlePositionChange(deltaX: Int, deltaY: Int) {
+        // Check if in SAFE_HOME mode and not on home screen - prevent dragging
         serviceScope.launch {
+            val tapBehavior = settingsRepository.getTapBehavior().first()
+            if (tapBehavior == "SAFE_HOME" && !isOnHomeScreen()) {
+                Log.d(TAG, "SAFE_HOME mode: Dragging not allowed outside home screen")
+                return@launch
+            }
+
             val currentPos = viewManager.getCurrentPosition() ?: return@launch
             val newX = currentPos.x + deltaX
             val newY = currentPos.y + deltaY
