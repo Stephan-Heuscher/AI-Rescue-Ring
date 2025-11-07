@@ -70,17 +70,15 @@ Back Home Dot - Schnelle Navigation
 
 **Kurzbeschreibung** (max 80 Zeichen):
 ```
-Navigation mit Punkt oder Rettungsring - Zurück, Home & App-Wechsel
+Navigation mit Punkt - Zurück, Home & App-Wechsel
 ```
 
 **Ausführliche Beschreibung** (max 4000 Zeichen):
 ```
-Back Home Dot ist ein praktisches Tool für schnelle Navigation auf Android mit zwei Modi.
+Back Home Dot ist ein praktisches Tool für schnelle Navigation auf Android.
 
 🎯 FUNKTIONEN
 
-• Zwei Modi: Normaler Navigationspunkt oder Rettungsring für Notfälle
-• Rettungsring-Modus: Großer weißer Ring mit 🛟 für schnelle Flucht
 • Verschiebbarer Punkt, immer sichtbar
 • Einfacher Klick = Zurück (Normal-Modus)
 • Doppelklick = Zur vorherigen App wechseln (Normal-Modus)
@@ -96,7 +94,6 @@ Back Home Dot ist ein praktisches Tool für schnelle Navigation auf Android mit 
 • Position frei verschiebbar
 • Ein/Aus-Schalter
 • Service-Stop Button für einfaches Beenden
-• Rettungsring-Modus per Schalter aktivierbar
 
 ⚙️ ANPASSBAR
 
@@ -140,17 +137,15 @@ Back Home Dot - Quick Navigation
 ```
 **Short Description**:
 ```
-Navigation with dot or rescue ring - Back, Home & App switching
+Navigation with dot - Back, Home & App switching
 ```
 
 **Full Description**: (Übersetzung der deutschen Beschreibung)
 ```
-Back Home Dot is a practical tool for quick navigation on Android with two modes.
+Back Home Dot is a practical tool for quick navigation on Android.
 
 🎯 FEATURES
 
-• Two modes: Normal navigation dot or rescue ring for emergencies
-• Rescue ring mode: Large white ring with 🛟 for quick escape
 • Movable dot, always visible
 • Single tap = Back (Normal mode)
 • Double tap = Switch to previous app (Normal mode)
@@ -166,7 +161,6 @@ Back Home Dot is a practical tool for quick navigation on Android with two modes
 • Position freely movable
 • On/Off switch
 • Service stop button for easy termination
-• Rescue ring mode activatable via switch
 ```
 
 **Full Description**: (Übersetzung der deutschen Beschreibung)

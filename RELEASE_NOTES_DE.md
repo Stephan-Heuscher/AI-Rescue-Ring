@@ -64,7 +64,6 @@ Wir freuen uns, **AssistiPunkt v1.1.1** mit bedeutenden Verbesserungen der Tipp-
 #### 🎨 Dynamische Benutzeroberfläche
 - **Kontextabhängige Anweisungen**: Hauptbildschirm-Anweisungen aktualisieren sich automatisch basierend auf gewähltem Tipp-Verhalten
 - **Einstellungs-Optimierung**: Tipp-Verhaltens-Auswahl an oberste Stelle der Einstellungen verschoben für bessere Auffindbarkeit
-- **Optimierte Erfahrung**: Rettungsring-Funktion entfernt für saubere, fokussierte Benutzeroberfläche
 
 #### 🔧 Technische Verbesserungen
 - **Automatische Versionierung**: Release-Builds erhöhen nun automatisch Versionsnummern
@@ -72,10 +71,6 @@ Wir freuen uns, **AssistiPunkt v1.1.1** mit bedeutenden Verbesserungen der Tipp-
 - **Verbesserte Build-Scripts**: Gradle Build-Prozess mit dynamischer Versionierung optimiert
 
 ### Änderungen
-
-#### ✅ Entfernte Funktionen
-- **Rettungsring-Modus**: Notfall-Rettungsring-Funktion vollständig entfernt für vereinfachtes Benutzererlebnis
-- **Rettungsring-Schalter**: Hauptbildschirm-Schalter entfernt, Benutzeroberfläche fokussiert sich nun auf Kern-Navigation
 
 #### ✅ Erweiterte Funktionen
 - **Tipp-Verhaltens-Auswahl**: Radio-Buttons in Einstellungen für einfache Modus-Umschaltung
@@ -93,13 +88,7 @@ Wir freuen uns, **AssistiPunkt v1.1.1** mit bedeutenden Verbesserungen der Tipp-
 
 ### Neue Funktionen
 
-Wir freuen uns, **AssistiPunkt v1.1.0** mit zwei wichtigen neuen Funktionen vorzustellen, die die Barrierefreiheit und Notfall-Reaktionsfähigkeiten verbessern!
-
-#### 🛟 Rettungsring-Modus
-- **Notfall-Navigation**: Neuer Rettungsring-Modus mit großem weißen Ring und roter Rettungsring-Emoji (🛟)
-- **Schnelle Flucht**: Einfacher Tipp schließt aktuelle App und kehrt zur Startseite zurück
-- **Hauptbildschirm-Schalter**: Einfacher Zugriff auf den Rettungsmodus vom Hauptbildschirm
-- **Visuelle Unterscheidung**: Klare visuelle Unterscheidung zwischen normalem Navigationspunkt und Rettungsring
+Wir freuen uns, **AssistiPunkt v1.1.0** mit Tastatur-Vermeidung vorzustellen!
 
 #### ⌨️ Tastatur-Vermeidung
 - **Automatische Positionierung**: Schwebender Punkt bewegt sich automatisch nach oben, wenn Tastatur erscheint
@@ -107,9 +96,8 @@ Wir freuen uns, **AssistiPunkt v1.1.0** mit zwei wichtigen neuen Funktionen vorz
 - **Nahtloses Erlebnis**: Kein manuelles Neupositionieren beim Tippen nötig
 
 #### 🎨 Verbesserungen der Benutzerfreundlichkeit
-- **Modus-spezifische Anweisungen**: Dynamische Anweisungen, die sich je nach gewähltem Modus ändern
-- **Verbesserte Touch-Verarbeitung**: Bessere Gesten-Erkennung im Rettungsring-Modus
-- **Erweiterte Barrierefreiheit**: Aktualisierte Texte und Beschreibungen für beide Modi
+- **Verbesserte Touch-Verarbeitung**: Bessere Gesten-Erkennung
+- **Erweiterte Barrierefreiheit**: Aktualisierte Texte und Beschreibungen
 
 ---
 

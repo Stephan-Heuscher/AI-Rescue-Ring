@@ -9,12 +9,10 @@ object AppConstants {
     // Overlay dimensions and appearance
     const val DOT_SIZE_DP = 48
     const val DOT_STROKE_WIDTH_DP = 3
-    const val RESCUE_RING_SIZE_MULTIPLIER = 1.2f
 
     // Gesture timeouts (milliseconds)
     const val GESTURE_DOUBLE_TAP_TIMEOUT_MS = 300L
     const val GESTURE_LONG_PRESS_TIMEOUT_MS = 500L
-    const val RESCUE_RING_TAP_DELAY_MS = 200L
 
     // Keyboard detection
     const val KEYBOARD_CHECK_INTERVAL_MS = 100L
@@ -64,13 +62,11 @@ object AppConstants {
     const val KEY_ROTATION = "rotation"
     const val KEY_RECENTS_TIMEOUT = "recents_timeout"
     const val KEY_KEYBOARD_AVOIDANCE = "keyboard_avoidance"
-    const val KEY_RESCUE_RING = "rescue_ring"
     const val KEY_TAP_BEHAVIOR = "tap_behavior"
 
     // Default values
     const val DEFAULT_COLOR = -0xBBBC // Blue: 0xFF2196F3
     const val DEFAULT_ENABLED = false
     const val DEFAULT_KEYBOARD_AVOIDANCE = true
-    const val DEFAULT_RESCUE_RING = false
     const val DEFAULT_TAP_BEHAVIOR = "STANDARD"
 }

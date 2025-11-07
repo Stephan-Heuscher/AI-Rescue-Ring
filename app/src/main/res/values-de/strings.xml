@@ -65,15 +65,6 @@
     <string name="tap_behavior_standard_description">1x tippen = Home, 2x tippen = Zurück</string>
     <string name="tap_behavior_back_description">1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
 
-    <!-- Rescue Ring / Overlay Modes -->
-    <string name="rescue_ring">Rettungsring</string>
-    <string name="rescue_ring_desc">Notfall-Modus: Aktuelle App stoppen und nach Hause</string>
-    <string name="enable_rescue_ring">Rettungsring aktivieren</string>
-    <string name="overlay_mode_normal">Normal-Modus</string>
-    <string name="overlay_mode_normal_description">Standard-Navigation mit Gestensteuerung</string>
-    <string name="overlay_mode_rescue_ring">Rettungsring-Modus</string>
-    <string name="overlay_mode_rescue_ring_description">Notfall-Modus zum schnellen App-Schließen</string>
-
     <!-- Advanced Settings -->
     <string name="for_experts">Mehr Einstellungen</string>
     <string name="transparency">Durchsichtig</string>

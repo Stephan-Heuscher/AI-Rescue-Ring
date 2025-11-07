@@ -125,15 +125,6 @@ class SharedPreferencesDataSource(
         prefs.edit().putBoolean(AppConstants.KEY_KEYBOARD_AVOIDANCE, enabled).apply()
     }
 
-    override fun isRescueRingEnabled(): Flow<Boolean> =
-        getPreferenceFlow(AppConstants.KEY_RESCUE_RING, AppConstants.DEFAULT_RESCUE_RING) { prefs, key, default ->
-            prefs.getBoolean(key, default)
-        }
-
-    override suspend fun setRescueRingEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean(AppConstants.KEY_RESCUE_RING, enabled).apply()
-    }
-
     override fun getTapBehavior(): Flow<String> =
         getPreferenceFlow(AppConstants.KEY_TAP_BEHAVIOR, AppConstants.DEFAULT_TAP_BEHAVIOR) { prefs, key, default ->
             prefs.getString(key, default) ?: default

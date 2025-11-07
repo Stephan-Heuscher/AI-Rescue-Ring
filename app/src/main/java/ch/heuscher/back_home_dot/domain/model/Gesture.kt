@@ -18,6 +18,5 @@ enum class Gesture {
  * Represents the different modes the overlay can operate in.
  */
 enum class OverlayMode {
-    NORMAL,
-    RESCUE_RING
+    NORMAL
 }

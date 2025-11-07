@@ -14,16 +14,4 @@
         android:focusable="false"
         android:visibility="visible" />
 
-    <TextView
-        android:id="@+id/rescue_ring"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:text="🛟"
-        android:textSize="28sp"
-        android:gravity="center"
-        android:background="@drawable/life_ring_background"
-        android:clickable="true"
-        android:focusable="false"
-        android:visibility="gone" />
-
 </FrameLayout>

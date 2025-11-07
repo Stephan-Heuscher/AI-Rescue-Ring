@@ -20,7 +20,6 @@ data class OverlaySettings(
     ),
     val recentsTimeout: Long = AppConstants.RECENTS_TIMEOUT_DEFAULT_MS,
     val keyboardAvoidanceEnabled: Boolean = AppConstants.DEFAULT_KEYBOARD_AVOIDANCE,
-    val rescueRingEnabled: Boolean = AppConstants.DEFAULT_RESCUE_RING,
     val tapBehavior: String = AppConstants.DEFAULT_TAP_BEHAVIOR,
     val screenWidth: Int = AppConstants.DEFAULT_SCREEN_WIDTH,
     val screenHeight: Int = AppConstants.DEFAULT_SCREEN_HEIGHT,
@@ -43,6 +42,6 @@ data class OverlaySettings(
      * Gets the current overlay mode based on settings.
      */
     fun getOverlayMode(): OverlayMode {
-        return if (rescueRingEnabled) OverlayMode.RESCUE_RING else OverlayMode.NORMAL
+        return OverlayMode.NORMAL
     }
 }

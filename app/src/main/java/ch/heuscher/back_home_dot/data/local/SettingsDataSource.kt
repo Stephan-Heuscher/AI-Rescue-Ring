@@ -42,9 +42,6 @@ interface SettingsDataSource {
     fun isKeyboardAvoidanceEnabled(): Flow<Boolean>
     suspend fun setKeyboardAvoidanceEnabled(enabled: Boolean)
 
-    fun isRescueRingEnabled(): Flow<Boolean>
-    suspend fun setRescueRingEnabled(enabled: Boolean)
-
     fun getTapBehavior(): Flow<String>
     suspend fun setTapBehavior(behavior: String)
 

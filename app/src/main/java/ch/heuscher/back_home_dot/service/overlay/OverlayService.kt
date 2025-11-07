@@ -249,13 +249,10 @@ class OverlayService : Service() {
         }
 
         serviceScope.launch {
-            val settings = settingsRepository.getAllSettings().first()
-            val mode = if (settings.rescueRingEnabled) OverlayMode.RESCUE_RING else OverlayMode.NORMAL
-
             when (gesture) {
-                Gesture.TAP -> handleTap(mode)
-                Gesture.DOUBLE_TAP -> handleDoubleTap(mode)
-                Gesture.TRIPLE_TAP -> handleTripleTap(mode)
+                Gesture.TAP -> handleTap()
+                Gesture.DOUBLE_TAP -> handleDoubleTap()
+                Gesture.TRIPLE_TAP -> handleTripleTap()
                 Gesture.QUADRUPLE_TAP -> handleQuadrupleTap()
                 Gesture.LONG_PRESS -> handleLongPress()
                 else -> { /* No-op */ }
@@ -263,39 +260,30 @@ class OverlayService : Service() {
         }
     }
 
-    private fun handleTap(mode: OverlayMode) {
-        when (mode) {
-            OverlayMode.NORMAL -> {
-                serviceScope.launch {
-                    val tapBehavior = settingsRepository.getTapBehavior().first()
-                    when (tapBehavior) {
-                        "STANDARD" -> BackHomeAccessibilityService.instance?.performHomeAction()
-                        "BACK" -> BackHomeAccessibilityService.instance?.performBackAction()
-                        else -> BackHomeAccessibilityService.instance?.performBackAction()
-                    }
-                }
-            }
-            OverlayMode.RESCUE_RING -> performRescueAction()
-        }
-    }
-
-    private fun handleDoubleTap(mode: OverlayMode) {
-        if (mode == OverlayMode.NORMAL) {
-            serviceScope.launch {
-                val tapBehavior = settingsRepository.getTapBehavior().first()
-                when (tapBehavior) {
-                    "STANDARD" -> BackHomeAccessibilityService.instance?.performBackAction()
-                    "BACK" -> BackHomeAccessibilityService.instance?.performRecentsAction()
-                    else -> BackHomeAccessibilityService.instance?.performRecentsAction()
-                }
+    private fun handleTap() {
+        serviceScope.launch {
+            val tapBehavior = settingsRepository.getTapBehavior().first()
+            when (tapBehavior) {
+                "STANDARD" -> BackHomeAccessibilityService.instance?.performHomeAction()
+                "BACK" -> BackHomeAccessibilityService.instance?.performBackAction()
+                else -> BackHomeAccessibilityService.instance?.performBackAction()
             }
         }
     }
 
-    private fun handleTripleTap(mode: OverlayMode) {
-        if (mode == OverlayMode.NORMAL) {
-            BackHomeAccessibilityService.instance?.performRecentsOverviewAction()
+    private fun handleDoubleTap() {
+        serviceScope.launch {
+            val tapBehavior = settingsRepository.getTapBehavior().first()
+            when (tapBehavior) {
+                "STANDARD" -> BackHomeAccessibilityService.instance?.performBackAction()
+                "BACK" -> BackHomeAccessibilityService.instance?.performRecentsAction()
+                else -> BackHomeAccessibilityService.instance?.performRecentsAction()
+            }
         }
+    }
+
+    private fun handleTripleTap() {
+        BackHomeAccessibilityService.instance?.performRecentsOverviewAction()
     }
 
     private fun handleQuadrupleTap() {
@@ -481,17 +469,6 @@ class OverlayService : Service() {
         // Show dot at new position
         viewManager.setVisibility(View.VISIBLE)
         Log.d(TAG, "Orientation change complete, dot shown at new position")
-    }
-
-    private fun performRescueAction() {
-        try {
-            BackHomeAccessibilityService.instance?.performBackAction()
-            Handler(Looper.getMainLooper()).postDelayed({
-                BackHomeAccessibilityService.instance?.performHomeAction()
-            }, AppConstants.ACCESSIBILITY_BACK_DELAY_MS)
-        } catch (e: Exception) {
-            BackHomeAccessibilityService.instance?.performHomeAction()
-        }
     }
 
     private fun animateToPosition(targetPosition: DotPosition, duration: Long = 250L) {

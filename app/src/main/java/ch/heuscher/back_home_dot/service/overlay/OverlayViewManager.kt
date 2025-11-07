@@ -25,7 +25,7 @@ import ch.heuscher.back_home_dot.util.AppConstants
 
 /**
  * Manages the overlay view creation, positioning, and appearance.
- * Handles the floating dot and rescue ring display.
+ * Handles the floating dot display.
  */
 class OverlayViewManager(
     private val context: Context,
@@ -37,7 +37,6 @@ class OverlayViewManager(
 
     private var floatingView: View? = null
     private var floatingDot: View? = null
-    private var rescueRing: TextView? = null
     private var layoutParams: WindowManager.LayoutParams? = null
     private var touchListener: View.OnTouchListener? = null
     private var fadeAnimator: ValueAnimator? = null
@@ -52,7 +51,6 @@ class OverlayViewManager(
 
         floatingView = LayoutInflater.from(context).inflate(R.layout.overlay_layout, null)
         floatingDot = floatingView?.findViewById<View>(R.id.floating_dot)
-        rescueRing = floatingView?.findViewById<TextView>(R.id.rescue_ring)
 
         setupLayoutParams()
         windowManager.addView(floatingView, layoutParams)
@@ -60,7 +58,6 @@ class OverlayViewManager(
         touchListener?.let { listener ->
             floatingView?.setOnTouchListener(listener)
             floatingDot?.setOnTouchListener(listener)
-            rescueRing?.setOnTouchListener(listener)
         }
 
         return floatingView!!
@@ -77,7 +74,6 @@ class OverlayViewManager(
         floatingView?.let { windowManager.removeView(it) }
         floatingView = null
         floatingDot = null
-        rescueRing = null
         layoutParams = null
     }
 
@@ -85,10 +81,7 @@ class OverlayViewManager(
      * Updates the overlay appearance based on settings.
      */
     fun updateAppearance(settings: OverlaySettings) {
-        when (settings.getOverlayMode()) {
-            OverlayMode.NORMAL -> showNormalDot(settings)
-            OverlayMode.RESCUE_RING -> showRescueRing()
-        }
+        showNormalDot(settings)
     }
 
     /**
@@ -180,7 +173,6 @@ class OverlayViewManager(
         touchListener = listener
         floatingView?.setOnTouchListener(listener)
         floatingDot?.setOnTouchListener(listener)
-        rescueRing?.setOnTouchListener(listener)
     }
 
     /**
@@ -218,7 +210,6 @@ class OverlayViewManager(
 
     private fun showNormalDot(settings: OverlaySettings) {
         floatingDot?.visibility = View.VISIBLE
-        rescueRing?.visibility = View.GONE
 
         floatingDot?.let { dotView ->
             val drawable = GradientDrawable().apply {
@@ -231,11 +222,6 @@ class OverlayViewManager(
             }
             dotView.background = drawable
         }
-    }
-
-    private fun showRescueRing() {
-        floatingDot?.visibility = View.GONE
-        rescueRing?.visibility = View.VISIBLE
     }
 
     private fun getScreenSize(): Point {

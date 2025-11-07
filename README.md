@@ -330,7 +330,6 @@ Beiträge sind willkommen! Bitte:
 - ✅ **Dependency Injection**: ServiceLocator-Pattern (Hilt-ready)
 - ✅ **Deprecation Fixes**: Alle veralteten APIs aktualisiert (LocalBroadcastManager, versionCode, etc.)
 - ✅ **Tipp-Verhalten Modi**: Standard- und Zurück-Modi implementiert
-- ✅ **Life Ring entfernt**: Rettungsring-Feature vollständig entfernt
 - ✅ **Dynamische Anweisungen**: Hauptbildschirm zeigt kontextabhängige Anweisungen
 - ✅ **Einstellungen-Optimierung**: Tipp-Verhalten an oberste Stelle der Einstellungen verschoben
 

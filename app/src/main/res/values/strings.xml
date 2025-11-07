@@ -65,15 +65,6 @@
     <string name="tap_behavior_standard_description">1 tap = Home, 2 taps = Back</string>
     <string name="tap_behavior_back_description">1 tap = Back, 2 taps = Switch to previous app</string>
 
-    <!-- Rescue Ring / Overlay Modes -->
-    <string name="rescue_ring">Life Ring</string>
-    <string name="rescue_ring_desc">Emergency mode: Stop current app and go home</string>
-    <string name="enable_rescue_ring">Enable life ring</string>
-    <string name="overlay_mode_normal">Normal Mode</string>
-    <string name="overlay_mode_normal_description">Standard navigation with gesture controls</string>
-    <string name="overlay_mode_rescue_ring">Rescue Ring Mode</string>
-    <string name="overlay_mode_rescue_ring_description">Emergency mode for quick app closure</string>
-
     <!-- Advanced Settings -->
     <string name="for_experts">More settings</string>
     <string name="transparency">See-through</string>

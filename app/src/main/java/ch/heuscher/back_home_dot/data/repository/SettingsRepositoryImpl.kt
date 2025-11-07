@@ -78,12 +78,6 @@ class SettingsRepositoryImpl(
         dataSource.setKeyboardAvoidanceEnabled(enabled)
     }
 
-    override fun isRescueRingEnabled(): Flow<Boolean> = dataSource.isRescueRingEnabled()
-
-    override suspend fun setRescueRingEnabled(enabled: Boolean) {
-        dataSource.setRescueRingEnabled(enabled)
-    }
-
     override fun getTapBehavior(): Flow<String> = dataSource.getTapBehavior()
 
     override suspend fun setTapBehavior(behavior: String) {
@@ -116,7 +110,6 @@ class SettingsRepositoryImpl(
         getPositionPercent(),
         getRecentsTimeout(),
         isKeyboardAvoidanceEnabled(),
-        isRescueRingEnabled(),
         getTapBehavior(),
         getScreenWidth(),
         getScreenHeight(),
@@ -130,11 +123,10 @@ class SettingsRepositoryImpl(
             positionPercent = values[4] as DotPositionPercent,
             recentsTimeout = values[5] as Long,
             keyboardAvoidanceEnabled = values[6] as Boolean,
-            rescueRingEnabled = values[7] as Boolean,
-            tapBehavior = values[8] as String,
-            screenWidth = values[9] as Int,
-            screenHeight = values[10] as Int,
-            rotation = values[11] as Int
+            tapBehavior = values[7] as String,
+            screenWidth = values[8] as Int,
+            screenHeight = values[9] as Int,
+            rotation = values[10] as Int
         )
     }
 
@@ -146,7 +138,6 @@ class SettingsRepositoryImpl(
         setPositionPercent(settings.positionPercent)
         setRecentsTimeout(settings.recentsTimeout)
         setKeyboardAvoidanceEnabled(settings.keyboardAvoidanceEnabled)
-        setRescueRingEnabled(settings.rescueRingEnabled)
         setTapBehavior(settings.tapBehavior)
         setScreenWidth(settings.screenWidth)
         setScreenHeight(settings.screenHeight)
