@@ -29,6 +29,10 @@
     <!-- Buttons -->
     <string name="settings">⚙ Einstellungen</string>
     <string name="stop_app">⛔ App beenden</string>
+    <string name="uninstall_app">🗑 App deinstallieren</string>
+    <string name="uninstall">Deinstallieren</string>
+    <string name="uninstall_app_confirmation">Möchten Sie AssistiPunkt deinstallieren?</string>
+    <string name="uninstall_app_desc">App deinstallieren</string>
 
     <!-- Help Section -->
     <string name="how_it_works">ℹ️ So funktioniert es</string>

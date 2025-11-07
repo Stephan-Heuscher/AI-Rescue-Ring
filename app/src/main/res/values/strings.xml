@@ -29,6 +29,10 @@
     <!-- Buttons -->
     <string name="settings">⚙ Settings</string>
     <string name="stop_app">⛔ Stop app</string>
+    <string name="uninstall_app">🗑 Uninstall app</string>
+    <string name="uninstall">Uninstall</string>
+    <string name="uninstall_app_confirmation">Do you want to uninstall Assistive Tap?</string>
+    <string name="uninstall_app_desc">Uninstall app</string>
 
     <!-- Help Section -->
     <string name="how_it_works">ℹ️ How it works</string>
