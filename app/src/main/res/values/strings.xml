@@ -60,10 +60,14 @@
     <string name="tap_behavior_desc">Choose what happens when you tap the dot</string>
     <string name="tap_behavior_standard">Standard: 1 tap = Home, 2 taps = Back</string>
     <string name="tap_behavior_back">Navi: 1 tap = Back, 2 taps = Switch to previous app</string>
+    <string name="tap_behavior_safe_home">Safe Home: Always goes home, can only be moved on home screen</string>
     <string name="tap_behavior_standard_name">Standard</string>
     <string name="tap_behavior_back_name">Navi</string>
+    <string name="tap_behavior_safe_home_name">Safe Home</string>
     <string name="tap_behavior_standard_description">1 tap = Home, 2 taps = Back</string>
     <string name="tap_behavior_back_description">1 tap = Back, 2 taps = Switch to previous app</string>
+    <string name="tap_behavior_safe_home_description">All taps go home, moveable only on home screen</string>
+    <string name="instructions_safe_home_mode">• All taps = Home\n• Can only be moved on home screen\n• For safety and simplicity</string>
 
     <!-- Rescue Ring / Overlay Modes -->
     <string name="rescue_ring">Life Ring</string>

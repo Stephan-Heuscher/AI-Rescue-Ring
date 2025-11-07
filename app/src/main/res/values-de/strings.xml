@@ -60,10 +60,14 @@
     <string name="tap_behavior_desc">Wählen Sie, was passiert wenn Sie den Punkt antippen</string>
     <string name="tap_behavior_standard">Standard: 1x tippen = Home, 2x tippen = Zurück</string>
     <string name="tap_behavior_back">Navi: 1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
+    <string name="tap_behavior_safe_home">Sicher nach Hause: Geht immer nach Home, kann nur auf Home-Bildschirm verschoben werden</string>
     <string name="tap_behavior_standard_name">Standard</string>
     <string name="tap_behavior_back_name">Navi</string>
+    <string name="tap_behavior_safe_home_name">Sicher nach Hause</string>
     <string name="tap_behavior_standard_description">1x tippen = Home, 2x tippen = Zurück</string>
     <string name="tap_behavior_back_description">1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
+    <string name="tap_behavior_safe_home_description">Alle Taps gehen nach Home, nur auf Home-Bildschirm verschiebbar</string>
+    <string name="instructions_safe_home_mode">• Alle Taps = Home\n• Kann nur auf Home-Bildschirm verschoben werden\n• Für Sicherheit und Einfachheit</string>
 
     <!-- Rescue Ring / Overlay Modes -->
     <string name="rescue_ring">Rettungsring</string>

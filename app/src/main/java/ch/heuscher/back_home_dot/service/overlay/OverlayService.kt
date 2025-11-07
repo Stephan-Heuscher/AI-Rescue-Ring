@@ -271,6 +271,7 @@ class OverlayService : Service() {
                     when (tapBehavior) {
                         "STANDARD" -> BackHomeAccessibilityService.instance?.performHomeAction()
                         "NAVI" -> BackHomeAccessibilityService.instance?.performBackAction()
+                        "SAFE_HOME" -> BackHomeAccessibilityService.instance?.performHomeAction()
                         else -> BackHomeAccessibilityService.instance?.performBackAction()
                     }
                 }
@@ -286,6 +287,7 @@ class OverlayService : Service() {
                 when (tapBehavior) {
                     "STANDARD" -> BackHomeAccessibilityService.instance?.performBackAction()
                     "NAVI" -> BackHomeAccessibilityService.instance?.performRecentsAction()
+                    "SAFE_HOME" -> BackHomeAccessibilityService.instance?.performHomeAction()
                     else -> BackHomeAccessibilityService.instance?.performRecentsAction()
                 }
             }
@@ -294,7 +296,14 @@ class OverlayService : Service() {
 
     private fun handleTripleTap(mode: OverlayMode) {
         if (mode == OverlayMode.NORMAL) {
-            BackHomeAccessibilityService.instance?.performRecentsOverviewAction()
+            serviceScope.launch {
+                val tapBehavior = settingsRepository.getTapBehavior().first()
+                if (tapBehavior == "SAFE_HOME") {
+                    BackHomeAccessibilityService.instance?.performHomeAction()
+                } else {
+                    BackHomeAccessibilityService.instance?.performRecentsOverviewAction()
+                }
+            }
         }
     }
 
@@ -309,24 +318,59 @@ class OverlayService : Service() {
         BackHomeAccessibilityService.instance?.performHomeAction()
     }
 
+    private fun isOnHomeScreen(): Boolean {
+        try {
+            val intent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+            }
+            val resolveInfo = packageManager.resolveActivity(intent, 0)
+            val launcherPackage = resolveInfo?.activityInfo?.packageName
+
+            // Get current foreground app
+            val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            val runningTasks = try {
+                @Suppress("DEPRECATION")
+                activityManager.getRunningTasks(1)
+            } catch (e: Exception) {
+                null
+            }
+
+            val currentPackage = runningTasks?.firstOrNull()?.topActivity?.packageName
+
+            return currentPackage == launcherPackage
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking if on home screen", e)
+            return false
+        }
+    }
+
     private fun handlePositionChange(deltaX: Int, deltaY: Int) {
-        val currentPos = viewManager.getCurrentPosition() ?: return
-        val newX = currentPos.x + deltaX
-        val newY = currentPos.y + deltaY
+        // Check if in SAFE_HOME mode and not on home screen - prevent dragging
+        serviceScope.launch {
+            val tapBehavior = settingsRepository.getTapBehavior().first()
+            if (tapBehavior == "SAFE_HOME" && !isOnHomeScreen()) {
+                Log.d(TAG, "SAFE_HOME mode: Dragging not allowed outside home screen")
+                return@launch
+            }
 
-        // First constrain to screen bounds
-        val (boundedX, boundedY) = viewManager.constrainPositionToBounds(newX, newY)
+            val currentPos = viewManager.getCurrentPosition() ?: return@launch
+            val newX = currentPos.x + deltaX
+            val newY = currentPos.y + deltaY
 
-        // Then apply keyboard constraints if needed
-        val (constrainedX, constrainedY) = keyboardManager.constrainPositionWithKeyboard(
-            newX, newY, boundedX, boundedY
-        )
+            // First constrain to screen bounds
+            val (boundedX, boundedY) = viewManager.constrainPositionToBounds(newX, newY)
 
-        val newPosition = DotPosition(constrainedX, constrainedY)
-        viewManager.updatePosition(newPosition)
+            // Then apply keyboard constraints if needed
+            val (constrainedX, constrainedY) = keyboardManager.constrainPositionWithKeyboard(
+                newX, newY, boundedX, boundedY
+            )
 
-        // Save new position
-        savePosition(newPosition)
+            val newPosition = DotPosition(constrainedX, constrainedY)
+            viewManager.updatePosition(newPosition)
+
+            // Save new position
+            savePosition(newPosition)
+        }
     }
 
     private fun onDragEnd() {
@@ -368,10 +412,6 @@ class OverlayService : Service() {
 
     private fun handleOrientationChange() {
         Log.d(TAG, "Configuration changed, handling orientation")
-
-        // Hide dot immediately to prevent visible jumping
-        viewManager.setVisibility(View.INVISIBLE)
-        Log.d(TAG, "Dot hidden during rotation")
 
         isOrientationChanging = true
         keyboardManager.setOrientationChanging(true)
@@ -478,9 +518,7 @@ class OverlayService : Service() {
         isOrientationChanging = false
         keyboardManager.setOrientationChanging(false)
 
-        // Show dot at new position
-        viewManager.setVisibility(View.VISIBLE)
-        Log.d(TAG, "Orientation change complete, dot shown at new position")
+        Log.d(TAG, "Orientation change complete")
     }
 
     private fun performRescueAction() {

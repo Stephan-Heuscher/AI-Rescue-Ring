@@ -25,6 +25,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var tapBehaviorRadioGroup: android.widget.RadioGroup
     private lateinit var tapBehaviorStandard: android.widget.RadioButton
     private lateinit var tapBehaviorBack: android.widget.RadioButton
+    private lateinit var tapBehaviorSafeHome: android.widget.RadioButton
     private lateinit var advancedToggleCard: androidx.cardview.widget.CardView
     private lateinit var advancedContent: androidx.cardview.widget.CardView
     private lateinit var advancedArrow: TextView
@@ -67,6 +68,7 @@ class SettingsActivity : AppCompatActivity() {
         tapBehaviorRadioGroup = findViewById(R.id.tap_behavior_radio_group)
         tapBehaviorStandard = findViewById(R.id.tap_behavior_standard)
         tapBehaviorBack = findViewById(R.id.tap_behavior_back)
+        tapBehaviorSafeHome = findViewById(R.id.tap_behavior_safe_home)
         advancedToggleCard = findViewById(R.id.advanced_toggle_card)
         advancedContent = findViewById(R.id.advanced_content)
         advancedArrow = findViewById(R.id.advanced_arrow)
@@ -146,6 +148,7 @@ class SettingsActivity : AppCompatActivity() {
             val behavior = when (checkedId) {
                 R.id.tap_behavior_standard -> "STANDARD"
                 R.id.tap_behavior_back -> "NAVI"
+                R.id.tap_behavior_safe_home -> "SAFE_HOME"
                 else -> "NAVI"
             }
             currentTapBehavior = behavior
@@ -204,6 +207,7 @@ class SettingsActivity : AppCompatActivity() {
                 when (behavior) {
                     "STANDARD" -> tapBehaviorStandard.isChecked = true
                     "NAVI" -> tapBehaviorBack.isChecked = true
+                    "SAFE_HOME" -> tapBehaviorSafeHome.isChecked = true
                 }
             }
         }

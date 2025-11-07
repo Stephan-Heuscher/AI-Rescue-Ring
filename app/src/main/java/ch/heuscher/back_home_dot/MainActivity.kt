@@ -268,6 +268,7 @@ class MainActivity : AppCompatActivity() {
         val instructions = when (tapBehavior) {
             "STANDARD" -> getString(R.string.instructions_normal_mode)
             "NAVI" -> getString(R.string.instructions_back_mode)
+            "SAFE_HOME" -> getString(R.string.instructions_safe_home_mode)
             else -> getString(R.string.instructions_normal_mode)
         }
         instructionsText.text = instructions
