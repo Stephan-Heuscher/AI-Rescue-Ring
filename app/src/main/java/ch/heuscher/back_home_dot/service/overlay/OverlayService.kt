@@ -307,29 +307,14 @@ class OverlayService : Service() {
     }
 
     private fun isOnHomeScreen(): Boolean {
-        try {
-            val intent = Intent(Intent.ACTION_MAIN).apply {
-                addCategory(Intent.CATEGORY_HOME)
-            }
-            val resolveInfo = packageManager.resolveActivity(intent, 0)
-            val launcherPackage = resolveInfo?.activityInfo?.packageName
-
-            // Get current foreground app
-            val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
-            val runningTasks = try {
-                @Suppress("DEPRECATION")
-                activityManager.getRunningTasks(1)
-            } catch (e: Exception) {
-                null
-            }
-
-            val currentPackage = runningTasks?.firstOrNull()?.topActivity?.packageName
-
-            return currentPackage == launcherPackage
-        } catch (e: Exception) {
-            Log.e(TAG, "Error checking if on home screen", e)
-            return false
+        // Use AccessibilityService to detect home screen (more reliable than getRunningTasks)
+        val accessibilityService = BackHomeAccessibilityService.instance
+        if (accessibilityService != null) {
+            return accessibilityService.isOnHomeScreen()
         }
+
+        Log.w(TAG, "AccessibilityService not available for home screen detection")
+        return false  // If accessibility service is not available, assume not on home screen for safety
     }
 
     private fun handlePositionChange(deltaX: Int, deltaY: Int) {
