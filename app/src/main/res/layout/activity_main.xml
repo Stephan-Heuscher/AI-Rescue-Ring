@@ -295,6 +295,20 @@
             android:layout_marginTop="16dp"
             android:paddingVertical="16dp" />
 
+        <!-- Uninstall Button -->
+        <Button
+            android:id="@+id/uninstall_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/uninstall_app"
+            android:textSize="18sp"
+            android:backgroundTint="#B71C1C"
+            android:textColor="#FFFFFF"
+            android:contentDescription="@string/uninstall_app_desc"
+            android:minHeight="64dp"
+            android:layout_marginTop="12dp"
+            android:paddingVertical="16dp" />
+
         <!-- Version Info -->
         <TextView
             android:id="@+id/version_info"

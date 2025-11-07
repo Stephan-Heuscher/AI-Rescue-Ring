@@ -11,8 +11,14 @@ enum class TapBehavior {
     STANDARD,
 
     /**
-     * Back mode: 1 tap = Back, 2 taps = Switch to previous app
+     * Navi mode: 1 tap = Back, 2 taps = Switch to previous app
      * Always: 3 taps = Switch apps, 4 taps = Open this app, Long press = Home
      */
-    BACK
+    NAVI,
+
+    /**
+     * Safe Home mode: All taps and gestures go to Home
+     * Can only be moved on the home screen for safety
+     */
+    SAFE_HOME
 }
