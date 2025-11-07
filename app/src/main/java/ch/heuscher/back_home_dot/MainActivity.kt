@@ -267,7 +267,7 @@ class MainActivity : AppCompatActivity() {
     private fun updateInstructionsText(tapBehavior: String) {
         val instructions = when (tapBehavior) {
             "STANDARD" -> getString(R.string.instructions_normal_mode)
-            "BACK" -> getString(R.string.instructions_back_mode)
+            "NAVI" -> getString(R.string.instructions_back_mode)
             else -> getString(R.string.instructions_normal_mode)
         }
         instructionsText.text = instructions

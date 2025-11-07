@@ -37,7 +37,7 @@ class SettingsActivity : AppCompatActivity() {
     private var currentTimeout = 100L
     private var currentColor = 0xFF2196F3.toInt()
     private var keyboardAvoidanceEnabled = false
-    private var currentTapBehavior = "BACK"
+    private var currentTapBehavior = "NAVI"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -145,8 +145,8 @@ class SettingsActivity : AppCompatActivity() {
         tapBehaviorRadioGroup.setOnCheckedChangeListener { _, checkedId ->
             val behavior = when (checkedId) {
                 R.id.tap_behavior_standard -> "STANDARD"
-                R.id.tap_behavior_back -> "BACK"
-                else -> "BACK"
+                R.id.tap_behavior_back -> "NAVI"
+                else -> "NAVI"
             }
             currentTapBehavior = behavior
             lifecycleScope.launch {
@@ -203,7 +203,7 @@ class SettingsActivity : AppCompatActivity() {
                 currentTapBehavior = behavior
                 when (behavior) {
                     "STANDARD" -> tapBehaviorStandard.isChecked = true
-                    "BACK" -> tapBehaviorBack.isChecked = true
+                    "NAVI" -> tapBehaviorBack.isChecked = true
                 }
             }
         }

@@ -270,7 +270,7 @@ class OverlayService : Service() {
                     val tapBehavior = settingsRepository.getTapBehavior().first()
                     when (tapBehavior) {
                         "STANDARD" -> BackHomeAccessibilityService.instance?.performHomeAction()
-                        "BACK" -> BackHomeAccessibilityService.instance?.performBackAction()
+                        "NAVI" -> BackHomeAccessibilityService.instance?.performBackAction()
                         else -> BackHomeAccessibilityService.instance?.performBackAction()
                     }
                 }
@@ -285,7 +285,7 @@ class OverlayService : Service() {
                 val tapBehavior = settingsRepository.getTapBehavior().first()
                 when (tapBehavior) {
                     "STANDARD" -> BackHomeAccessibilityService.instance?.performBackAction()
-                    "BACK" -> BackHomeAccessibilityService.instance?.performRecentsAction()
+                    "NAVI" -> BackHomeAccessibilityService.instance?.performRecentsAction()
                     else -> BackHomeAccessibilityService.instance?.performRecentsAction()
                 }
             }

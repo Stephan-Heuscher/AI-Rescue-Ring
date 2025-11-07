@@ -59,9 +59,9 @@
     <string name="tap_behavior">What taps do</string>
     <string name="tap_behavior_desc">Choose what happens when you tap the dot</string>
     <string name="tap_behavior_standard">Standard: 1 tap = Home, 2 taps = Back</string>
-    <string name="tap_behavior_back">Back: 1 tap = Back, 2 taps = Switch to previous app</string>
+    <string name="tap_behavior_back">Navi: 1 tap = Back, 2 taps = Switch to previous app</string>
     <string name="tap_behavior_standard_name">Standard</string>
-    <string name="tap_behavior_back_name">Back</string>
+    <string name="tap_behavior_back_name">Navi</string>
     <string name="tap_behavior_standard_description">1 tap = Home, 2 taps = Back</string>
     <string name="tap_behavior_back_description">1 tap = Back, 2 taps = Switch to previous app</string>
 

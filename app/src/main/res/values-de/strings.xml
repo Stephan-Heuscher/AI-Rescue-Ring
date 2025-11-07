@@ -59,9 +59,9 @@
     <string name="tap_behavior">Was Tippen macht</string>
     <string name="tap_behavior_desc">Wählen Sie, was passiert wenn Sie den Punkt antippen</string>
     <string name="tap_behavior_standard">Standard: 1x tippen = Home, 2x tippen = Zurück</string>
-    <string name="tap_behavior_back">Zurück: 1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
+    <string name="tap_behavior_back">Navi: 1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
     <string name="tap_behavior_standard_name">Standard</string>
-    <string name="tap_behavior_back_name">Zurück</string>
+    <string name="tap_behavior_back_name">Navi</string>
     <string name="tap_behavior_standard_description">1x tippen = Home, 2x tippen = Zurück</string>
     <string name="tap_behavior_back_description">1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
 
