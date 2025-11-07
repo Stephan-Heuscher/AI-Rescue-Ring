@@ -29,6 +29,10 @@
     <!-- Buttons -->
     <string name="settings">⚙ Settings</string>
     <string name="stop_app">⛔ Stop app</string>
+    <string name="uninstall_app">🗑 Uninstall app</string>
+    <string name="uninstall">Uninstall</string>
+    <string name="uninstall_app_confirmation">Do you want to uninstall Assistive Tap?</string>
+    <string name="uninstall_app_desc">Uninstall app</string>
 
     <!-- Help Section -->
     <string name="how_it_works">ℹ️ How it works</string>
@@ -59,11 +63,15 @@
     <string name="tap_behavior">What taps do</string>
     <string name="tap_behavior_desc">Choose what happens when you tap the dot</string>
     <string name="tap_behavior_standard">Standard: 1 tap = Home, 2 taps = Back</string>
-    <string name="tap_behavior_back">Back: 1 tap = Back, 2 taps = Switch to previous app</string>
+    <string name="tap_behavior_back">Navi: 1 tap = Back, 2 taps = Switch to previous app</string>
+    <string name="tap_behavior_safe_home">Safe Home: Always goes home, can only be moved on home screen</string>
     <string name="tap_behavior_standard_name">Standard</string>
-    <string name="tap_behavior_back_name">Back</string>
+    <string name="tap_behavior_back_name">Navi</string>
+    <string name="tap_behavior_safe_home_name">Safe Home</string>
     <string name="tap_behavior_standard_description">1 tap = Home, 2 taps = Back</string>
     <string name="tap_behavior_back_description">1 tap = Back, 2 taps = Switch to previous app</string>
+    <string name="tap_behavior_safe_home_description">All taps go home, moveable only on home screen</string>
+    <string name="instructions_safe_home_mode">• All taps = Home\n• Can only be moved on home screen\n• For safety and simplicity</string>
 
     <!-- Advanced Settings -->
     <string name="for_experts">More settings</string>

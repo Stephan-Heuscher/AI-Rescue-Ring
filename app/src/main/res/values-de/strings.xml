@@ -29,6 +29,10 @@
     <!-- Buttons -->
     <string name="settings">⚙ Einstellungen</string>
     <string name="stop_app">⛔ App beenden</string>
+    <string name="uninstall_app">🗑 App deinstallieren</string>
+    <string name="uninstall">Deinstallieren</string>
+    <string name="uninstall_app_confirmation">Möchten Sie AssistiPunkt deinstallieren?</string>
+    <string name="uninstall_app_desc">App deinstallieren</string>
 
     <!-- Help Section -->
     <string name="how_it_works">ℹ️ So funktioniert es</string>
@@ -59,11 +63,15 @@
     <string name="tap_behavior">Was Tippen macht</string>
     <string name="tap_behavior_desc">Wählen Sie, was passiert wenn Sie den Punkt antippen</string>
     <string name="tap_behavior_standard">Standard: 1x tippen = Home, 2x tippen = Zurück</string>
-    <string name="tap_behavior_back">Zurück: 1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
+    <string name="tap_behavior_back">Navi: 1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
+    <string name="tap_behavior_safe_home">Sicher nach Hause: Geht immer nach Home, kann nur auf Home-Bildschirm verschoben werden</string>
     <string name="tap_behavior_standard_name">Standard</string>
-    <string name="tap_behavior_back_name">Zurück</string>
+    <string name="tap_behavior_back_name">Navi</string>
+    <string name="tap_behavior_safe_home_name">Sicher nach Hause</string>
     <string name="tap_behavior_standard_description">1x tippen = Home, 2x tippen = Zurück</string>
     <string name="tap_behavior_back_description">1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
+    <string name="tap_behavior_safe_home_description">Alle Taps gehen nach Home, nur auf Home-Bildschirm verschiebbar</string>
+    <string name="instructions_safe_home_mode">• Alle Taps = Home\n• Kann nur auf Home-Bildschirm verschoben werden\n• Für Sicherheit und Einfachheit</string>
 
     <!-- Advanced Settings -->
     <string name="for_experts">Mehr Einstellungen</string>

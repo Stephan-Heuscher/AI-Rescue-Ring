@@ -7,22 +7,17 @@
 [![API Level](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://developer.android.com/about/versions/oreo)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## 📱 Über die App
+## 📱 Was macht die App?
 
-**AssistiPunkt** (international: *Assistive Tap*) ist eine barrierefreie Android-App, die Menschen mit eingeschränkter Mobilität oder motorischen Schwierigkeiten die Smartphone-Navigation erleichtert. Ein schwebender, anpassbarer Punkt ermöglicht mit einfachen Gesten die Steuerung aller wichtigen Navigationsfunktionen.
+Stell dir vor, deine Oma hätte Probleme, die Handy-Tasten unten zu erreichen. Mit diesem kleinen Punkt auf dem Bildschirm kommt sie mit dem Daumen immer wieder nach Hause - egal wo sie gerade ist.
 
-### ✨ Hauptfunktionen
+Und weil so ein Punkt praktisch ist, habe ich ihn für Ein-Daumen-Bedienung erweitert:
+- **1x tippen** → Zurück
+- **2x tippen** → Letzte App
+- **3x tippen** → Offene Apps
+- **Lang drücken** → Home
 
-- **🎯 Zwei Tipp-Verhalten**: Standard-Modus oder Zurück-Modus wählbar
-- **🎯 Schwebender Punkt**: Frei positionierbarer, anpassbarer Navigationspunkt über allen Apps
-- **👆 Intuitive Gesten**:
-  - **Standard-Modus**: 1x tippen → Home, 2x tippen → Zurück
-  - **Zurück-Modus**: 1x tippen → Zurück, 2x tippen → Zu vorheriger App wechseln
-  - **Immer verfügbar**: 3x tippen → Alle offenen Apps, 4x tippen → App öffnen, Lang drücken → Startseite
-- **⌨️ Tastatur-Vermeidung**: Punkt weicht automatisch der Bildschirmtastatur aus
-- **🎨 Anpassbar**: Farbe, Durchsichtigkeit und Position frei wählbar
-- **⚡ Konfigurierbar**: App-Wechsel-Geschwindigkeit einstellbar (50-300ms)
-- **♿ Barrierefrei**: Nach WCAG 2.1 Level AA optimiert
+Alles mit einem Daumen, ohne das Handy umzugreifen.
 
 ## 🖼️ Screenshots
 
@@ -53,40 +48,18 @@
    - Overlay-Berechtigung aktivieren
    - "AssistiPunkt" in den Bedienungshilfen einschalten
 
-## 🎮 Verwendung
+## 🎮 So funktioniert's
 
-### Tipp-Verhalten auswählen
+1. **Punkt einschalten**: Schalter in der App aktivieren
+2. **Punkt verschieben**: Punkt lange drücken und an beliebige Stelle ziehen
+3. **Navigieren**:
+   - **1x tippen** → Zurück
+   - **2x tippen** → Letzte App
+   - **3x tippen** → Offene Apps
+   - **Lang drücken** → Home
+4. **Anpassen**: Farbe und Durchsichtigkeit in den Einstellungen ändern
 
-**AssistiPunkt** bietet zwei Tipp-Verhalten für verschiedene Vorlieben:
-
-#### 🏠 Standard-Modus (empfohlen)
-- **1x tippen** → Home (Startseite)
-- **2x tippen** → Zurück
-- Ideal für intuitive Navigation ähnlich zu Android-Standards
-
-#### � Zurück-Modus
-- **1x tippen** → Zurück
-- **2x tippen** → Zu vorheriger App wechseln
-- Traditionelle Navigation für erfahrene Benutzer
-
-### Grundlegende Nutzung
-
-1. **Verhalten wählen**: In den Einstellungen das gewünschte Tipp-Verhalten auswählen
-2. **Punkt aktivieren**: Ein/Aus-Schalter in der App
-3. **Punkt positionieren**: Punkt gedrückt halten und verschieben
-4. **Navigation**: Mit verschiedenen Tipp-Gesten navigieren
-5. **Anpassen**: Über "⚙ Einstellungen" Farbe und Verhalten ändern
-
-### Automatische Funktionen
-
-- **Tastatur-Vermeidung**: Der Punkt bewegt sich automatisch nach oben, wenn die Bildschirmtastatur erscheint
-- **Bildschirm-Rotation**: Der Punkt bleibt an der gleichen physischen Position
-
-### Erweiterte Einstellungen (für Experten)
-
-Im Bereich "Für Experten" können folgende Parameter angepasst werden:
-- **Durchsichtigkeit**: Transparenz des Punktes (0-100%)
-- **Wechsel-Geschwindigkeit**: Verzögerung beim App-Wechsel (50-300ms)
+Der Punkt weicht automatisch der Tastatur aus und bleibt auch beim Drehen des Handys an der richtigen Stelle.
 
 ## 🛠️ Technische Details
 
