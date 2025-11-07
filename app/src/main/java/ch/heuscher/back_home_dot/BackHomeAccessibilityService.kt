@@ -29,6 +29,10 @@ class BackHomeAccessibilityService : AccessibilityService() {
     // Cache settings values for synchronous access
     private var recentsTimeout: Long = AppConstants.RECENTS_TIMEOUT_DEFAULT_MS
 
+    // Track current foreground package for home screen detection
+    private var currentPackageName: String? = null
+    private var launcherPackageName: String? = null
+
     override fun onServiceConnected() {
         super.onServiceConnected()
 
@@ -51,6 +55,10 @@ class BackHomeAccessibilityService : AccessibilityService() {
             notificationTimeout = 100
         }
 
+        // Detect launcher package
+        launcherPackageName = getLauncherPackageName()
+        Log.d(TAG, "Launcher package detected: $launcherPackageName")
+
         instance = this
     }
 
@@ -58,6 +66,12 @@ class BackHomeAccessibilityService : AccessibilityService() {
         event?.let {
             when (it.eventType) {
                 AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                    // Track current foreground package
+                    val packageName = it.packageName?.toString()
+                    if (packageName != null && packageName != currentPackageName) {
+                        currentPackageName = packageName
+                        Log.d(TAG, "Window changed to package: $packageName")
+                    }
                     detectKeyboardState(it)
                 }
             }
@@ -140,6 +154,33 @@ class BackHomeAccessibilityService : AccessibilityService() {
      */
     fun performRecentsOverviewAction() {
         performGlobalAction(GLOBAL_ACTION_RECENTS)
+    }
+
+    /**
+     * Get launcher package name
+     */
+    private fun getLauncherPackageName(): String? {
+        return try {
+            val intent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+            }
+            val resolveInfo = packageManager.resolveActivity(intent, 0)
+            resolveInfo?.activityInfo?.packageName
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting launcher package", e)
+            null
+        }
+    }
+
+    /**
+     * Check if currently on home screen
+     */
+    fun isOnHomeScreen(): Boolean {
+        val onHomeScreen = currentPackageName != null &&
+                          launcherPackageName != null &&
+                          currentPackageName == launcherPackageName
+        Log.d(TAG, "isOnHomeScreen: current=$currentPackageName, launcher=$launcherPackageName, result=$onHomeScreen")
+        return onHomeScreen
     }
 
     companion object {
