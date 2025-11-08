@@ -194,6 +194,14 @@ class OverlayViewManager(
         // Allow layout to position partially off-screen so button can reach edges
         val constrainedX = x.coerceIn(-offset, screenSize.x - buttonSize - offset)
         val constrainedY = y.coerceIn(-offset, screenSize.y - buttonSize - offset)
+
+        // Log constraint details for debugging
+        if (x != constrainedX || y != constrainedY) {
+            Log.d(TAG, "constrainPositionToBounds: screenSize=${screenSize.x}x${screenSize.y}, layoutSize=$layoutSize, buttonSize=$buttonSize, offset=$offset")
+            Log.d(TAG, "constrainPositionToBounds: input=($x,$y) -> output=($constrainedX,$constrainedY)")
+            Log.d(TAG, "constrainPositionToBounds: maxX=${screenSize.x - buttonSize - offset}, maxY=${screenSize.y - buttonSize - offset}")
+        }
+
         return Pair(constrainedX, constrainedY)
     }
 

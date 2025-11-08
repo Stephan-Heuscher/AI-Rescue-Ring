@@ -203,12 +203,10 @@ class OverlayService : Service() {
                 updateGestureMode(settings.tapBehavior)
 
                 // Restore position after appearance update to prevent jumping
+                // Always restore the position, constrained to bounds if needed
                 currentPosition?.let { pos ->
                     val (constrainedX, constrainedY) = viewManager.constrainPositionToBounds(pos.x, pos.y)
-                    if (constrainedX == pos.x && constrainedY == pos.y) {
-                        // Position is still valid, keep it
-                        viewManager.updatePosition(pos)
-                    }
+                    viewManager.updatePosition(DotPosition(constrainedX, constrainedY))
                 }
             }
         }
@@ -246,6 +244,11 @@ class OverlayService : Service() {
             val constrainedX = settings.position.x.coerceIn(-offset, screenSize.x - buttonSize - offset)
             val constrainedY = settings.position.y.coerceIn(-offset, screenSize.y - buttonSize - offset)
             val constrainedPosition = DotPosition(constrainedX, constrainedY)
+
+            Log.d(TAG, "updateOverlayAppearance: screenSize=${screenSize.x}x${screenSize.y}, layoutSize=$layoutSize, buttonSize=$buttonSize, offset=$offset")
+            Log.d(TAG, "updateOverlayAppearance: savedPosition=(${settings.position.x},${settings.position.y}) -> constrainedPosition=($constrainedX,$constrainedY)")
+            Log.d(TAG, "updateOverlayAppearance: maxX=${screenSize.x - buttonSize - offset}, maxY=${screenSize.y - buttonSize - offset}")
+
             viewManager.updatePosition(constrainedPosition)
         }
     }
@@ -371,6 +374,13 @@ class OverlayService : Service() {
             )
 
             val newPosition = DotPosition(constrainedX, constrainedY)
+
+            // Log position changes near screen edges
+            val screenSize = orientationHandler.getUsableScreenSize()
+            if (newX > screenSize.x - 200 || newY > screenSize.y - 200) {
+                Log.d(TAG, "handlePositionChange: newX=$newX, newY=$newY -> boundedX=$boundedX, boundedY=$boundedY -> finalX=$constrainedX, finalY=$constrainedY")
+            }
+
             viewManager.updatePosition(newPosition)
 
             // Save new position
