@@ -230,7 +230,7 @@ class OverlayViewManager(
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
             WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
@@ -261,10 +261,15 @@ class OverlayViewManager(
 
     private fun getScreenSize(): Point {
         val size = Point()
-        // Always use the real display size (not window metrics which excludes nav bars)
-        // This allows the button to reach the actual screen edges with halo cut off
-        @Suppress("DEPRECATION")
-        windowManager.defaultDisplay.getRealSize(size)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val windowMetrics = windowManager.currentWindowMetrics
+            val bounds = windowMetrics.bounds
+            size.x = bounds.width()
+            size.y = bounds.height()
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getSize(size)
+        }
         return size
     }
 
