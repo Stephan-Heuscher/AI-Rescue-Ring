@@ -33,16 +33,30 @@ class GestureDetector(
     private val doubleTapTimeout = AppConstants.GESTURE_DOUBLE_TAP_TIMEOUT_MS
     private val longPressTimeout = AppConstants.GESTURE_LONG_PRESS_TIMEOUT_MS
 
+    // Mode configuration - set by OverlayService
+    private var requiresLongPressToDrag = false
+
     // Callbacks
     var onGesture: ((Gesture) -> Unit)? = null
     var onPositionChanged: ((Int, Int) -> Unit)? = null
     var onDragModeChanged: ((Boolean) -> Unit)? = null
 
+    /**
+     * Sets whether long-press is required to enable dragging.
+     * Used for Safe-Home mode.
+     */
+    fun setRequiresLongPressToDrag(required: Boolean) {
+        requiresLongPressToDrag = required
+    }
+
     // Runnables
     private val longPressRunnable = Runnable {
         isLongPress = true
-        isDragMode = true
-        onDragModeChanged?.invoke(true)
+        // Only activate drag mode if long-press is required for dragging (Safe-Home mode)
+        if (requiresLongPressToDrag) {
+            isDragMode = true
+            onDragModeChanged?.invoke(true)
+        }
         onGesture?.invoke(Gesture.LONG_PRESS)
     }
 
@@ -87,20 +101,31 @@ class GestureDetector(
         val totalDeltaY = event.rawY - initialY
 
         if (!hasMoved) {
-            // Only allow dragging if in drag mode (long-press detected)
-            if (isDragMode) {
+            if (requiresLongPressToDrag) {
+                // Safe-Home mode: Only allow dragging if in drag mode (long-press detected)
+                if (isDragMode) {
+                    if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
+                        hasMoved = true
+                        onGesture?.invoke(Gesture.DRAG_START)
+                    } else {
+                        return true
+                    }
+                } else {
+                    // Not in drag mode yet, check if user moved too much (cancel long press)
+                    if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
+                        mainHandler.removeCallbacks(longPressRunnable)
+                    }
+                    return true
+                }
+            } else {
+                // Standard/Navi mode: Allow immediate dragging
                 if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
                     hasMoved = true
+                    mainHandler.removeCallbacks(longPressRunnable) // Cancel long press
                     onGesture?.invoke(Gesture.DRAG_START)
                 } else {
                     return true
                 }
-            } else {
-                // Not in drag mode yet, check if user moved too much (cancel long press)
-                if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
-                    mainHandler.removeCallbacks(longPressRunnable)
-                }
-                return true
             }
         }
 

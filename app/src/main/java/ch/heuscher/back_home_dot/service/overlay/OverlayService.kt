@@ -197,8 +197,16 @@ class OverlayService : Service() {
         serviceScope.launch {
             settingsRepository.getAllSettings().collectLatest { settings ->
                 updateOverlayAppearance()
+                updateGestureMode(settings.tapBehavior)
             }
         }
+    }
+
+    private fun updateGestureMode(tapBehavior: String) {
+        // Safe-Home mode requires long-press to drag, others allow immediate dragging
+        val requiresLongPress = (tapBehavior == "SAFE_HOME")
+        gestureDetector.setRequiresLongPressToDrag(requiresLongPress)
+        Log.d(TAG, "updateGestureMode: tapBehavior=$tapBehavior, requiresLongPress=$requiresLongPress")
     }
 
     private fun initializeScreenDimensions() {
@@ -307,9 +315,17 @@ class OverlayService : Service() {
     }
 
     private fun handleLongPress() {
-        // Long press now activates drag mode instead of performing home action
-        // The drag mode is already activated by GestureDetector's onDragModeChanged callback
-        Log.d(TAG, "Long press detected - drag mode activated")
+        serviceScope.launch {
+            val tapBehavior = settingsRepository.getTapBehavior().first()
+            if (tapBehavior == "SAFE_HOME") {
+                // Safe-Home mode: Long press activates drag mode
+                // The drag mode is already activated by GestureDetector's onDragModeChanged callback
+                Log.d(TAG, "Long press detected - drag mode activated (Safe-Home)")
+            } else {
+                // Standard/Navi mode: Long press performs home action
+                BackHomeAccessibilityService.instance?.performHomeAction()
+            }
+        }
     }
 
     private fun isOnHomeScreen(): Boolean {

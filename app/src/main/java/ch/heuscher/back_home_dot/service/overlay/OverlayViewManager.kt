@@ -219,8 +219,13 @@ class OverlayViewManager(
 
         floatingDot?.let { dotView ->
             val drawable = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = 8f * context.resources.displayMetrics.density
+                // Square shape only for SAFE_HOME mode, circle for others
+                if (settings.tapBehavior == "SAFE_HOME") {
+                    shape = GradientDrawable.RECTANGLE
+                    cornerRadius = 8f * context.resources.displayMetrics.density
+                } else {
+                    shape = GradientDrawable.OVAL
+                }
                 setColor(settings.getColorWithAlpha())
                 setStroke(
                     (AppConstants.DOT_STROKE_WIDTH_DP * context.resources.displayMetrics.density).toInt(),
@@ -255,10 +260,10 @@ class OverlayViewManager(
     fun setDragMode(enabled: Boolean) {
         floatingDotHalo?.let { haloView ->
             if (enabled) {
-                // Create halo drawable
+                // Create halo drawable with doubled size (128dp)
                 val drawable = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
-                    cornerRadius = 12f * context.resources.displayMetrics.density
+                    cornerRadius = 24f * context.resources.displayMetrics.density
                     setColor(android.graphics.Color.argb(80, 255, 255, 255))
                 }
                 haloView.background = drawable
