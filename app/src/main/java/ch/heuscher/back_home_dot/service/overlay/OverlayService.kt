@@ -226,9 +226,9 @@ class OverlayService : Service() {
             viewManager.updateAppearance(settings)
 
             val screenSize = orientationHandler.getUsableScreenSize()
-            val dotSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
-            val constrainedX = settings.position.x.coerceIn(0, screenSize.x - dotSize)
-            val constrainedY = settings.position.y.coerceIn(0, screenSize.y - dotSize)
+            val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * resources.displayMetrics.density).toInt()
+            val constrainedX = settings.position.x.coerceIn(0, screenSize.x - layoutSize)
+            val constrainedY = settings.position.y.coerceIn(0, screenSize.y - layoutSize)
             val constrainedPosition = DotPosition(constrainedX, constrainedY)
             viewManager.updatePosition(constrainedPosition)
         }
@@ -470,8 +470,8 @@ class OverlayService : Service() {
 
         // Transform position if rotation changed
         if (newRotation != oldRotation) {
-            val dotSizePx = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
-            val half = dotSizePx / 2
+            val layoutSizePx = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * resources.displayMetrics.density).toInt()
+            val half = layoutSizePx / 2
 
             // Calculate center point
             val centerX = baselinePosition.x + half

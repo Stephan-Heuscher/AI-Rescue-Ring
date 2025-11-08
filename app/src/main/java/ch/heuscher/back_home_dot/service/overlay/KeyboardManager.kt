@@ -163,12 +163,12 @@ class KeyboardManager(
 
         // Apply keyboard constraints
         val screenHeight = context.resources.displayMetrics.heightPixels
-        val dotSize = (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
-        val margin = (dotSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
+        val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * context.resources.displayMetrics.density).toInt()
+        val margin = (layoutSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
 
         // Calculate the maximum Y position allowed (above keyboard with margin)
         val keyboardTop = screenHeight - currentKeyboardHeight
-        val maxY = keyboardTop - dotSize - margin
+        val maxY = keyboardTop - layoutSize - margin
 
         // Constrain Y to be above the keyboard area
         val constrainedY = boundedY.coerceAtMost(maxY)
@@ -259,14 +259,14 @@ class KeyboardManager(
             keyboardDetector.getKeyboardHeight(screenHeight)
         }
 
-        val dotSize = (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
-        val margin = (dotSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
+        val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * context.resources.displayMetrics.density).toInt()
+        val margin = (layoutSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
 
-        Log.d(TAG, "adjustPositionForKeyboard: screenHeight=$screenHeight, keyboardHeight=$height, dotSize=$dotSize, margin=$margin")
+        Log.d(TAG, "adjustPositionForKeyboard: screenHeight=$screenHeight, keyboardHeight=$height, layoutSize=$layoutSize, margin=$margin")
 
         // Calculate keyboard top and safe zone (margin above keyboard)
         val keyboardTop = screenHeight - height
-        val safeZoneY = keyboardTop - dotSize - margin
+        val safeZoneY = keyboardTop - layoutSize - margin
 
         Log.d(TAG, "adjustPositionForKeyboard: keyboardTop=$keyboardTop, safeZoneY=$safeZoneY")
 

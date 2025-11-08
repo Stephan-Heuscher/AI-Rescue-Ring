@@ -251,7 +251,8 @@ class OverlayViewManager(
     }
 
     private fun getDotSize(): Int {
-        return (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
+        // Return the actual layout size to account for the halo
+        return (AppConstants.OVERLAY_LAYOUT_SIZE_DP * context.resources.displayMetrics.density).toInt()
     }
 
     /**

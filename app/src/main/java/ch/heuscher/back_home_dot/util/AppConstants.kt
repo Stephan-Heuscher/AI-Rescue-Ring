@@ -8,6 +8,7 @@ object AppConstants {
 
     // Overlay dimensions and appearance
     const val DOT_SIZE_DP = 48
+    const val OVERLAY_LAYOUT_SIZE_DP = 128  // Full layout including halo
     const val DOT_STROKE_WIDTH_DP = 3
 
     // Gesture timeouts (milliseconds)
