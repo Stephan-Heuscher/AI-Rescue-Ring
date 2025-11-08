@@ -64,7 +64,9 @@ class OverlayService : Service() {
     private val settingsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == AppConstants.ACTION_UPDATE_SETTINGS) {
-                updateOverlayAppearance()
+                serviceScope.launch {
+                    updateOverlayAppearance()
+                }
             }
         }
     }
@@ -234,27 +236,25 @@ class OverlayService : Service() {
         }
     }
 
-    private fun updateOverlayAppearance() {
-        serviceScope.launch {
-            val settings = settingsRepository.getAllSettings().first()
-            viewManager.updateAppearance(settings)
+    private suspend fun updateOverlayAppearance() {
+        val settings = settingsRepository.getAllSettings().first()
+        viewManager.updateAppearance(settings)
 
-            val screenSize = orientationHandler.getUsableScreenSize()
-            val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * resources.displayMetrics.density).toInt()
-            val buttonSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
-            val offset = (layoutSize - buttonSize) / 2
+        val screenSize = orientationHandler.getUsableScreenSize()
+        val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * resources.displayMetrics.density).toInt()
+        val buttonSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
+        val offset = (layoutSize - buttonSize) / 2
 
-            // Use same logic as OverlayViewManager.constrainPositionToBounds
-            val constrainedX = settings.position.x.coerceIn(-offset, screenSize.x - buttonSize - offset)
-            val constrainedY = settings.position.y.coerceIn(-offset, screenSize.y - buttonSize - offset)
-            val constrainedPosition = DotPosition(constrainedX, constrainedY)
+        // Use same logic as OverlayViewManager.constrainPositionToBounds
+        val constrainedX = settings.position.x.coerceIn(-offset, screenSize.x - buttonSize - offset)
+        val constrainedY = settings.position.y.coerceIn(-offset, screenSize.y - buttonSize - offset)
+        val constrainedPosition = DotPosition(constrainedX, constrainedY)
 
-            Log.d(TAG, "updateOverlayAppearance: screenSize=${screenSize.x}x${screenSize.y}, layoutSize=$layoutSize, buttonSize=$buttonSize, offset=$offset")
-            Log.d(TAG, "updateOverlayAppearance: savedPosition=(${settings.position.x},${settings.position.y}) -> constrainedPosition=($constrainedX,$constrainedY)")
-            Log.d(TAG, "updateOverlayAppearance: maxX=${screenSize.x - buttonSize - offset}, maxY=${screenSize.y - buttonSize - offset}")
+        Log.d(TAG, "updateOverlayAppearance: screenSize=${screenSize.x}x${screenSize.y}, layoutSize=$layoutSize, buttonSize=$buttonSize, offset=$offset")
+        Log.d(TAG, "updateOverlayAppearance: savedPosition=(${settings.position.x},${settings.position.y}) -> constrainedPosition=($constrainedX,$constrainedY)")
+        Log.d(TAG, "updateOverlayAppearance: maxX=${screenSize.x - buttonSize - offset}, maxY=${screenSize.y - buttonSize - offset}")
 
-            viewManager.updatePosition(constrainedPosition)
-        }
+        viewManager.updatePosition(constrainedPosition)
     }
 
     private fun handleGesture(gesture: Gesture) {
