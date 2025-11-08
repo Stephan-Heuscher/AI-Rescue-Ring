@@ -33,6 +33,7 @@ class OverlayViewManager(
 ) {
     companion object {
         private const val TAG = "OverlayViewManager"
+        private const val NAV_TAG = "NavBarDebug"  // Easy to filter: adb logcat -s NavBarDebug:D
     }
 
     private var floatingView: View? = null
@@ -219,15 +220,10 @@ class OverlayViewManager(
 
         // Log when near bottom edge (within 300px)
         val nearBottom = y > screenSize.y - 300
-        if (nearBottom || x != constrainedX || y != constrainedY) {
-            val navBarHeight = getNavigationBarHeight()
+        if (nearBottom) {
             val maxY = screenSize.y - buttonSize - offset - navBarMargin
-            Log.d(TAG, "=== POSITION CONSTRAINT (near bottom: $nearBottom) ===")
-            Log.d(TAG, "Screen: ${screenSize.x}x${screenSize.y}, Layout: $layoutSize, Button: $buttonSize, Offset: $offset")
-            Log.d(TAG, "Nav bar height: $navBarHeight px, Total margin: $navBarMargin px")
-            Log.d(TAG, "Input Y: $y, Max allowed Y: $maxY, Constrained Y: $constrainedY")
-            Log.d(TAG, "Difference from max: ${maxY - constrainedY} px")
-            Log.d(TAG, "=========================================")
+            val distanceFromBottom = screenSize.y - (constrainedY + offset + buttonSize)
+            Log.d(NAV_TAG, "Y=$constrainedY | MaxY=$maxY | DistFromBottom=${distanceFromBottom}px | Margin=${navBarMargin}px")
         }
 
         return Pair(constrainedX, constrainedY)
@@ -309,21 +305,15 @@ class OverlayViewManager(
             val bounds = windowMetrics.bounds
             usableSize.x = bounds.width()
             usableSize.y = bounds.height()
-            Log.d(TAG, "getNavigationBarHeight: Using API 30+ windowMetrics")
         } else {
             @Suppress("DEPRECATION")
             windowManager.defaultDisplay.getSize(usableSize)
-            Log.d(TAG, "getNavigationBarHeight: Using legacy getSize()")
         }
 
         // Navigation bar is at the bottom, so check height difference
         val navBarHeight = realSize.y - usableSize.y
 
-        Log.d(TAG, "=== NAV BAR DETECTION ===")
-        Log.d(TAG, "Real display size: ${realSize.x}x${realSize.y}")
-        Log.d(TAG, "Usable screen size: ${usableSize.x}x${usableSize.y}")
-        Log.d(TAG, "Calculated nav bar height: $navBarHeight px")
-        Log.d(TAG, "========================")
+        Log.d(NAV_TAG, "Display: ${realSize.x}x${realSize.y} | Usable: ${usableSize.x}x${usableSize.y} | NavBar: $navBarHeight px")
 
         // Return nav bar height, or 0 if using gesture navigation (no bar)
         return navBarHeight.coerceAtLeast(0)

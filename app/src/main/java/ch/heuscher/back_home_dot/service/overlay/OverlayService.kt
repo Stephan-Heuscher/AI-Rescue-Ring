@@ -382,19 +382,6 @@ class OverlayService : Service() {
             )
 
             val newPosition = DotPosition(constrainedX, constrainedY)
-
-            // Log position changes near bottom edge
-            val screenSize = orientationHandler.getUsableScreenSize()
-            if (newY > screenSize.y - 300) {
-                Log.d(TAG, "=== DRAG NEAR BOTTOM ===")
-                Log.d(TAG, "Raw position: ($newX, $newY)")
-                Log.d(TAG, "After bounds: ($boundedX, $boundedY)")
-                Log.d(TAG, "After keyboard: ($constrainedX, $constrainedY)")
-                Log.d(TAG, "Screen height: ${screenSize.y}")
-                Log.d(TAG, "Distance from bottom: ${screenSize.y - newY} px")
-                Log.d(TAG, "=======================")
-            }
-
             viewManager.updatePosition(newPosition)
 
             // Save new position
