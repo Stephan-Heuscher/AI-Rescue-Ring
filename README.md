@@ -12,10 +12,19 @@
 Stell dir vor, deine Oma hätte Probleme, die Handy-Tasten unten zu erreichen. Mit diesem kleinen Punkt auf dem Bildschirm kommt sie mit dem Daumen immer wieder nach Hause - egal wo sie gerade ist.
 
 Und weil so ein Punkt praktisch ist, habe ich ihn für Ein-Daumen-Bedienung erweitert:
-- **1x tippen** → Zurück
-- **2x tippen** → Letzte App
+
+### Standard-Modus
+- **1x tippen** → Home
+- **2x tippen** → Zurück
 - **3x tippen** → Offene Apps
 - **Lang drücken** → Home
+- **Verschieben** → Sofort ziehbar
+
+### Safe-Home-Modus (für maximale Sicherheit)
+- **Alle Taps** → Home (Oma kommt immer nach Hause)
+- **Viereck-Design** → Wie Android-Navigation
+- **Lang drücken + Ziehen** → Button verschieben (überall möglich)
+- **Halo-Effekt** → Zeigt, wann der Button verschoben werden kann
 
 Alles mit einem Daumen, ohne das Handy umzugreifen.
 
@@ -51,13 +60,14 @@ Alles mit einem Daumen, ohne das Handy umzugreifen.
 ## 🎮 So funktioniert's
 
 1. **Punkt einschalten**: Schalter in der App aktivieren
-2. **Punkt verschieben**: Punkt lange drücken und an beliebige Stelle ziehen
-3. **Navigieren**:
-   - **1x tippen** → Zurück
-   - **2x tippen** → Letzte App
-   - **3x tippen** → Offene Apps
-   - **Lang drücken** → Home
-4. **Anpassen**: Farbe und Durchsichtigkeit in den Einstellungen ändern
+2. **Modus wählen**: Standard oder Safe-Home in den Einstellungen
+3. **Punkt verschieben**:
+   - **Standard-Modus**: Punkt sofort ziehen
+   - **Safe-Home-Modus**: Punkt 500ms lang drücken (Halo erscheint), dann ziehen
+4. **Navigieren**:
+   - **Standard**: 1x tippen = Home, 2x tippen = Zurück
+   - **Safe-Home**: Alle Taps = Home (für maximale Sicherheit)
+5. **Anpassen**: Farbe, Durchsichtigkeit und Modus in den Einstellungen ändern
 
 Der Punkt weicht automatisch der Tastatur aus und bleibt auch beim Drehen des Handys an der richtigen Stelle.
 
@@ -167,7 +177,7 @@ data class OverlaySettings(
     val positionPercent: DotPositionPercent,
     val recentsTimeout: Long,
     val keyboardAvoidanceEnabled: Boolean,
-    val tapBehavior: String,  // "STANDARD" or "BACK"
+    val tapBehavior: String,  // "STANDARD", "NAVI", or "SAFE_HOME"
     val screenWidth: Int,
     val screenHeight: Int,
     val rotation: Int
@@ -250,16 +260,23 @@ Das Projekt folgt **Clean Architecture** Prinzipien:
 - **`util/`**: Hilfsfunktionen und Konstanten
 - **`di/`**: Dependency Injection (ServiceLocator + Hilt-Module)
 
-### 🔄 Aktuelle Verbesserungen (v2.0.0)
+### 🔄 Aktuelle Verbesserungen (v2.1.0)
 
-**Major Refactoring 2025**: Umstellung auf Clean Architecture
+**Safe-Home-Modus & UX-Verbesserungen 2025**
 
+- ✅ **Safe-Home-Modus**: Neuer Modus für maximale Sicherheit - alle Taps führen nach Hause
+- ✅ **Viereck-Design**: Button wird im Safe-Home-Modus zum Viereck (wie Android-Navigation)
+- ✅ **Long-Press Drag**: Im Safe-Home-Modus nur nach langem Drücken verschiebbar
+- ✅ **Halo-Effekt**: Pulsierender 128dp Halo zeigt, wann der Button verschoben werden kann
+- ✅ **Modus-basiertes Design**: Kreis (Standard/Navi) vs. Viereck (Safe-Home)
+- ✅ **Auto-Restart nach Update**: App startet automatisch nach Updates neu
+- ✅ **Tablet-Fix**: Button kann jetzt über den gesamten Bildschirm verschoben werden
 - ✅ **Architektur-Überarbeitung**: Von monolithischem Service zu komponentenbasierter Architektur
 - ✅ **Spezialisierte Komponenten**: Extrahierte KeyboardManager (273L), PositionAnimator (86L), OrientationHandler (97L)
 - ✅ **Code-Reduktion**: OverlayService von 670 auf ~459 Zeilen reduziert (31%)
 - ✅ **Testbarkeit**: Komponenten sind isoliert testbar
 - ✅ **Wartbarkeit**: Klare Trennung der Verantwortlichkeiten
-- ✅ **Tastatur-Vermeidung**: Vollständig extrahiert mit 1.5x Punkt-Durchmesser Margin
+- ✅ **Tastatur-Vermeidung**: Vollständig extrahiert mit optimaler Margin
 - ✅ **Rotation ohne Sprung**: Punkt wird während Rotation versteckt, erscheint an korrekter Position
 - ✅ **Intelligente Rotation-Erkennung**: Dynamisches 16ms-Polling bis Dimensionsänderung erkannt
 - ✅ **Reaktive Daten**: Kotlin Flows für Echtzeit-Updates

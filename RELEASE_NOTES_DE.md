@@ -1,5 +1,63 @@
 # Release Notes - AssistiPunkt
 
+## Version 2.1.0 (2025-11-08)
+
+### Safe-Home-Modus & UX-Verbesserungen
+
+Wir freuen uns, **AssistiPunkt v2.1.0** mit dem neuen **Safe-Home-Modus** vorzustellen - perfekt für Nutzer, die maximale Sicherheit benötigen!
+
+#### 🏠 Safe-Home-Modus (Neu!)
+- **Immer nach Hause**: Alle Taps führen zur Startseite - keine Verwirrung mehr
+- **Viereck-Design**: Button wird zum abgerundeten Viereck (8dp Radius) - wie Android-Navigationsbuttons
+- **Geschütztes Verschieben**: Button nur nach 500ms langem Drücken verschiebbar
+- **Visuelles Feedback**: Pulsierender weißer Halo (128dp) zeigt an, wann der Button verschoben werden kann
+- **Überall verschiebbar**: Im Drag-Modus kann der Button überall platziert werden
+
+#### 🎨 Design-Verbesserungen
+- **Modus-basiertes Design**:
+  - **Standard/Navi**: Klassisches Kreis-Design
+  - **Safe-Home**: Modernes Viereck-Design (wie Android-Navigation)
+- **Halo-Effekt**: Doppelt so groß (128dp statt 64dp) für bessere Sichtbarkeit
+- **Sanfte Animation**: Pulsierender Halo (300ms-700ms Alpha) während Drag-Modus
+
+#### 🔧 Technische Verbesserungen
+- **Automatischer Neustart**: App startet automatisch nach Updates neu (PackageUpdateReceiver)
+- **Tablet-Fix**: Tastatur-Erkennung korrigiert - Button kann jetzt über gesamten Bildschirm verschoben werden
+- **Layout-Optimierung**: Feste 128dp Layoutgröße verhindert Button-Verschiebung beim Halo-Erscheinen
+- **Intelligente Gesten**: Modus-bewusste Drag-Logik (sofort vs. long-press)
+
+#### 🎯 Verhalten pro Modus
+**Standard-Modus:**
+- Kreis-Design
+- Sofortiges Verschieben per Drag
+- 1x Tap = Home, 2x Tap = Zurück
+- Long-Press = Home
+
+**Navi-Modus:**
+- Kreis-Design
+- Sofortiges Verschieben per Drag
+- 1x Tap = Zurück, 2x Tap = Letzte App
+- Long-Press = Home
+
+**Safe-Home-Modus:**
+- Viereck-Design (8dp Radius)
+- Verschieben nur nach Long-Press (500ms) mit Halo-Feedback
+- Alle Taps = Home (maximale Sicherheit)
+- Long-Press = Drag-Modus aktivieren
+
+### Fehlerbehebungen
+- **Tablet-Problem behoben**: Button war auf Tablets auf 62% des Bildschirms beschränkt (Tastatur-Erkennung gab immer 38% zurück)
+- **Halo verschiebt Button nicht mehr**: Layout-Größe fix auf 128dp, verhindert Verschiebung beim Halo-Erscheinen
+- **Keyboard-Erkennung**: getKeyboardHeight() gibt jetzt 0 zurück wenn Tastatur nicht sichtbar
+
+### Technische Details
+- **Neue Konstante**: `OVERLAY_LAYOUT_SIZE_DP = 128` für Layout mit Halo
+- **GestureDetector**: Mode-aware drag logic mit `requiresLongPressToDrag` Flag
+- **OverlayViewManager**: Dynamisches Shape-Rendering basierend auf tapBehavior
+- **PackageUpdateReceiver**: Lauscht auf `ACTION_MY_PACKAGE_REPLACED` Intent
+
+---
+
 ## Version 2.0.0 (2025-11-05)
 
 ### Großes Refactoring - Clean Architecture & Spezialisierte Komponenten

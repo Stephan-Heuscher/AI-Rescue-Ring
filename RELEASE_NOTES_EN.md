@@ -1,5 +1,63 @@
 # Release Notes - Assistive Tap
 
+## Version 2.1.0 (2025-11-08)
+
+### Safe-Home Mode & UX Improvements
+
+We're excited to announce **Assistive Tap v2.1.0** with the new **Safe-Home Mode** - perfect for users who need maximum safety!
+
+#### 🏠 Safe-Home Mode (New!)
+- **Always Home**: All taps lead to home screen - no more confusion
+- **Square Design**: Button becomes a rounded square (8dp radius) - like Android navigation buttons
+- **Protected Dragging**: Button can only be moved after 500ms long-press
+- **Visual Feedback**: Pulsing white halo (128dp) shows when button is draggable
+- **Drag Anywhere**: In drag mode, button can be placed anywhere on screen
+
+#### 🎨 Design Improvements
+- **Mode-based Design**:
+  - **Standard/Navi**: Classic circle design
+  - **Safe-Home**: Modern square design (like Android navigation)
+- **Halo Effect**: Doubled in size (128dp instead of 64dp) for better visibility
+- **Smooth Animation**: Pulsing halo (300ms-700ms alpha) during drag mode
+
+#### 🔧 Technical Improvements
+- **Auto-Restart**: App automatically restarts after updates (PackageUpdateReceiver)
+- **Tablet Fix**: Keyboard detection corrected - button can now move across entire screen
+- **Layout Optimization**: Fixed 128dp layout size prevents button shifting when halo appears
+- **Smart Gestures**: Mode-aware drag logic (immediate vs. long-press)
+
+#### 🎯 Behavior per Mode
+**Standard Mode:**
+- Circle design
+- Immediate dragging
+- 1 tap = Home, 2 taps = Back
+- Long-press = Home
+
+**Navi Mode:**
+- Circle design
+- Immediate dragging
+- 1 tap = Back, 2 taps = Last app
+- Long-press = Home
+
+**Safe-Home Mode:**
+- Square design (8dp radius)
+- Dragging only after long-press (500ms) with halo feedback
+- All taps = Home (maximum safety)
+- Long-press = Activate drag mode
+
+### Bug Fixes
+- **Tablet Issue Fixed**: Button was restricted to 62% of screen on tablets (keyboard detection always returned 38%)
+- **Halo No Longer Shifts Button**: Layout size fixed at 128dp, prevents shifting when halo appears
+- **Keyboard Detection**: getKeyboardHeight() now returns 0 when keyboard is not visible
+
+### Technical Details
+- **New Constant**: `OVERLAY_LAYOUT_SIZE_DP = 128` for layout with halo
+- **GestureDetector**: Mode-aware drag logic with `requiresLongPressToDrag` flag
+- **OverlayViewManager**: Dynamic shape rendering based on tapBehavior
+- **PackageUpdateReceiver**: Listens for `ACTION_MY_PACKAGE_REPLACED` intent
+
+---
+
 ## Version 2.0.0 (2025-11-05)
 
 ### Major Refactoring - Clean Architecture & Specialized Components
