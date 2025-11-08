@@ -191,6 +191,7 @@ class OverlayViewManager(
     /**
      * Calculates constrained position within screen bounds.
      * Accounts for button being centered in larger layout.
+     * Adds virtual border at navigation bar to prevent overlap.
      */
     fun constrainPositionToBounds(x: Int, y: Int): Pair<Int, Int> {
         val screenSize = getScreenSize()
@@ -198,15 +199,20 @@ class OverlayViewManager(
         val buttonSize = (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
         val offset = (layoutSize - buttonSize) / 2
 
+        // Add small margin at bottom for virtual nav bar border (8dp = ~half button radius)
+        val navBarMargin = (8 * context.resources.displayMetrics.density).toInt()
+
         // Allow layout to position partially off-screen so button can reach edges
+        // Top, left, right: button can touch edges
+        // Bottom: keep margin above nav bar area
         val constrainedX = x.coerceIn(-offset, screenSize.x - buttonSize - offset)
-        val constrainedY = y.coerceIn(-offset, screenSize.y - buttonSize - offset)
+        val constrainedY = y.coerceIn(-offset, screenSize.y - buttonSize - offset - navBarMargin)
 
         // Log constraint details for debugging
         if (x != constrainedX || y != constrainedY) {
-            Log.d(TAG, "constrainPositionToBounds: screenSize=${screenSize.x}x${screenSize.y}, layoutSize=$layoutSize, buttonSize=$buttonSize, offset=$offset")
+            Log.d(TAG, "constrainPositionToBounds: screenSize=${screenSize.x}x${screenSize.y}, layoutSize=$layoutSize, buttonSize=$buttonSize, offset=$offset, navMargin=$navBarMargin")
             Log.d(TAG, "constrainPositionToBounds: input=($x,$y) -> output=($constrainedX,$constrainedY)")
-            Log.d(TAG, "constrainPositionToBounds: maxX=${screenSize.x - buttonSize - offset}, maxY=${screenSize.y - buttonSize - offset}")
+            Log.d(TAG, "constrainPositionToBounds: maxX=${screenSize.x - buttonSize - offset}, maxY=${screenSize.y - buttonSize - offset - navBarMargin}")
         }
 
         return Pair(constrainedX, constrainedY)
