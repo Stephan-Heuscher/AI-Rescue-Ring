@@ -207,12 +207,21 @@ class OverlayViewManager(
      * Get the navigation bar margin (actual nav bar height + safety margin)
      */
     fun getNavigationBarMargin(): Int {
-        val navBarHeight = getNavigationBarHeight()
+        val detectedHeight = getNavigationBarHeight()
+
+        // If WindowInsets returns 0 (transparent/gesture nav), use a safe minimum
+        // Typical nav bar heights: 42-56dp, use 48dp as safe default
+        val minNavBarHeight = (48 * context.resources.displayMetrics.density).toInt()
+        val navBarHeight = if (detectedHeight == 0) minNavBarHeight else detectedHeight
+
         val safetyMargin = (8 * context.resources.displayMetrics.density).toInt()
         val totalMargin = navBarHeight + safetyMargin
 
         // Log only once
         if (!hasLoggedNavBar) {
+            if (detectedHeight == 0) {
+                Log.d(NAV_TAG, "NavBar: 0px detected (transparent/gesture) → Using safe minimum: ${minNavBarHeight}px")
+            }
             Log.d(NAV_TAG, "NavBar: ${navBarHeight}px + Safety: ${safetyMargin}px = Total: ${totalMargin}px")
             hasLoggedNavBar = true
         }
