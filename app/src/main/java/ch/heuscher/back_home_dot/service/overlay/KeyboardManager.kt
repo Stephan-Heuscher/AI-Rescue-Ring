@@ -164,11 +164,13 @@ class KeyboardManager(
         // Apply keyboard constraints
         val screenHeight = context.resources.displayMetrics.heightPixels
         val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * context.resources.displayMetrics.density).toInt()
-        val margin = (layoutSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
+        val buttonSize = (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
+        val offset = (layoutSize - buttonSize) / 2
+        val margin = (buttonSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
 
         // Calculate the maximum Y position allowed (above keyboard with margin)
         val keyboardTop = screenHeight - currentKeyboardHeight
-        val maxY = keyboardTop - layoutSize - margin
+        val maxY = keyboardTop - buttonSize - offset - margin
 
         // Constrain Y to be above the keyboard area
         val constrainedY = boundedY.coerceAtMost(maxY)
@@ -260,13 +262,15 @@ class KeyboardManager(
         }
 
         val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * context.resources.displayMetrics.density).toInt()
-        val margin = (layoutSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
+        val buttonSize = (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
+        val offset = (layoutSize - buttonSize) / 2
+        val margin = (buttonSize * AppConstants.KEYBOARD_MARGIN_MULTIPLIER).toInt()
 
-        Log.d(TAG, "adjustPositionForKeyboard: screenHeight=$screenHeight, keyboardHeight=$height, layoutSize=$layoutSize, margin=$margin")
+        Log.d(TAG, "adjustPositionForKeyboard: screenHeight=$screenHeight, keyboardHeight=$height, buttonSize=$buttonSize, margin=$margin")
 
         // Calculate keyboard top and safe zone (margin above keyboard)
         val keyboardTop = screenHeight - height
-        val safeZoneY = keyboardTop - layoutSize - margin
+        val safeZoneY = keyboardTop - buttonSize - offset - margin
 
         Log.d(TAG, "adjustPositionForKeyboard: keyboardTop=$keyboardTop, safeZoneY=$safeZoneY")
 

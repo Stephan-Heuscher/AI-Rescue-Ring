@@ -227,8 +227,12 @@ class OverlayService : Service() {
 
             val screenSize = orientationHandler.getUsableScreenSize()
             val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * resources.displayMetrics.density).toInt()
-            val constrainedX = settings.position.x.coerceIn(0, screenSize.x - layoutSize)
-            val constrainedY = settings.position.y.coerceIn(0, screenSize.y - layoutSize)
+            val buttonSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
+            val offset = (layoutSize - buttonSize) / 2
+
+            // Use same logic as OverlayViewManager.constrainPositionToBounds
+            val constrainedX = settings.position.x.coerceIn(-offset, screenSize.x - buttonSize - offset)
+            val constrainedY = settings.position.y.coerceIn(-offset, screenSize.y - buttonSize - offset)
             val constrainedPosition = DotPosition(constrainedX, constrainedY)
             viewManager.updatePosition(constrainedPosition)
         }
