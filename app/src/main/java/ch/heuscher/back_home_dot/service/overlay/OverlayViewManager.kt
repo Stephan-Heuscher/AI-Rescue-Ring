@@ -230,9 +230,9 @@ class OverlayViewManager(
         if (!hasLoggedNavBar) {
             val navBarHeightDp = (navBarHeightPx / density).toInt()
             if (detectedHeightPx == 0) {
-                Log.d(NAV_TAG, "NavBar: 0dp detected (transparent/gesture) → Using safe minimum: ${AppConstants.NAV_BAR_MIN_HEIGHT_DP}dp")
+                Log.d(NAV_TAG, "NavBar: 0dp detected (transparent/gesture) → Using safe minimum: ${AppConstants.NAV_BAR_MIN_HEIGHT_DP}dp at ${cachedNavBarPosition.name.lowercase()}")
             }
-            Log.d(NAV_TAG, "NavBar: ${navBarHeightDp}dp + Safety: ${AppConstants.NAV_BAR_SAFETY_MARGIN_DP}dp = Total: ${(totalMarginPx / density).toInt()}dp")
+            Log.d(NAV_TAG, "NavBar: ${navBarHeightDp}dp + Safety: ${AppConstants.NAV_BAR_SAFETY_MARGIN_DP}dp = Total: ${(totalMarginPx / density).toInt()}dp (position: ${cachedNavBarPosition.name.lowercase()})")
             hasLoggedNavBar = true
         }
 
@@ -266,7 +266,6 @@ class OverlayViewManager(
                 maxX = screenSize.x - buttonSize - offset
                 minY = -offset
                 maxY = screenSize.y - buttonSize - offset - navBarMargin
-                Log.d(NAV_TAG, "constrainPositionToBounds: NavBar at BOTTOM, applying margin to bottom edge")
             }
             NavBarPosition.LEFT -> {
                 // Nav bar on left - constrain left edge
@@ -274,7 +273,6 @@ class OverlayViewManager(
                 maxX = screenSize.x - buttonSize - offset
                 minY = -offset
                 maxY = screenSize.y - buttonSize - offset
-                Log.d(NAV_TAG, "constrainPositionToBounds: NavBar at LEFT, applying margin to left edge")
             }
             NavBarPosition.RIGHT -> {
                 // Nav bar on right - constrain right edge
@@ -282,22 +280,23 @@ class OverlayViewManager(
                 maxX = screenSize.x - buttonSize - offset - navBarMargin
                 minY = -offset
                 maxY = screenSize.y - buttonSize - offset
-                Log.d(NAV_TAG, "constrainPositionToBounds: NavBar at RIGHT, applying margin to right edge")
             }
             NavBarPosition.NONE -> {
-                // No nav bar detected - use minimum margin at bottom as fallback
+                // Should not happen (we guess from rotation now), but fallback to bottom
                 minX = -offset
                 maxX = screenSize.x - buttonSize - offset
                 minY = -offset
                 maxY = screenSize.y - buttonSize - offset - navBarMargin
-                Log.d(NAV_TAG, "constrainPositionToBounds: NavBar NONE, applying fallback margin to bottom edge")
             }
         }
 
         val constrainedX = x.coerceIn(minX, maxX)
         val constrainedY = y.coerceIn(minY, maxY)
 
-        Log.d(NAV_TAG, "constrainPositionToBounds: input=($x,$y) output=($constrainedX,$constrainedY) bounds=[x:$minX..$maxX, y:$minY..$maxY]")
+        // Log only when position was actually constrained (changed)
+        if (x != constrainedX || y != constrainedY) {
+            Log.d(NAV_TAG, "constrainPositionToBounds: Position constrained! input=($x,$y) → output=($constrainedX,$constrainedY) | NavBar at ${cachedNavBarPosition.name.lowercase()} | bounds=[x:$minX..$maxX, y:$minY..$maxY]")
+        }
 
         return Pair(constrainedX, constrainedY)
     }
@@ -364,6 +363,31 @@ class OverlayViewManager(
     }
 
     /**
+     * Get current screen rotation
+     */
+    private fun getCurrentRotation(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display?.rotation ?: 0
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.rotation
+        }
+    }
+
+    /**
+     * Guess nav bar position based on screen rotation (for transparent/gesture nav bars)
+     */
+    private fun guessNavBarPositionFromRotation(rotation: Int): NavBarPosition {
+        return when (rotation) {
+            android.view.Surface.ROTATION_0 -> NavBarPosition.BOTTOM // Portrait
+            android.view.Surface.ROTATION_90 -> NavBarPosition.RIGHT // Landscape (rotated left)
+            android.view.Surface.ROTATION_180 -> NavBarPosition.BOTTOM // Portrait upside down
+            android.view.Surface.ROTATION_270 -> NavBarPosition.LEFT // Landscape (rotated right)
+            else -> NavBarPosition.BOTTOM
+        }
+    }
+
+    /**
      * Calculate the navigation bar height using WindowInsets
      * This gets the ACTUAL current nav bar height, not a default value
      * Handles both portrait (bottom) and landscape (side) nav bars
@@ -403,25 +427,41 @@ class OverlayViewManager(
                             navBarHeightPx = rightPx
                         }
                         else -> {
-                            cachedNavBarPosition = NavBarPosition.NONE
+                            // All insets are 0 - transparent/gesture nav bar
+                            // Guess position based on rotation
+                            val rotation = getCurrentRotation()
+                            cachedNavBarPosition = guessNavBarPositionFromRotation(rotation)
                             navBarHeightPx = 0
+                            Log.d(NAV_TAG, "WindowInsets API: All 0dp (transparent/gesture nav), rotation=$rotation → Guessed position: ${cachedNavBarPosition.name.lowercase()}")
                         }
                     }
 
-                    val navBarHeightDp = (navBarHeightPx / density).toInt()
-                    Log.d(NAV_TAG, "WindowInsets API: ${navBarHeightDp}dp (${navBarHeightPx}px) at ${cachedNavBarPosition.name.lowercase()} (bottom=${(bottomPx/density).toInt()}dp, left=${(leftPx/density).toInt()}dp, right=${(rightPx/density).toInt()}dp)")
+                    if (navBarHeightPx > 0) {
+                        val navBarHeightDp = (navBarHeightPx / density).toInt()
+                        Log.d(NAV_TAG, "WindowInsets API: ${navBarHeightDp}dp (${navBarHeightPx}px) at ${cachedNavBarPosition.name.lowercase()} (bottom=${(bottomPx/density).toInt()}dp, left=${(leftPx/density).toInt()}dp, right=${(rightPx/density).toInt()}dp)")
+                    }
+
                     cachedNavBarHeight = navBarHeightPx
                     return navBarHeightPx
                 }
             } else {
-                // For older Android versions, use rootWindowInsets (assume bottom)
+                // For older Android versions, use rootWindowInsets
                 @Suppress("DEPRECATION")
                 val insets = view.rootWindowInsets
                 if (insets != null) {
                     @Suppress("DEPRECATION")
                     val navBarHeightPx = insets.systemWindowInsetBottom
                     val navBarHeightDp = (navBarHeightPx / density).toInt()
-                    cachedNavBarPosition = if (navBarHeightPx > 0) NavBarPosition.BOTTOM else NavBarPosition.NONE
+
+                    if (navBarHeightPx > 0) {
+                        cachedNavBarPosition = NavBarPosition.BOTTOM
+                    } else {
+                        // Guess from rotation for transparent nav
+                        val rotation = getCurrentRotation()
+                        cachedNavBarPosition = guessNavBarPositionFromRotation(rotation)
+                        Log.d(NAV_TAG, "Legacy WindowInsets: 0dp (transparent/gesture nav), rotation=$rotation → Guessed position: ${cachedNavBarPosition.name.lowercase()}")
+                    }
+
                     Log.d(NAV_TAG, "Legacy WindowInsets: ${navBarHeightDp}dp (${navBarHeightPx}px) at ${cachedNavBarPosition.name.lowercase()}")
                     cachedNavBarHeight = navBarHeightPx
                     return navBarHeightPx
@@ -429,7 +469,7 @@ class OverlayViewManager(
             }
         }
 
-        // Fallback: use system resources (assume bottom)
+        // Fallback: use system resources
         val resourceId = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
         val navBarHeightPx = if (resourceId > 0) {
             context.resources.getDimensionPixelSize(resourceId)
@@ -438,7 +478,16 @@ class OverlayViewManager(
         }
 
         val navBarHeightDp = (navBarHeightPx / density).toInt()
-        cachedNavBarPosition = if (navBarHeightPx > 0) NavBarPosition.BOTTOM else NavBarPosition.NONE
+
+        if (navBarHeightPx > 0) {
+            cachedNavBarPosition = NavBarPosition.BOTTOM
+        } else {
+            // Guess from rotation for transparent nav
+            val rotation = getCurrentRotation()
+            cachedNavBarPosition = guessNavBarPositionFromRotation(rotation)
+            Log.d(NAV_TAG, "Fallback resources: 0dp (transparent/gesture nav), rotation=$rotation → Guessed position: ${cachedNavBarPosition.name.lowercase()}")
+        }
+
         Log.d(NAV_TAG, "Fallback resources: ${navBarHeightDp}dp (${navBarHeightPx}px) at ${cachedNavBarPosition.name.lowercase()}")
         cachedNavBarHeight = navBarHeightPx
         return navBarHeightPx
