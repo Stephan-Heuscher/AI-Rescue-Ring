@@ -261,15 +261,10 @@ class OverlayViewManager(
 
     private fun getScreenSize(): Point {
         val size = Point()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val windowMetrics = windowManager.currentWindowMetrics
-            val bounds = windowMetrics.bounds
-            size.x = bounds.width()
-            size.y = bounds.height()
-        } else {
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.getSize(size)
-        }
+        // Always use the real display size (not window metrics which excludes nav bars)
+        // This allows the button to reach the actual screen edges with halo cut off
+        @Suppress("DEPRECATION")
+        windowManager.defaultDisplay.getRealSize(size)
         return size
     }
 
@@ -284,10 +279,10 @@ class OverlayViewManager(
     fun setDragMode(enabled: Boolean) {
         floatingDotHalo?.let { haloView ->
             if (enabled) {
-                // Create halo drawable (80dp, about 1.67x button size)
+                // Create halo drawable (72dp, 1.5x button size)
                 val drawable = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
-                    cornerRadius = 16f * context.resources.displayMetrics.density
+                    cornerRadius = 14f * context.resources.displayMetrics.density
                     setColor(android.graphics.Color.argb(80, 255, 255, 255))
                 }
                 haloView.background = drawable

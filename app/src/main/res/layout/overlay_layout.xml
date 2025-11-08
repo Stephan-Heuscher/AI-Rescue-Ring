@@ -8,8 +8,8 @@
     <!-- Halo effect (shown during long-press drag mode) -->
     <View
         android:id="@+id/floating_dot_halo"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
         android:layout_gravity="center"
         android:visibility="gone"
         android:alpha="0.5" />
