@@ -196,8 +196,11 @@ class OverlayService : Service() {
     private fun observeSettings() {
         serviceScope.launch {
             settingsRepository.getAllSettings().collectLatest { settings ->
+                Log.d(TAG, "observeSettings: Settings changed, tapBehavior=${settings.tapBehavior}")
+
                 // Get current position before updating appearance
                 val currentPosition = viewManager.getCurrentPosition()
+                Log.d(TAG, "observeSettings: currentPosition before update=(${currentPosition?.x}, ${currentPosition?.y})")
 
                 updateOverlayAppearance()
                 updateGestureMode(settings.tapBehavior)
@@ -206,6 +209,7 @@ class OverlayService : Service() {
                 // Always restore the position, constrained to bounds if needed
                 currentPosition?.let { pos ->
                     val (constrainedX, constrainedY) = viewManager.constrainPositionToBounds(pos.x, pos.y)
+                    Log.d(TAG, "observeSettings: restoring position from (${pos.x}, ${pos.y}) to ($constrainedX, $constrainedY)")
                     viewManager.updatePosition(DotPosition(constrainedX, constrainedY))
                 }
             }
@@ -391,6 +395,7 @@ class OverlayService : Service() {
     private fun onDragEnd() {
         serviceScope.launch {
             viewManager.getCurrentPosition()?.let { finalPos ->
+                Log.d(TAG, "onDragEnd: finalPos=(${finalPos.x}, ${finalPos.y})")
                 if (keyboardManager.keyboardVisible) {
                     val settings = settingsRepository.getAllSettings().first()
                     keyboardManager.handleKeyboardChange(
@@ -399,6 +404,7 @@ class OverlayService : Service() {
                         settings = settings
                     )
                 } else {
+                    Log.d(TAG, "onDragEnd: calling savePosition with (${finalPos.x}, ${finalPos.y})")
                     savePosition(finalPos)
                 }
             }
@@ -410,10 +416,12 @@ class OverlayService : Service() {
             val screenSize = orientationHandler.getUsableScreenSize()
             val rotation = orientationHandler.getCurrentRotation()
             val positionWithScreen = DotPosition(position.x, position.y, screenSize.x, screenSize.y)
+            Log.d(TAG, "savePosition: saving position=(${position.x}, ${position.y}), screenSize=${screenSize.x}x${screenSize.y}, rotation=$rotation")
             settingsRepository.setPosition(positionWithScreen)
             settingsRepository.setScreenWidth(screenSize.x)
             settingsRepository.setScreenHeight(screenSize.y)
             settingsRepository.setRotation(rotation)
+            Log.d(TAG, "savePosition: position saved to repository")
         }
     }
 

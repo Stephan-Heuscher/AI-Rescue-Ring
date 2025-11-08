@@ -95,9 +95,16 @@ class OverlayViewManager(
      */
     fun updatePosition(position: DotPosition) {
         layoutParams?.let { params ->
+            val oldX = params.x
+            val oldY = params.y
             params.x = position.x
             params.y = position.y
             floatingView?.let { windowManager.updateViewLayout(it, params) }
+
+            // Log significant position changes
+            if (Math.abs(oldX - position.x) > 10 || Math.abs(oldY - position.y) > 10) {
+                Log.d(TAG, "updatePosition: LARGE MOVE from ($oldX, $oldY) to (${position.x}, ${position.y})")
+            }
         }
     }
 
