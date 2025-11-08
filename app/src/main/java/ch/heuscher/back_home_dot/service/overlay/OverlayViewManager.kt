@@ -37,9 +37,11 @@ class OverlayViewManager(
 
     private var floatingView: View? = null
     private var floatingDot: View? = null
+    private var floatingDotHalo: View? = null
     private var layoutParams: WindowManager.LayoutParams? = null
     private var touchListener: View.OnTouchListener? = null
     private var fadeAnimator: ValueAnimator? = null
+    private var haloAnimator: ValueAnimator? = null
     private val fadeHandler = Handler(Looper.getMainLooper())
     private var fadeRunnable: Runnable? = null
 
@@ -51,6 +53,7 @@ class OverlayViewManager(
 
         floatingView = LayoutInflater.from(context).inflate(R.layout.overlay_layout, null)
         floatingDot = floatingView?.findViewById<View>(R.id.floating_dot)
+        floatingDotHalo = floatingView?.findViewById<View>(R.id.floating_dot_halo)
 
         setupLayoutParams()
         windowManager.addView(floatingView, layoutParams)
@@ -69,11 +72,14 @@ class OverlayViewManager(
     fun removeOverlayView() {
         fadeAnimator?.cancel()
         fadeAnimator = null
+        haloAnimator?.cancel()
+        haloAnimator = null
         fadeRunnable?.let { fadeHandler.removeCallbacks(it) }
         fadeRunnable = null
         floatingView?.let { windowManager.removeView(it) }
         floatingView = null
         floatingDot = null
+        floatingDotHalo = null
         layoutParams = null
     }
 
@@ -213,7 +219,8 @@ class OverlayViewManager(
 
         floatingDot?.let { dotView ->
             val drawable = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = 8f * context.resources.displayMetrics.density
                 setColor(settings.getColorWithAlpha())
                 setStroke(
                     (AppConstants.DOT_STROKE_WIDTH_DP * context.resources.displayMetrics.density).toInt(),
@@ -240,5 +247,40 @@ class OverlayViewManager(
 
     private fun getDotSize(): Int {
         return (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
+    }
+
+    /**
+     * Shows or hides the halo effect for drag mode.
+     */
+    fun setDragMode(enabled: Boolean) {
+        floatingDotHalo?.let { haloView ->
+            if (enabled) {
+                // Create halo drawable
+                val drawable = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    cornerRadius = 12f * context.resources.displayMetrics.density
+                    setColor(android.graphics.Color.argb(80, 255, 255, 255))
+                }
+                haloView.background = drawable
+                haloView.visibility = View.VISIBLE
+
+                // Animate the halo (pulsing effect)
+                haloAnimator?.cancel()
+                haloAnimator = ValueAnimator.ofFloat(0.3f, 0.7f).apply {
+                    duration = 800
+                    repeatMode = ValueAnimator.REVERSE
+                    repeatCount = ValueAnimator.INFINITE
+                    addUpdateListener { animator ->
+                        haloView.alpha = animator.animatedValue as Float
+                    }
+                    start()
+                }
+            } else {
+                // Hide halo
+                haloAnimator?.cancel()
+                haloAnimator = null
+                haloView.visibility = View.GONE
+            }
+        }
     }
 }

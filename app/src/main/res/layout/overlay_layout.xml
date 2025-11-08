@@ -5,10 +5,20 @@
     android:clickable="true"
     android:focusable="false">
 
+    <!-- Halo effect (shown during long-press drag mode) -->
+    <View
+        android:id="@+id/floating_dot_halo"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:alpha="0.5" />
+
     <View
         android:id="@+id/floating_dot"
         android:layout_width="48dp"
         android:layout_height="48dp"
+        android:layout_gravity="center"
         android:background="@drawable/floating_dot_background"
         android:clickable="true"
         android:focusable="false"

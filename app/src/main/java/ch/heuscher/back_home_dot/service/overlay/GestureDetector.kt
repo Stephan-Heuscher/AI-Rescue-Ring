@@ -21,6 +21,7 @@ class GestureDetector(
     private var clickCount = 0
     private var lastClickTime = 0L
     private var isLongPress = false
+    private var isDragMode = false
     private var hasMoved = false
     private var initialX = 0f
     private var initialY = 0f
@@ -35,10 +36,13 @@ class GestureDetector(
     // Callbacks
     var onGesture: ((Gesture) -> Unit)? = null
     var onPositionChanged: ((Int, Int) -> Unit)? = null
+    var onDragModeChanged: ((Boolean) -> Unit)? = null
 
     // Runnables
     private val longPressRunnable = Runnable {
         isLongPress = true
+        isDragMode = true
+        onDragModeChanged?.invoke(true)
         onGesture?.invoke(Gesture.LONG_PRESS)
     }
 
@@ -69,8 +73,8 @@ class GestureDetector(
     private fun handleActionDown(event: MotionEvent) {
         initialX = event.rawX
         initialY = event.rawY
-    lastX = initialX
-    lastY = initialY
+        lastX = initialX
+        lastY = initialY
         isLongPress = false
         hasMoved = false
 
@@ -83,10 +87,19 @@ class GestureDetector(
         val totalDeltaY = event.rawY - initialY
 
         if (!hasMoved) {
-            if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
-                hasMoved = true
-                mainHandler.removeCallbacks(longPressRunnable) // Cancel long press
+            // Only allow dragging if in drag mode (long-press detected)
+            if (isDragMode) {
+                if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
+                    hasMoved = true
+                    onGesture?.invoke(Gesture.DRAG_START)
+                } else {
+                    return true
+                }
             } else {
+                // Not in drag mode yet, check if user moved too much (cancel long press)
+                if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
+                    mainHandler.removeCallbacks(longPressRunnable)
+                }
                 return true
             }
         }
@@ -111,6 +124,12 @@ class GestureDetector(
         } else if (!isLongPress) {
             // Handle click
             handleClick()
+        }
+
+        // Reset drag mode
+        if (isDragMode) {
+            isDragMode = false
+            onDragModeChanged?.invoke(false)
         }
     }
 

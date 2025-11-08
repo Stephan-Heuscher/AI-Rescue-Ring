@@ -59,7 +59,9 @@ class KeyboardDetector(
     }
 
     /**
-     * Gets the actual keyboard height if available, otherwise estimates.
+     * Gets the actual keyboard height if available.
+     * Returns 0 if keyboard is not visible.
+     * Only use this when keyboard is known to be visible.
      */
     fun getKeyboardHeight(screenHeight: Int): Int {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
@@ -71,9 +73,15 @@ class KeyboardDetector(
                     return imeInset.bottom
                 }
             } catch (e: Exception) {
-                // Fall back to estimation
+                // Fall back to estimation only if keyboard should be visible
             }
         }
-        return estimateKeyboardHeight(screenHeight)
+
+        // Only estimate if keyboard is actually visible
+        return if (isKeyboardVisible()) {
+            estimateKeyboardHeight(screenHeight)
+        } else {
+            0
+        }
     }
 }

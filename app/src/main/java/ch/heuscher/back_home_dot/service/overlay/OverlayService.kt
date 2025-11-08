@@ -163,6 +163,10 @@ class OverlayService : Service() {
             handlePositionChange(deltaX, deltaY)
         }
 
+        gestureDetector.onDragModeChanged = { enabled ->
+            viewManager.setDragMode(enabled)
+        }
+
         val listener = View.OnTouchListener { _, event ->
             gestureDetector.onTouch(event)
         }
@@ -303,7 +307,9 @@ class OverlayService : Service() {
     }
 
     private fun handleLongPress() {
-        BackHomeAccessibilityService.instance?.performHomeAction()
+        // Long press now activates drag mode instead of performing home action
+        // The drag mode is already activated by GestureDetector's onDragModeChanged callback
+        Log.d(TAG, "Long press detected - drag mode activated")
     }
 
     private fun isOnHomeScreen(): Boolean {
@@ -318,14 +324,8 @@ class OverlayService : Service() {
     }
 
     private fun handlePositionChange(deltaX: Int, deltaY: Int) {
-        // Check if in SAFE_HOME mode and not on home screen - prevent dragging
+        // In Safe-Home mode, dragging is now allowed everywhere (after long-press)
         serviceScope.launch {
-            val tapBehavior = settingsRepository.getTapBehavior().first()
-            if (tapBehavior == "SAFE_HOME" && !isOnHomeScreen()) {
-                Log.d(TAG, "SAFE_HOME mode: Dragging not allowed outside home screen")
-                return@launch
-            }
-
             val currentPos = viewManager.getCurrentPosition() ?: return@launch
             val newX = currentPos.x + deltaX
             val newY = currentPos.y + deltaY
