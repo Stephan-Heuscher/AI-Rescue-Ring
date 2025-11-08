@@ -189,6 +189,15 @@ class OverlayViewManager(
     }
 
     /**
+     * Get the navigation bar margin (actual nav bar height + safety margin)
+     */
+    fun getNavigationBarMargin(): Int {
+        val navBarHeight = getNavigationBarHeight()
+        val safetyMargin = (8 * context.resources.displayMetrics.density).toInt()
+        return navBarHeight + safetyMargin
+    }
+
+    /**
      * Calculates constrained position within screen bounds.
      * Accounts for button being centered in larger layout.
      * Adds virtual border at navigation bar to prevent overlap.
@@ -199,8 +208,8 @@ class OverlayViewManager(
         val buttonSize = (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
         val offset = (layoutSize - buttonSize) / 2
 
-        // Add margin at bottom for virtual nav bar border (24dp = half button height)
-        val navBarMargin = (24 * context.resources.displayMetrics.density).toInt()
+        // Get navigation bar margin (actual height + safety margin)
+        val navBarMargin = getNavigationBarMargin()
 
         // Allow layout to position partially off-screen so button can reach edges
         // Top, left, right: button can touch edges
@@ -210,7 +219,9 @@ class OverlayViewManager(
 
         // Log constraint details for debugging
         if (x != constrainedX || y != constrainedY) {
-            Log.d(TAG, "constrainPositionToBounds: screenSize=${screenSize.x}x${screenSize.y}, layoutSize=$layoutSize, buttonSize=$buttonSize, offset=$offset, navMargin=$navBarMargin")
+            val navBarHeight = getNavigationBarHeight()
+            Log.d(TAG, "constrainPositionToBounds: screenSize=${screenSize.x}x${screenSize.y}, layoutSize=$layoutSize, buttonSize=$buttonSize, offset=$offset")
+            Log.d(TAG, "constrainPositionToBounds: navBarHeight=$navBarHeight, navBarMargin=$navBarMargin (includes 8dp safety)")
             Log.d(TAG, "constrainPositionToBounds: input=($x,$y) -> output=($constrainedX,$constrainedY)")
             Log.d(TAG, "constrainPositionToBounds: maxX=${screenSize.x - buttonSize - offset}, maxY=${screenSize.y - buttonSize - offset - navBarMargin}")
         }
@@ -277,6 +288,35 @@ class OverlayViewManager(
             windowManager.defaultDisplay.getSize(size)
         }
         return size
+    }
+
+    /**
+     * Calculate the navigation bar height by comparing real size with usable size
+     */
+    private fun getNavigationBarHeight(): Int {
+        val realSize = Point()
+        val usableSize = Point()
+
+        @Suppress("DEPRECATION")
+        windowManager.defaultDisplay.getRealSize(realSize)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val windowMetrics = windowManager.currentWindowMetrics
+            val bounds = windowMetrics.bounds
+            usableSize.x = bounds.width()
+            usableSize.y = bounds.height()
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getSize(usableSize)
+        }
+
+        // Navigation bar is at the bottom, so check height difference
+        val navBarHeight = realSize.y - usableSize.y
+
+        Log.d(TAG, "getNavigationBarHeight: realSize=${realSize.x}x${realSize.y}, usableSize=${usableSize.x}x${usableSize.y}, navBarHeight=$navBarHeight")
+
+        // Return nav bar height, or 0 if using gesture navigation (no bar)
+        return navBarHeight.coerceAtLeast(0)
     }
 
     private fun getDotSize(): Int {

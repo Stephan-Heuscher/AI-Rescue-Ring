@@ -244,14 +244,17 @@ class OverlayService : Service() {
         val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * resources.displayMetrics.density).toInt()
         val buttonSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
         val offset = (layoutSize - buttonSize) / 2
-        val navBarMargin = (24 * resources.displayMetrics.density).toInt()
+
+        // Get actual navigation bar margin from OverlayViewManager
+        val navBarMargin = viewManager.getNavigationBarMargin()
 
         // Use same logic as OverlayViewManager.constrainPositionToBounds
         val constrainedX = settings.position.x.coerceIn(-offset, screenSize.x - buttonSize - offset)
         val constrainedY = settings.position.y.coerceIn(-offset, screenSize.y - buttonSize - offset - navBarMargin)
         val constrainedPosition = DotPosition(constrainedX, constrainedY)
 
-        Log.d(TAG, "updateOverlayAppearance: screenSize=${screenSize.x}x${screenSize.y}, layoutSize=$layoutSize, buttonSize=$buttonSize, offset=$offset, navMargin=$navBarMargin")
+        Log.d(TAG, "updateOverlayAppearance: screenSize=${screenSize.x}x${screenSize.y}, layoutSize=$layoutSize, buttonSize=$buttonSize, offset=$offset")
+        Log.d(TAG, "updateOverlayAppearance: navBarMargin=$navBarMargin (detected height + 8dp safety)")
         Log.d(TAG, "updateOverlayAppearance: savedPosition=(${settings.position.x},${settings.position.y}) -> constrainedPosition=($constrainedX,$constrainedY)")
         Log.d(TAG, "updateOverlayAppearance: maxX=${screenSize.x - buttonSize - offset}, maxY=${screenSize.y - buttonSize - offset - navBarMargin}")
 
