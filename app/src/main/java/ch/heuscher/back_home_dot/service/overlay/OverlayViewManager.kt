@@ -183,12 +183,17 @@ class OverlayViewManager(
 
     /**
      * Calculates constrained position within screen bounds.
+     * Accounts for button being centered in larger layout.
      */
     fun constrainPositionToBounds(x: Int, y: Int): Pair<Int, Int> {
         val screenSize = getScreenSize()
-        val dotSize = getDotSize()
-        val constrainedX = x.coerceIn(0, screenSize.x - dotSize)
-        val constrainedY = y.coerceIn(0, screenSize.y - dotSize)
+        val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * context.resources.displayMetrics.density).toInt()
+        val buttonSize = (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
+        val offset = (layoutSize - buttonSize) / 2
+
+        // Allow layout to position partially off-screen so button can reach edges
+        val constrainedX = x.coerceIn(-offset, screenSize.x - buttonSize - offset)
+        val constrainedY = y.coerceIn(-offset, screenSize.y - buttonSize - offset)
         return Pair(constrainedX, constrainedY)
     }
 
@@ -261,10 +266,10 @@ class OverlayViewManager(
     fun setDragMode(enabled: Boolean) {
         floatingDotHalo?.let { haloView ->
             if (enabled) {
-                // Create halo drawable with doubled size (128dp)
+                // Create halo drawable (80dp, about 1.67x button size)
                 val drawable = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
-                    cornerRadius = 24f * context.resources.displayMetrics.density
+                    cornerRadius = 16f * context.resources.displayMetrics.density
                     setColor(android.graphics.Color.argb(80, 255, 255, 255))
                 }
                 haloView.background = drawable
