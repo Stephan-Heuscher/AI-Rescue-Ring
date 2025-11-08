@@ -199,8 +199,8 @@ class OverlayViewManager(
         val buttonSize = (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
         val offset = (layoutSize - buttonSize) / 2
 
-        // Add small margin at bottom for virtual nav bar border (8dp = ~half button radius)
-        val navBarMargin = (8 * context.resources.displayMetrics.density).toInt()
+        // Add margin at bottom for virtual nav bar border (24dp = half button height)
+        val navBarMargin = (24 * context.resources.displayMetrics.density).toInt()
 
         // Allow layout to position partially off-screen so button can reach edges
         // Top, left, right: button can touch edges

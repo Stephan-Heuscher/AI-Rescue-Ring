@@ -244,7 +244,7 @@ class OverlayService : Service() {
         val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * resources.displayMetrics.density).toInt()
         val buttonSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
         val offset = (layoutSize - buttonSize) / 2
-        val navBarMargin = (8 * resources.displayMetrics.density).toInt()
+        val navBarMargin = (24 * resources.displayMetrics.density).toInt()
 
         // Use same logic as OverlayViewManager.constrainPositionToBounds
         val constrainedX = settings.position.x.coerceIn(-offset, screenSize.x - buttonSize - offset)
