@@ -60,6 +60,16 @@ class OverlayViewManager(
         floatingDot = floatingView?.findViewById<View>(R.id.floating_dot)
         floatingDotHalo = floatingView?.findViewById<View>(R.id.floating_dot_halo)
 
+        // Listen for insets to get accurate nav bar height
+        floatingView?.setOnApplyWindowInsetsListener { view, insets ->
+            // Clear cache so next call to getNavigationBarHeight recalculates
+            cachedNavBarHeight = null
+            hasLoggedNavBar = false
+            // Trigger recalculation by calling getNavigationBarMargin
+            getNavigationBarMargin()
+            insets
+        }
+
         setupLayoutParams()
         windowManager.addView(floatingView, layoutParams)
 
@@ -295,14 +305,39 @@ class OverlayViewManager(
     }
 
     /**
-     * Calculate the navigation bar height using system resources
-     * This works even with transparent nav bars
+     * Calculate the navigation bar height using WindowInsets
+     * This gets the ACTUAL current nav bar height, not a default value
      */
     private fun getNavigationBarHeight(): Int {
         // Return cached value if available
         cachedNavBarHeight?.let { return it }
 
-        // Get nav bar height from system resources (works for transparent bars too)
+        // Try to get nav bar from window insets (most accurate)
+        floatingView?.let { view ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val insets = view.rootWindowInsets
+                if (insets != null) {
+                    val navBarInsets = insets.getInsets(android.view.WindowInsets.Type.navigationBars())
+                    val navBarHeight = navBarInsets.bottom
+                    Log.d(NAV_TAG, "WindowInsets API: NavBar = $navBarHeight px")
+                    cachedNavBarHeight = navBarHeight
+                    return navBarHeight
+                }
+            } else {
+                // For older Android versions, use rootWindowInsets
+                @Suppress("DEPRECATION")
+                val insets = view.rootWindowInsets
+                if (insets != null) {
+                    @Suppress("DEPRECATION")
+                    val navBarHeight = insets.systemWindowInsetBottom
+                    Log.d(NAV_TAG, "Legacy WindowInsets: NavBar = $navBarHeight px")
+                    cachedNavBarHeight = navBarHeight
+                    return navBarHeight
+                }
+            }
+        }
+
+        // Fallback: use system resources
         val resourceId = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
         val navBarHeight = if (resourceId > 0) {
             context.resources.getDimensionPixelSize(resourceId)
@@ -310,7 +345,7 @@ class OverlayViewManager(
             0
         }
 
-        // Cache it
+        Log.d(NAV_TAG, "Fallback resources: NavBar = $navBarHeight px")
         cachedNavBarHeight = navBarHeight
         return navBarHeight
     }
