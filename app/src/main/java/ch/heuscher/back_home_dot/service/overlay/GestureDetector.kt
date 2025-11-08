@@ -53,9 +53,10 @@ class GestureDetector(
     private val longPressRunnable = Runnable {
         isLongPress = true
         // Only activate drag mode if long-press is required for dragging (Safe-Home mode)
+        // But don't show halo yet - wait for user to move finger
         if (requiresLongPressToDrag) {
             isDragMode = true
-            onDragModeChanged?.invoke(true)
+            // Don't invoke onDragModeChanged here - wait for movement
         }
         onGesture?.invoke(Gesture.LONG_PRESS)
     }
@@ -106,6 +107,8 @@ class GestureDetector(
                 if (isDragMode) {
                     if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
                         hasMoved = true
+                        // Now show the halo when user starts moving
+                        onDragModeChanged?.invoke(true)
                         onGesture?.invoke(Gesture.DRAG_START)
                     } else {
                         return true
