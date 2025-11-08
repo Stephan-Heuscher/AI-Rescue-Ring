@@ -317,6 +317,7 @@ class OverlayViewManager(
     /**
      * Calculate the navigation bar height using WindowInsets
      * This gets the ACTUAL current nav bar height, not a default value
+     * Handles both portrait (bottom) and landscape (side) nav bars
      * Returns height in pixels (px)
      */
     private fun getNavigationBarHeight(): Int {
@@ -331,9 +332,24 @@ class OverlayViewManager(
                 val insets = view.rootWindowInsets
                 if (insets != null) {
                     val navBarInsets = insets.getInsets(android.view.WindowInsets.Type.navigationBars())
-                    val navBarHeightPx = navBarInsets.bottom
+
+                    // Check bottom (portrait & some landscape)
+                    val bottomPx = navBarInsets.bottom
+                    // Check sides (landscape on some devices)
+                    val sidePx = maxOf(navBarInsets.left, navBarInsets.right)
+
+                    // Use whichever is larger (nav bar position)
+                    val navBarHeightPx = maxOf(bottomPx, sidePx)
                     val navBarHeightDp = (navBarHeightPx / density).toInt()
-                    Log.d(NAV_TAG, "WindowInsets API detected: ${navBarHeightDp}dp (${navBarHeightPx}px)")
+
+                    val position = when {
+                        bottomPx > 0 -> "bottom"
+                        navBarInsets.left > 0 -> "left"
+                        navBarInsets.right > 0 -> "right"
+                        else -> "none"
+                    }
+
+                    Log.d(NAV_TAG, "WindowInsets API: ${navBarHeightDp}dp (${navBarHeightPx}px) at $position")
                     cachedNavBarHeight = navBarHeightPx
                     return navBarHeightPx
                 }
@@ -345,7 +361,7 @@ class OverlayViewManager(
                     @Suppress("DEPRECATION")
                     val navBarHeightPx = insets.systemWindowInsetBottom
                     val navBarHeightDp = (navBarHeightPx / density).toInt()
-                    Log.d(NAV_TAG, "Legacy WindowInsets detected: ${navBarHeightDp}dp (${navBarHeightPx}px)")
+                    Log.d(NAV_TAG, "Legacy WindowInsets: ${navBarHeightDp}dp (${navBarHeightPx}px)")
                     cachedNavBarHeight = navBarHeightPx
                     return navBarHeightPx
                 }
@@ -361,7 +377,7 @@ class OverlayViewManager(
         }
 
         val navBarHeightDp = (navBarHeightPx / density).toInt()
-        Log.d(NAV_TAG, "Fallback system resources: ${navBarHeightDp}dp (${navBarHeightPx}px)")
+        Log.d(NAV_TAG, "Fallback resources: ${navBarHeightDp}dp (${navBarHeightPx}px)")
         cachedNavBarHeight = navBarHeightPx
         return navBarHeightPx
     }
