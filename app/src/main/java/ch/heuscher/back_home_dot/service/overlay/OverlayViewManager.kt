@@ -366,12 +366,10 @@ class OverlayViewManager(
      * Get current screen rotation
      */
     private fun getCurrentRotation(): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            context.display?.rotation ?: 0
-        } else {
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.rotation
-        }
+        // Use windowManager.defaultDisplay for all versions since Service context
+        // is not associated with a display (would crash on Android R+)
+        @Suppress("DEPRECATION")
+        return windowManager.defaultDisplay.rotation
     }
 
     /**
