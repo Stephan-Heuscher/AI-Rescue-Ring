@@ -220,9 +220,12 @@ class OverlayViewManager(
             WindowManager.LayoutParams.TYPE_PHONE
         }
 
+        // Use fixed layout size to prevent button jump when halo appears/disappears
+        val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * context.resources.displayMetrics.density).toInt()
+
         layoutParams = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT,
+            layoutSize,
+            layoutSize,
             layoutType,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
