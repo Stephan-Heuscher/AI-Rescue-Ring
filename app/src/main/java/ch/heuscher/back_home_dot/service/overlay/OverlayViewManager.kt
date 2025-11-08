@@ -24,6 +24,13 @@ import ch.heuscher.back_home_dot.domain.model.OverlaySettings
 import ch.heuscher.back_home_dot.util.AppConstants
 
 /**
+ * Navigation bar position on screen
+ */
+enum class NavBarPosition {
+    BOTTOM, LEFT, RIGHT, NONE
+}
+
+/**
  * Manages the overlay view creation, positioning, and appearance.
  * Handles the floating dot display.
  */
@@ -46,8 +53,9 @@ class OverlayViewManager(
     private val fadeHandler = Handler(Looper.getMainLooper())
     private var fadeRunnable: Runnable? = null
 
-    // Cache nav bar height and log only once
+    // Cache nav bar height, position, and log only once
     private var cachedNavBarHeight: Int? = null
+    private var cachedNavBarPosition: NavBarPosition = NavBarPosition.NONE
     private var hasLoggedNavBar = false
 
     /**
@@ -64,6 +72,7 @@ class OverlayViewManager(
         floatingView?.setOnApplyWindowInsetsListener { view, insets ->
             // Clear cache so next call to getNavigationBarHeight recalculates
             cachedNavBarHeight = null
+            cachedNavBarPosition = NavBarPosition.NONE
             hasLoggedNavBar = false
             // Trigger recalculation by calling getNavigationBarMargin
             getNavigationBarMargin()
@@ -244,11 +253,51 @@ class OverlayViewManager(
         // Get navigation bar margin (actual height + safety margin)
         val navBarMargin = getNavigationBarMargin()
 
-        // Allow layout to position partially off-screen so button can reach edges
-        // Top, left, right: button can touch edges
-        // Bottom: keep margin above nav bar area
-        val constrainedX = x.coerceIn(-offset, screenSize.x - buttonSize - offset)
-        val constrainedY = y.coerceIn(-offset, screenSize.y - buttonSize - offset - navBarMargin)
+        // Apply margin based on nav bar position
+        val minX: Int
+        val maxX: Int
+        val minY: Int
+        val maxY: Int
+
+        when (cachedNavBarPosition) {
+            NavBarPosition.BOTTOM -> {
+                // Nav bar at bottom - constrain bottom edge
+                minX = -offset
+                maxX = screenSize.x - buttonSize - offset
+                minY = -offset
+                maxY = screenSize.y - buttonSize - offset - navBarMargin
+                Log.d(NAV_TAG, "constrainPositionToBounds: NavBar at BOTTOM, applying margin to bottom edge")
+            }
+            NavBarPosition.LEFT -> {
+                // Nav bar on left - constrain left edge
+                minX = -offset + navBarMargin
+                maxX = screenSize.x - buttonSize - offset
+                minY = -offset
+                maxY = screenSize.y - buttonSize - offset
+                Log.d(NAV_TAG, "constrainPositionToBounds: NavBar at LEFT, applying margin to left edge")
+            }
+            NavBarPosition.RIGHT -> {
+                // Nav bar on right - constrain right edge
+                minX = -offset
+                maxX = screenSize.x - buttonSize - offset - navBarMargin
+                minY = -offset
+                maxY = screenSize.y - buttonSize - offset
+                Log.d(NAV_TAG, "constrainPositionToBounds: NavBar at RIGHT, applying margin to right edge")
+            }
+            NavBarPosition.NONE -> {
+                // No nav bar detected - use minimum margin at bottom as fallback
+                minX = -offset
+                maxX = screenSize.x - buttonSize - offset
+                minY = -offset
+                maxY = screenSize.y - buttonSize - offset - navBarMargin
+                Log.d(NAV_TAG, "constrainPositionToBounds: NavBar NONE, applying fallback margin to bottom edge")
+            }
+        }
+
+        val constrainedX = x.coerceIn(minX, maxX)
+        val constrainedY = y.coerceIn(minY, maxY)
+
+        Log.d(NAV_TAG, "constrainPositionToBounds: input=($x,$y) output=($constrainedX,$constrainedY) bounds=[x:$minX..$maxX, y:$minY..$maxY]")
 
         return Pair(constrainedX, constrainedY)
     }
@@ -333,42 +382,54 @@ class OverlayViewManager(
                 if (insets != null) {
                     val navBarInsets = insets.getInsets(android.view.WindowInsets.Type.navigationBars())
 
-                    // Check bottom (portrait & some landscape)
+                    // Check all sides
                     val bottomPx = navBarInsets.bottom
-                    // Check sides (landscape on some devices)
-                    val sidePx = maxOf(navBarInsets.left, navBarInsets.right)
+                    val leftPx = navBarInsets.left
+                    val rightPx = navBarInsets.right
 
-                    // Use whichever is larger (nav bar position)
-                    val navBarHeightPx = maxOf(bottomPx, sidePx)
-                    val navBarHeightDp = (navBarHeightPx / density).toInt()
-
-                    val position = when {
-                        bottomPx > 0 -> "bottom"
-                        navBarInsets.left > 0 -> "left"
-                        navBarInsets.right > 0 -> "right"
-                        else -> "none"
+                    // Determine position based on which side has the largest inset
+                    val navBarHeightPx: Int
+                    when {
+                        bottomPx > 0 && bottomPx >= leftPx && bottomPx >= rightPx -> {
+                            cachedNavBarPosition = NavBarPosition.BOTTOM
+                            navBarHeightPx = bottomPx
+                        }
+                        leftPx > 0 && leftPx >= bottomPx && leftPx >= rightPx -> {
+                            cachedNavBarPosition = NavBarPosition.LEFT
+                            navBarHeightPx = leftPx
+                        }
+                        rightPx > 0 && rightPx >= bottomPx && rightPx >= leftPx -> {
+                            cachedNavBarPosition = NavBarPosition.RIGHT
+                            navBarHeightPx = rightPx
+                        }
+                        else -> {
+                            cachedNavBarPosition = NavBarPosition.NONE
+                            navBarHeightPx = 0
+                        }
                     }
 
-                    Log.d(NAV_TAG, "WindowInsets API: ${navBarHeightDp}dp (${navBarHeightPx}px) at $position")
+                    val navBarHeightDp = (navBarHeightPx / density).toInt()
+                    Log.d(NAV_TAG, "WindowInsets API: ${navBarHeightDp}dp (${navBarHeightPx}px) at ${cachedNavBarPosition.name.lowercase()} (bottom=${(bottomPx/density).toInt()}dp, left=${(leftPx/density).toInt()}dp, right=${(rightPx/density).toInt()}dp)")
                     cachedNavBarHeight = navBarHeightPx
                     return navBarHeightPx
                 }
             } else {
-                // For older Android versions, use rootWindowInsets
+                // For older Android versions, use rootWindowInsets (assume bottom)
                 @Suppress("DEPRECATION")
                 val insets = view.rootWindowInsets
                 if (insets != null) {
                     @Suppress("DEPRECATION")
                     val navBarHeightPx = insets.systemWindowInsetBottom
                     val navBarHeightDp = (navBarHeightPx / density).toInt()
-                    Log.d(NAV_TAG, "Legacy WindowInsets: ${navBarHeightDp}dp (${navBarHeightPx}px)")
+                    cachedNavBarPosition = if (navBarHeightPx > 0) NavBarPosition.BOTTOM else NavBarPosition.NONE
+                    Log.d(NAV_TAG, "Legacy WindowInsets: ${navBarHeightDp}dp (${navBarHeightPx}px) at ${cachedNavBarPosition.name.lowercase()}")
                     cachedNavBarHeight = navBarHeightPx
                     return navBarHeightPx
                 }
             }
         }
 
-        // Fallback: use system resources
+        // Fallback: use system resources (assume bottom)
         val resourceId = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
         val navBarHeightPx = if (resourceId > 0) {
             context.resources.getDimensionPixelSize(resourceId)
@@ -377,7 +438,8 @@ class OverlayViewManager(
         }
 
         val navBarHeightDp = (navBarHeightPx / density).toInt()
-        Log.d(NAV_TAG, "Fallback resources: ${navBarHeightDp}dp (${navBarHeightPx}px)")
+        cachedNavBarPosition = if (navBarHeightPx > 0) NavBarPosition.BOTTOM else NavBarPosition.NONE
+        Log.d(NAV_TAG, "Fallback resources: ${navBarHeightDp}dp (${navBarHeightPx}px) at ${cachedNavBarPosition.name.lowercase()}")
         cachedNavBarHeight = navBarHeightPx
         return navBarHeightPx
     }
