@@ -46,6 +46,10 @@ class OverlayViewManager(
     private val fadeHandler = Handler(Looper.getMainLooper())
     private var fadeRunnable: Runnable? = null
 
+    // Cache nav bar height and log only once
+    private var cachedNavBarHeight: Int? = null
+    private var hasLoggedNavBar = false
+
     /**
      * Creates and adds the overlay view to the window.
      */
@@ -195,7 +199,15 @@ class OverlayViewManager(
     fun getNavigationBarMargin(): Int {
         val navBarHeight = getNavigationBarHeight()
         val safetyMargin = (8 * context.resources.displayMetrics.density).toInt()
-        return navBarHeight + safetyMargin
+        val totalMargin = navBarHeight + safetyMargin
+
+        // Log only once
+        if (!hasLoggedNavBar) {
+            Log.d(NAV_TAG, "NavBar: ${navBarHeight}px + Safety: ${safetyMargin}px = Total: ${totalMargin}px")
+            hasLoggedNavBar = true
+        }
+
+        return totalMargin
     }
 
     /**
@@ -217,14 +229,6 @@ class OverlayViewManager(
         // Bottom: keep margin above nav bar area
         val constrainedX = x.coerceIn(-offset, screenSize.x - buttonSize - offset)
         val constrainedY = y.coerceIn(-offset, screenSize.y - buttonSize - offset - navBarMargin)
-
-        // Log when near bottom edge (within 300px)
-        val nearBottom = y > screenSize.y - 300
-        if (nearBottom) {
-            val maxY = screenSize.y - buttonSize - offset - navBarMargin
-            val distanceFromBottom = screenSize.y - (constrainedY + offset + buttonSize)
-            Log.d(NAV_TAG, "Y=$constrainedY | MaxY=$maxY | DistFromBottom=${distanceFromBottom}px | Margin=${navBarMargin}px")
-        }
 
         return Pair(constrainedX, constrainedY)
     }
@@ -291,32 +295,24 @@ class OverlayViewManager(
     }
 
     /**
-     * Calculate the navigation bar height by comparing real size with usable size
+     * Calculate the navigation bar height using system resources
+     * This works even with transparent nav bars
      */
     private fun getNavigationBarHeight(): Int {
-        val realSize = Point()
-        val usableSize = Point()
+        // Return cached value if available
+        cachedNavBarHeight?.let { return it }
 
-        @Suppress("DEPRECATION")
-        windowManager.defaultDisplay.getRealSize(realSize)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val windowMetrics = windowManager.currentWindowMetrics
-            val bounds = windowMetrics.bounds
-            usableSize.x = bounds.width()
-            usableSize.y = bounds.height()
+        // Get nav bar height from system resources (works for transparent bars too)
+        val resourceId = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+        val navBarHeight = if (resourceId > 0) {
+            context.resources.getDimensionPixelSize(resourceId)
         } else {
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.getSize(usableSize)
+            0
         }
 
-        // Navigation bar is at the bottom, so check height difference
-        val navBarHeight = realSize.y - usableSize.y
-
-        Log.d(NAV_TAG, "Display: ${realSize.x}x${realSize.y} | Usable: ${usableSize.x}x${usableSize.y} | NavBar: $navBarHeight px")
-
-        // Return nav bar height, or 0 if using gesture navigation (no bar)
-        return navBarHeight.coerceAtLeast(0)
+        // Cache it
+        cachedNavBarHeight = navBarHeight
+        return navBarHeight
     }
 
     private fun getDotSize(): Int {
