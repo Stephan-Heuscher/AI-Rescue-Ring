@@ -207,26 +207,27 @@ class OverlayViewManager(
      * Get the navigation bar margin (actual nav bar height + safety margin)
      */
     fun getNavigationBarMargin(): Int {
-        val detectedHeight = getNavigationBarHeight()
+        val density = context.resources.displayMetrics.density
+        val detectedHeightPx = getNavigationBarHeight()
 
-        // If WindowInsets returns 0 (transparent/gesture nav), use a safe minimum
-        // Typical nav bar heights: 42-56dp, use 48dp as safe default
-        val minNavBarHeight = (48 * context.resources.displayMetrics.density).toInt()
-        val navBarHeight = if (detectedHeight == 0) minNavBarHeight else detectedHeight
+        // If WindowInsets returns 0 (transparent/gesture nav), use safe minimum from constants
+        val minNavBarHeightPx = (AppConstants.NAV_BAR_MIN_HEIGHT_DP * density).toInt()
+        val navBarHeightPx = if (detectedHeightPx == 0) minNavBarHeightPx else detectedHeightPx
 
-        val safetyMargin = (8 * context.resources.displayMetrics.density).toInt()
-        val totalMargin = navBarHeight + safetyMargin
+        val safetyMarginPx = (AppConstants.NAV_BAR_SAFETY_MARGIN_DP * density).toInt()
+        val totalMarginPx = navBarHeightPx + safetyMarginPx
 
-        // Log only once
+        // Log only once (in dp for readability)
         if (!hasLoggedNavBar) {
-            if (detectedHeight == 0) {
-                Log.d(NAV_TAG, "NavBar: 0px detected (transparent/gesture) → Using safe minimum: ${minNavBarHeight}px")
+            val navBarHeightDp = (navBarHeightPx / density).toInt()
+            if (detectedHeightPx == 0) {
+                Log.d(NAV_TAG, "NavBar: 0dp detected (transparent/gesture) → Using safe minimum: ${AppConstants.NAV_BAR_MIN_HEIGHT_DP}dp")
             }
-            Log.d(NAV_TAG, "NavBar: ${navBarHeight}px + Safety: ${safetyMargin}px = Total: ${totalMargin}px")
+            Log.d(NAV_TAG, "NavBar: ${navBarHeightDp}dp + Safety: ${AppConstants.NAV_BAR_SAFETY_MARGIN_DP}dp = Total: ${(totalMarginPx / density).toInt()}dp")
             hasLoggedNavBar = true
         }
 
-        return totalMargin
+        return totalMarginPx
     }
 
     /**
@@ -316,10 +317,13 @@ class OverlayViewManager(
     /**
      * Calculate the navigation bar height using WindowInsets
      * This gets the ACTUAL current nav bar height, not a default value
+     * Returns height in pixels (px)
      */
     private fun getNavigationBarHeight(): Int {
         // Return cached value if available
         cachedNavBarHeight?.let { return it }
+
+        val density = context.resources.displayMetrics.density
 
         // Try to get nav bar from window insets (most accurate)
         floatingView?.let { view ->
@@ -327,10 +331,11 @@ class OverlayViewManager(
                 val insets = view.rootWindowInsets
                 if (insets != null) {
                     val navBarInsets = insets.getInsets(android.view.WindowInsets.Type.navigationBars())
-                    val navBarHeight = navBarInsets.bottom
-                    Log.d(NAV_TAG, "WindowInsets API: NavBar = $navBarHeight px")
-                    cachedNavBarHeight = navBarHeight
-                    return navBarHeight
+                    val navBarHeightPx = navBarInsets.bottom
+                    val navBarHeightDp = (navBarHeightPx / density).toInt()
+                    Log.d(NAV_TAG, "WindowInsets API detected: ${navBarHeightDp}dp (${navBarHeightPx}px)")
+                    cachedNavBarHeight = navBarHeightPx
+                    return navBarHeightPx
                 }
             } else {
                 // For older Android versions, use rootWindowInsets
@@ -338,25 +343,27 @@ class OverlayViewManager(
                 val insets = view.rootWindowInsets
                 if (insets != null) {
                     @Suppress("DEPRECATION")
-                    val navBarHeight = insets.systemWindowInsetBottom
-                    Log.d(NAV_TAG, "Legacy WindowInsets: NavBar = $navBarHeight px")
-                    cachedNavBarHeight = navBarHeight
-                    return navBarHeight
+                    val navBarHeightPx = insets.systemWindowInsetBottom
+                    val navBarHeightDp = (navBarHeightPx / density).toInt()
+                    Log.d(NAV_TAG, "Legacy WindowInsets detected: ${navBarHeightDp}dp (${navBarHeightPx}px)")
+                    cachedNavBarHeight = navBarHeightPx
+                    return navBarHeightPx
                 }
             }
         }
 
         // Fallback: use system resources
         val resourceId = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
-        val navBarHeight = if (resourceId > 0) {
+        val navBarHeightPx = if (resourceId > 0) {
             context.resources.getDimensionPixelSize(resourceId)
         } else {
             0
         }
 
-        Log.d(NAV_TAG, "Fallback resources: NavBar = $navBarHeight px")
-        cachedNavBarHeight = navBarHeight
-        return navBarHeight
+        val navBarHeightDp = (navBarHeightPx / density).toInt()
+        Log.d(NAV_TAG, "Fallback system resources: ${navBarHeightDp}dp (${navBarHeightPx}px)")
+        cachedNavBarHeight = navBarHeightPx
+        return navBarHeightPx
     }
 
     private fun getDotSize(): Int {

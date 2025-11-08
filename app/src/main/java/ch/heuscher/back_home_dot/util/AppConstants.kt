@@ -11,6 +11,10 @@ object AppConstants {
     const val OVERLAY_LAYOUT_SIZE_DP = 128  // Full layout including halo
     const val DOT_STROKE_WIDTH_DP = 3
 
+    // Navigation bar margins
+    const val NAV_BAR_SAFETY_MARGIN_DP = 8  // Extra spacing above nav bar
+    const val NAV_BAR_MIN_HEIGHT_DP = 48    // Fallback when detection fails (gesture nav)
+
     // Gesture timeouts (milliseconds)
     const val GESTURE_DOUBLE_TAP_TIMEOUT_MS = 300L
     const val GESTURE_LONG_PRESS_TIMEOUT_MS = 500L
