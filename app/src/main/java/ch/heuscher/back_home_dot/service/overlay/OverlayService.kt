@@ -196,8 +196,20 @@ class OverlayService : Service() {
     private fun observeSettings() {
         serviceScope.launch {
             settingsRepository.getAllSettings().collectLatest { settings ->
+                // Get current position before updating appearance
+                val currentPosition = viewManager.getCurrentPosition()
+
                 updateOverlayAppearance()
                 updateGestureMode(settings.tapBehavior)
+
+                // Restore position after appearance update to prevent jumping
+                currentPosition?.let { pos ->
+                    val (constrainedX, constrainedY) = viewManager.constrainPositionToBounds(pos.x, pos.y)
+                    if (constrainedX == pos.x && constrainedY == pos.y) {
+                        // Position is still valid, keep it
+                        viewManager.updatePosition(pos)
+                    }
+                }
             }
         }
     }
