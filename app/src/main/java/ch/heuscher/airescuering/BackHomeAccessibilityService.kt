@@ -3,10 +3,17 @@ package ch.heuscher.airescuering
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.ColorSpace
+import android.hardware.HardwareBuffer
+import android.media.Image
+import android.media.ImageReader
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import androidx.annotation.RequiresApi
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.repository.SettingsRepository
 import ch.heuscher.airescuering.util.AppConstants
@@ -16,6 +23,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.cancel
+import java.nio.ByteBuffer
 
 /**
  * Accessibility service for performing system navigation actions
@@ -183,11 +191,83 @@ class BackHomeAccessibilityService : AccessibilityService() {
         return onHomeScreen
     }
 
+    /**
+     * Take a screenshot of the current screen
+     * Requires Android R (API 30+) and canTakeScreenshot permission
+     */
+    @RequiresApi(Build.VERSION_CODES.R)
+    fun takeScreenshot(callback: (Bitmap?) -> Unit) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            Log.e(TAG, "takeScreenshot: Requires Android R (API 30+)")
+            callback(null)
+            return
+        }
+
+        try {
+            Log.d(TAG, "takeScreenshot: Requesting screenshot...")
+            takeScreenshot(
+                android.view.Display.DEFAULT_DISPLAY,
+                application.mainExecutor,
+                object : TakeScreenshotCallback {
+                    override fun onSuccess(screenshotResult: ScreenshotResult) {
+                        Log.d(TAG, "takeScreenshot: Success!")
+                        try {
+                            val hardwareBuffer = screenshotResult.hardwareBuffer
+                            val bitmap = hardwareBufferToBitmap(hardwareBuffer)
+                            hardwareBuffer.close()
+                            screenshotResult.colorSpace
+
+                            Log.d(TAG, "takeScreenshot: Bitmap created: ${bitmap.width}x${bitmap.height}")
+                            callback(bitmap)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "takeScreenshot: Error creating bitmap", e)
+                            callback(null)
+                        }
+                    }
+
+                    override fun onFailure(errorCode: Int) {
+                        Log.e(TAG, "takeScreenshot: Failed with error code: $errorCode")
+                        callback(null)
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "takeScreenshot: Exception", e)
+            callback(null)
+        }
+    }
+
+    /**
+     * Convert HardwareBuffer to Bitmap
+     */
+    @RequiresApi(Build.VERSION_CODES.R)
+    private fun hardwareBufferToBitmap(hardwareBuffer: HardwareBuffer): Bitmap {
+        val bitmap = Bitmap.wrapHardwareBuffer(hardwareBuffer, null)
+            ?: throw IllegalStateException("Failed to create bitmap from hardware buffer")
+
+        // Convert to software bitmap for easier manipulation
+        return bitmap.copy(Bitmap.Config.ARGB_8888, false)
+    }
+
     companion object {
         private const val TAG = "BackHomeAccessibilityService"
         var instance: BackHomeAccessibilityService? = null
             private set
 
         fun isServiceEnabled(): Boolean = instance != null
+
+        /**
+         * Take a screenshot via the singleton instance
+         */
+        @RequiresApi(Build.VERSION_CODES.R)
+        fun captureScreen(callback: (Bitmap?) -> Unit) {
+            val service = instance
+            if (service == null) {
+                Log.e(TAG, "captureScreen: Accessibility service not available")
+                callback(null)
+                return
+            }
+            service.takeScreenshot(callback)
+        }
     }
 }
