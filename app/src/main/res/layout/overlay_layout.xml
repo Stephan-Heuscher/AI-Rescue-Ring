@@ -13,7 +13,8 @@
         android:text="🛟"
         android:textSize="40sp"
         android:gravity="center"
-        android:clickable="true"
+        android:background="@drawable/white_circle_background"
+        android:clickable="false"
         android:focusable="false"
         android:visibility="visible" />
 
