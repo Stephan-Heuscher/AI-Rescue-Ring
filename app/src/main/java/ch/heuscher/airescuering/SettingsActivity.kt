@@ -25,10 +25,6 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var timeoutSeekBar: SeekBar
     private lateinit var timeoutValueText: TextView
     private lateinit var keyboardAvoidanceSwitch: androidx.appcompat.widget.SwitchCompat
-    private lateinit var tapBehaviorRadioGroup: android.widget.RadioGroup
-    private lateinit var tapBehaviorStandard: android.widget.RadioButton
-    private lateinit var tapBehaviorBack: android.widget.RadioButton
-    private lateinit var tapBehaviorSafeHome: android.widget.RadioButton
     private lateinit var advancedToggleCard: androidx.cardview.widget.CardView
     private lateinit var advancedContent: androidx.cardview.widget.CardView
     private lateinit var advancedArrow: TextView
@@ -47,7 +43,6 @@ class SettingsActivity : AppCompatActivity() {
     private var currentTimeout = 100L
     private var currentColor = 0xFF2196F3.toInt()
     private var keyboardAvoidanceEnabled = false
-    private var currentTapBehavior = "NAVI"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +61,6 @@ class SettingsActivity : AppCompatActivity() {
         setupAlphaSeekBar()
         setupTimeoutSeekBar()
         setupKeyboardAvoidanceSwitch()
-        setupTapBehaviorRadioGroup()
         setupColorButtons()
         setupAIHelperControls()
     }
@@ -77,10 +71,6 @@ class SettingsActivity : AppCompatActivity() {
         timeoutSeekBar = findViewById(R.id.timeout_seekbar)
         timeoutValueText = findViewById(R.id.timeout_value_text)
         keyboardAvoidanceSwitch = findViewById(R.id.keyboard_avoidance_switch)
-        tapBehaviorRadioGroup = findViewById(R.id.tap_behavior_radio_group)
-        tapBehaviorStandard = findViewById(R.id.tap_behavior_standard)
-        tapBehaviorBack = findViewById(R.id.tap_behavior_back)
-        tapBehaviorSafeHome = findViewById(R.id.tap_behavior_safe_home)
         advancedToggleCard = findViewById(R.id.advanced_toggle_card)
         advancedContent = findViewById(R.id.advanced_content)
         advancedArrow = findViewById(R.id.advanced_arrow)
@@ -160,22 +150,6 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupTapBehaviorRadioGroup() {
-        tapBehaviorRadioGroup.setOnCheckedChangeListener { _, checkedId ->
-            val behavior = when (checkedId) {
-                R.id.tap_behavior_standard -> "STANDARD"
-                R.id.tap_behavior_back -> "NAVI"
-                R.id.tap_behavior_safe_home -> "SAFE_HOME"
-                else -> "NAVI"
-            }
-            currentTapBehavior = behavior
-            lifecycleScope.launch {
-                settingsRepository.setTapBehavior(behavior)
-            }
-            broadcastSettingsUpdate()
-        }
-    }
-
     private fun setupColorButtons() {
         findViewById<Button>(R.id.color_blue).setOnClickListener { setColor(0xFF2196F3.toInt()) }
         findViewById<Button>(R.id.color_red).setOnClickListener { setColor(0xFFF44336.toInt()) }
@@ -215,17 +189,6 @@ class SettingsActivity : AppCompatActivity() {
             settingsRepository.isKeyboardAvoidanceEnabled().collect { enabled ->
                 keyboardAvoidanceEnabled = enabled
                 keyboardAvoidanceSwitch.isChecked = enabled
-            }
-        }
-
-        lifecycleScope.launch {
-            settingsRepository.getTapBehavior().collect { behavior ->
-                currentTapBehavior = behavior
-                when (behavior) {
-                    "STANDARD" -> tapBehaviorStandard.isChecked = true
-                    "NAVI" -> tapBehaviorBack.isChecked = true
-                    "SAFE_HOME" -> tapBehaviorSafeHome.isChecked = true
-                }
             }
         }
     }
