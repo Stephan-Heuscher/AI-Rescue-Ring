@@ -5,10 +5,10 @@
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- Include all shared preferences (DataStore uses this) -->
+        <!-- Include all shared preferences (includes AI Helper settings and API key) -->
         <include domain="sharedpref" path="."/>
 
-        <!-- Exclude EncryptedSharedPreferences - cannot be restored on different device -->
+        <!-- Exclude old EncryptedSharedPreferences - deprecated, migrated to standard prefs -->
         <exclude domain="sharedpref" path="ai_helper_secure_prefs.xml"/>
 
         <!-- Include DataStore preferences specifically -->
@@ -16,10 +16,10 @@
     </cloud-backup>
 
     <device-transfer>
-        <!-- Include preferences for device-to-device transfer -->
+        <!-- Include all preferences for device-to-device transfer (includes AI Helper API key) -->
         <include domain="sharedpref" path="."/>
 
-        <!-- Exclude EncryptedSharedPreferences - cannot be restored on different device -->
+        <!-- Exclude old EncryptedSharedPreferences - deprecated, migrated to standard prefs -->
         <exclude domain="sharedpref" path="ai_helper_secure_prefs.xml"/>
 
         <include domain="file" path="datastore/"/>
