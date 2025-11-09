@@ -1,4 +1,4 @@
-package ch.heuscher.back_home_dot
+package ch.heuscher.airescuering
 
 import android.content.ComponentName
 import android.content.Context
@@ -20,12 +20,12 @@ import androidx.cardview.widget.CardView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import ch.heuscher.back_home_dot.BackHomeAccessibilityService
-import ch.heuscher.back_home_dot.service.overlay.OverlayService
-import ch.heuscher.back_home_dot.SettingsActivity
-import ch.heuscher.back_home_dot.di.ServiceLocator
-import ch.heuscher.back_home_dot.domain.repository.SettingsRepository
-import ch.heuscher.back_home_dot.util.AppConstants
+import ch.heuscher.airescuering.BackHomeAccessibilityService
+import ch.heuscher.airescuering.service.overlay.OverlayService
+import ch.heuscher.airescuering.SettingsActivity
+import ch.heuscher.airescuering.di.ServiceLocator
+import ch.heuscher.airescuering.domain.repository.SettingsRepository
+import ch.heuscher.airescuering.util.AppConstants
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -132,8 +132,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        overlayPermissionButton.setOnClickListener { requestOverlayPermission() }
-        accessibilityButton.setOnClickListener { openAccessibilitySettings() }
+        overlayPermissionButton.setOnClickListener {
+            Log.d(TAG, "setupClickListeners: Overlay permission button clicked")
+            requestOverlayPermission()
+        }
+        accessibilityButton.setOnClickListener {
+            Log.d(TAG, "setupClickListeners: Accessibility button clicked")
+            openAccessibilitySettings()
+        }
         stopServiceButton.setOnClickListener { showStopServiceDialog() }
         uninstallButton.setOnClickListener { showUninstallDialog() }
         settingsButton.setOnClickListener { openSettings() }
@@ -192,15 +198,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openAccessibilitySettings() {
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.allow_navigation_title))
-            .setMessage(getString(R.string.allow_navigation_message))
-            .setPositiveButton(getString(R.string.open)) { _, _ ->
-                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                startActivity(intent)
-            }
-            .setNegativeButton(getString(R.string.cancel), null)
-            .show()
+        Log.d(TAG, "openAccessibilitySettings: Called")
+        try {
+            AlertDialog.Builder(this)
+                .setTitle(getString(R.string.allow_navigation_title))
+                .setMessage(getString(R.string.allow_navigation_message))
+                .setPositiveButton(getString(R.string.open)) { _, _ ->
+                    Log.d(TAG, "openAccessibilitySettings: User clicked Open button")
+                    try {
+                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                        startActivity(intent)
+                        Log.d(TAG, "openAccessibilitySettings: Started accessibility settings activity")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "openAccessibilitySettings: Failed to open settings", e)
+                        android.widget.Toast.makeText(
+                            this,
+                            "Failed to open accessibility settings: ${e.message}",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+                .setNegativeButton(getString(R.string.cancel), null)
+                .show()
+            Log.d(TAG, "openAccessibilitySettings: Dialog shown")
+        } catch (e: Exception) {
+            Log.e(TAG, "openAccessibilitySettings: Failed to create dialog", e)
+        }
     }
 
     private fun openSettings() {
@@ -270,28 +293,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        lifecycleScope.launch {
-            Log.d(TAG, "observeSettings: Launching tap behavior observer")
-            try {
-                settingsRepository.getTapBehavior().collect { behavior ->
-                    Log.d(TAG, "observeSettings: Tap behavior changed to $behavior")
-                    updateInstructionsText(behavior)
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "observeSettings: Error observing tap behavior", e)
-            }
-        }
-        Log.d(TAG, "observeSettings: Observers launched")
-    }
-
-    private fun updateInstructionsText(tapBehavior: String) {
-        val instructions = when (tapBehavior) {
-            "STANDARD" -> getString(R.string.instructions_normal_mode)
-            "NAVI" -> getString(R.string.instructions_back_mode)
-            "SAFE_HOME" -> getString(R.string.instructions_safe_home_mode)
-            else -> getString(R.string.instructions_normal_mode)
-        }
-        instructionsText.text = instructions
+        // Set instructions text once (no longer dynamic based on tap behavior)
+        instructionsText.text = getString(R.string.instructions)
+        Log.d(TAG, "observeSettings: Instructions text set")
     }
 
     private fun hasOverlayPermission(): Boolean {

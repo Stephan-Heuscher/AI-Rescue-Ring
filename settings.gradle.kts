@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Back_Home_Dot"
+rootProject.name = "AI-Rescue-Ring"
 include(":app")
  

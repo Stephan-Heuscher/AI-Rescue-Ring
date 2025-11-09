@@ -36,9 +36,7 @@
 
     <!-- Help Section -->
     <string name="how_it_works">🛟 How it works</string>
-    <string name="instructions">🛟 Tap the rescue ring to ask for help!\n\n• Single tap = Open AI Assistant\n• Voice or text = Tell me what you need\n• Long press + drag = Reposition ring\n\nThe AI will help you with any task on your device!</string>
-    <string name="instructions_normal_mode">🛟 Tap the rescue ring to get AI help with anything!\n\n• Tap = Open AI chat\n• Voice input supported\n• Long press + drag = Move ring</string>
-    <string name="instructions_back_mode">🛟 Tap the rescue ring for intelligent assistance!\n\n• Tap = Ask AI for help\n• Speak or type your request\n• Long press + drag = Reposition</string>
+    <string name="instructions">🛟 Tap the rescue ring to ask for help!\n\n• Tap = Open AI Assistant\n• Voice or text = Tell me what you need\n• Long press + drag = Reposition ring\n\nThe AI will help you with any task on your device!</string>
 
     <!-- Settings Screen -->
     <string name="back">Back</string>
@@ -58,20 +56,6 @@
     <string name="keyboard_avoidance">Auto-move from keyboard</string>
     <string name="keyboard_avoidance_desc">Automatically move ring when keyboard appears</string>
     <string name="avoid_keyboard">Auto-move from keyboard</string>
-
-    <!-- Tap Behavior -->
-    <string name="tap_behavior">Rescue Ring Behavior</string>
-    <string name="tap_behavior_desc">How the rescue ring responds to interaction</string>
-    <string name="tap_behavior_standard">AI First: Tap for AI help (recommended)</string>
-    <string name="tap_behavior_back">Quick Nav: Tap for back button, long press for AI</string>
-    <string name="tap_behavior_safe_home">Safe Mode: All taps for AI, long-press to move</string>
-    <string name="tap_behavior_standard_name">AI First</string>
-    <string name="tap_behavior_back_name">Quick Nav</string>
-    <string name="tap_behavior_safe_home_name">Safe Mode</string>
-    <string name="tap_behavior_standard_description">Tap = AI assistance</string>
-    <string name="tap_behavior_back_description">Tap = Back, Long press = AI</string>
-    <string name="tap_behavior_safe_home_description">All taps = AI, Long-press to move</string>
-    <string name="instructions_safe_home_mode">🛟 Safe Mode\n• All taps = AI help\n• Long-press + drag to move (ring glows when ready)\n• Perfect for preventing accidental taps</string>
 
     <!-- Advanced Settings -->
     <string name="for_experts">Advanced</string>

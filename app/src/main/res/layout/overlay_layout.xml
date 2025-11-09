@@ -1,25 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="128dp"
-    android:layout_height="128dp"
+    android:layout_width="64dp"
+    android:layout_height="64dp"
     android:clickable="true"
     android:focusable="false">
 
-    <!-- Halo effect (shown during long-press drag mode) -->
-    <View
-        android:id="@+id/floating_dot_halo"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_gravity="center"
-        android:visibility="gone"
-        android:alpha="0.5" />
-
-    <View
+    <TextView
         android:id="@+id/floating_dot"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_gravity="center"
-        android:background="@drawable/floating_dot_background"
+        android:text="🛟"
+        android:textSize="40sp"
+        android:gravity="center"
         android:clickable="true"
         android:focusable="false"
         android:visibility="visible" />

@@ -1,93 +1,87 @@
 <resources>
     <!-- App Name -->
-    <string name="app_name">Assistive Tap</string>
+    <string name="app_name">AI Rescue Ring</string>
 
     <!-- Permissions -->
-    <string name="accessibility_service_description">Lässt Assistive Tap für Sie Zurück, Home und App-Wechsel drücken</string>
-    <string name="overlay_permission_needed">Über Apps anzeigen nötig</string>
-    <string name="accessibility_service_needed">Hilfe-Dienst nötig</string>
-    <string name="please_enable_overlay">Bitte erlauben Sie dieser App, über anderen Apps zu erscheinen</string>
-    <string name="please_enable_accessibility">Bitte schalten Sie den Hilfe-Dienst für diese App in den Einstellungen ein</string>
+    <string name="accessibility_service_description">Ermöglicht AI Rescue Ring, Ihnen bei Geräteaufgaben mit KI-Unterstützung zu helfen</string>
+    <string name="overlay_permission_needed">Rettungsring anzeigen erforderlich</string>
+    <string name="accessibility_service_needed">KI-Assistenzdienst erforderlich</string>
+    <string name="please_enable_overlay">Bitte erlauben Sie dieser App, den Rettungsring anzuzeigen</string>
+    <string name="please_enable_accessibility">Bitte schalten Sie den KI-Assistenzdienst für diese App ein</string>
     <string name="open_settings">Einstellungen öffnen</string>
 
     <!-- Main Screen -->
-    <string name="app_title">AssistiPunkt</string>
-    <string name="app_subtitle">Ihr Tipp-Helfer zur Navigation</string>
-    <string name="missing_permissions">Fehlende Berechtigungen</string>
+    <string name="app_title">🛟 AI Rescue Ring</string>
+    <string name="app_subtitle">Ihr intelligenter Assistent, immer bereit zu helfen</string>
+    <string name="missing_permissions">Einrichtung erforderlich</string>
 
     <!-- Permission Cards -->
-    <string name="show_assistipoint">AssistiPunkt anzeigen</string>
-    <string name="shows_assistipoint_over_apps">Zeigt den AssistiPunkt über Apps</string>
+    <string name="show_assistipoint">Rettungsring anzeigen</string>
+    <string name="shows_assistipoint_over_apps">Zeigt Ihren KI-Rettungsring über allen Apps</string>
     <string name="allow">Erlauben</string>
-    <string name="allow_navigation">Navigation erlauben</string>
-    <string name="for_back_home_app_switch">Für Zurück, Home und App-Wechsel</string>
+    <string name="allow_navigation">KI-Assistent aktivieren</string>
+    <string name="for_back_home_app_switch">Für intelligente Geräteunterstützung</string>
 
     <!-- Main Switch -->
-    <string name="assistipoint_on_off">AssistiPunkt Ein/Aus</string>
-    <string name="shows_the_assistipoint">Zeigt den AssistiPunkt an</string>
+    <string name="assistipoint_on_off">Rettungsring aktiv</string>
+    <string name="shows_the_assistipoint">Zeigt Ihren KI-Rettungsring auf dem Bildschirm</string>
 
     <!-- Buttons -->
-    <string name="settings">⚙ Einstellungen</string>
-    <string name="stop_app">⛔ App beenden</string>
-    <string name="uninstall_app">🗑 App deinstallieren</string>
+    <string name="settings">⚙️ Einstellungen</string>
+    <string name="stop_app">⛔ Rettungsring stoppen</string>
+    <string name="uninstall_app">🗑️ Deinstallieren</string>
     <string name="uninstall">Deinstallieren</string>
-    <string name="uninstall_app_confirmation">Möchten Sie AssistiPunkt deinstallieren?</string>
+    <string name="uninstall_app_confirmation">Möchten Sie AI Rescue Ring deinstallieren?</string>
     <string name="uninstall_app_desc">App deinstallieren</string>
 
     <!-- Help Section -->
-    <string name="how_it_works">ℹ️ So funktioniert es</string>
-    <string name="instructions">• 1x tippen = Home\n• 2x tippen = Zurück\n• 3x tippen = Alle offenen Apps\n• 4x tippen = AssistiPunkt öffnen\n• Lang drücken = Start-Bildschirm</string>
-    <string name="instructions_normal_mode">• 1x tippen = Home\n• 2x tippen = Zurück\n• 3x tippen = Alle offenen Apps\n• 4x tippen = AssistiPunkt öffnen\n• Lang drücken = Start-Bildschirm</string>
-    <string name="instructions_back_mode">• 1x tippen = Zurück\n• 2x tippen = Zu vorheriger App wechseln\n• 3x tippen = Alle offenen Apps\n• 4x tippen = AssistiPunkt öffnen\n• Lang drücken = Start-Bildschirm</string>
+    <string name="how_it_works">🛟 So funktioniert es</string>
+    <string name="instructions">🛟 Tippen Sie auf den Rettungsring, um Hilfe zu erhalten!\n\n• Tippen = KI-Assistent öffnen\n• Sprache oder Text = Sagen Sie mir, was Sie brauchen\n• Lang drücken + ziehen = Ring neu positionieren\n\nDie KI hilft Ihnen bei jeder Aufgabe auf Ihrem Gerät!</string>
 
     <!-- Settings Screen -->
     <string name="back">Zurück</string>
     <string name="settings_title">Einstellungen</string>
-    <string name="color">Farbe</string>
-    <string name="color_blue">Blau</string>
-    <string name="color_red">Rot</string>
-    <string name="color_green">Grün</string>
-    <string name="color_orange">Orange</string>
+    <string name="color">Ringfarbe</string>
+    <string name="color_blue">Ozeanblau</string>
+    <string name="color_red">Rettungsrot</string>
+    <string name="color_green">Sicherheitsgrün</string>
+    <string name="color_orange">Alarmorange</string>
     <string name="color_purple">Lila</string>
     <string name="color_cyan">Cyan</string>
-    <string name="color_yellow">Gelb</string>
-    <string name="color_gray">Grau</string>
+    <string name="color_yellow">Warngelb</string>
+    <string name="color_gray">Dezentes Grau</string>
     <string name="custom_color">Eigene Farbe</string>
 
     <!-- Keyboard Avoidance -->
-    <string name="keyboard_avoidance">Weg von Tastatur</string>
-    <string name="keyboard_avoidance_desc">Punkt wegbewegen wenn Tastatur erscheint</string>
-    <string name="avoid_keyboard">Weg von Tastatur</string>
-
-    <!-- Tap Behavior -->
-    <string name="tap_behavior">Was Tippen macht</string>
-    <string name="tap_behavior_desc">Wählen Sie, was passiert wenn Sie den Punkt antippen</string>
-    <string name="tap_behavior_standard">Standard: 1x tippen = Home, 2x tippen = Zurück</string>
-    <string name="tap_behavior_back">Navi: 1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
-    <string name="tap_behavior_safe_home">Sicher nach Hause: Alle Taps gehen nach Home, lang drücken + ziehen zum Verschieben</string>
-    <string name="tap_behavior_standard_name">Standard</string>
-    <string name="tap_behavior_back_name">Navi</string>
-    <string name="tap_behavior_safe_home_name">Sicher nach Hause</string>
-    <string name="tap_behavior_standard_description">1x tippen = Home, 2x tippen = Zurück</string>
-    <string name="tap_behavior_back_description">1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln</string>
-    <string name="tap_behavior_safe_home_description">Alle Taps = Home, lang drücken + ziehen zum Verschieben</string>
-    <string name="instructions_safe_home_mode">• Alle Taps = Home\n• Lang drücken + ziehen zum Verschieben (Halo zeigt Bereitschaft)\n• Viereck-Design für Sicherheit</string>
+    <string name="keyboard_avoidance">Auto-Verschiebung bei Tastatur</string>
+    <string name="keyboard_avoidance_desc">Ring automatisch verschieben wenn Tastatur erscheint</string>
+    <string name="avoid_keyboard">Auto-Verschiebung bei Tastatur</string>
 
     <!-- Advanced Settings -->
-    <string name="for_experts">Mehr Einstellungen</string>
-    <string name="transparency">Durchsichtig</string>
-    <string name="how_transparent_the_point_is">Wie durchsichtig der Punkt ist</string>
-    <string name="switch_speed">Geschwindigkeit</string>
-    <string name="wait_time_for_app_switch">Wartezeit beim App-Wechsel</string>
+    <string name="for_experts">Erweitert</string>
+    <string name="transparency">Transparenz</string>
+    <string name="how_transparent_the_point_is">Wie transparent der Rettungsring erscheint</string>
+    <string name="switch_speed">Animationsgeschwindigkeit</string>
+    <string name="wait_time_for_app_switch">Anpassung des Animations-Timings</string>
+
+    <!-- AI Helper -->
+    <string name="ai_helper_title">🤖 KI-Assistent</string>
+    <string name="ai_helper_description">Konfigurieren Sie Ihren intelligenten Rettungsassistenten</string>
+    <string name="ai_helper_enabled">KI-Unterstützung aktiviert</string>
+    <string name="ai_api_key_label">Gemini API-Schlüssel</string>
+    <string name="ai_api_key_hint">Geben Sie Ihren Gemini API-Schlüssel ein</string>
+    <string name="ai_api_key_help">Holen Sie sich Ihren kostenlosen API-Schlüssel von ai.google.dev</string>
+    <string name="ai_voice_input">Spracheingabe aktiviert</string>
+    <string name="ai_setup_required">API-Schlüssel einrichten um KI-Unterstützung zu aktivieren</string>
 
     <!-- Dialogs -->
-    <string name="allow_assistipoint_display">AssistiPunkt anzeigen erlauben</string>
-    <string name="allow_assistipoint_message">Erlauben Sie, dass der AssistiPunkt über anderen Apps angezeigt wird.</string>
-    <string name="allow_navigation_title">Navigation erlauben</string>
-    <string name="allow_navigation_message">Erlauben Sie, dass die App für Sie navigiert (Zurück, Home, App-Wechsel).\n\nSchalten Sie \"Assistive Tap\" ein.</string>
+    <string name="allow_assistipoint_display">Rettungsring anzeigen</string>
+    <string name="allow_assistipoint_message">Erlauben Sie AI Rescue Ring, über anderen Apps angezeigt zu werden für sofortige Hilfe.</string>
+    <string name="allow_navigation_title">KI-Assistent aktivieren</string>
+    <string name="allow_navigation_message">Aktivieren Sie den KI-Assistenzdienst, um Ihnen bei Geräteaufgaben zu helfen.\n\nSchalten Sie \"AI Rescue Ring\" in den Bedienungshilfen ein.</string>
     <string name="open">Öffnen</string>
     <string name="cancel">Abbrechen</string>
-    <string name="choose_custom_color">Eigene Farbe wählen</string>
+    <string name="choose_custom_color">Rettungsring-Farbe wählen</string>
     <string name="ok">OK</string>
 
     <!-- Color Picker -->
@@ -96,23 +90,23 @@
     <string name="color_component_blue">Blau</string>
 
     <!-- Content Descriptions -->
-    <string name="assistipoint_app">AssistiPunkt App</string>
-    <string name="your_tap_helper_for_navigation">Ihr Tipp-Helfer zur Navigation</string>
-    <string name="allow_assistipoint_over_apps">AssistiPunkt über Apps anzeigen erlauben</string>
-    <string name="allow_navigation_desc">Navigation erlauben</string>
-    <string name="switch_assistipoint_on_off">AssistiPunkt ein oder aus schalten</string>
-    <string name="adjust_color_and_speed">Farbe und Geschwindigkeit einstellen</string>
-    <string name="instructions_desc">So funktioniert es: Einmal tippen für Zurück, Zweimal tippen für letzte App, Dreimal tippen für alle offenen Apps, Viermal tippen für AssistiPunkt öffnen, Lang drücken für Start-Bildschirm</string>
-    <string name="stop_app_desc">App beenden</string>
-    <string name="choose_custom_color_desc">Eigene Farbe wählen</string>
-    <string name="transparency_desc">Durchsichtigkeit</string>
-    <string name="switch_speed_desc">Wechsel-Geschwindigkeit</string>
+    <string name="assistipoint_app">AI Rescue Ring App</string>
+    <string name="your_tap_helper_for_navigation">Ihr intelligenter Assistent, immer bereit zu helfen</string>
+    <string name="allow_assistipoint_over_apps">Rettungsring über Apps anzeigen erlauben</string>
+    <string name="allow_navigation_desc">KI-Unterstützung aktivieren</string>
+    <string name="switch_assistipoint_on_off">Rettungsring ein- oder ausschalten</string>
+    <string name="adjust_color_and_speed">Rettungsring-Erscheinungsbild anpassen</string>
+    <string name="instructions_desc">Tippen Sie auf den Rettungsring, um KI-Hilfe bei jeder Aufgabe auf Ihrem Gerät zu erhalten</string>
+    <string name="stop_app_desc">Rettungsring-Dienst stoppen</string>
+    <string name="choose_custom_color_desc">Eigene Rettungsring-Farbe wählen</string>
+    <string name="transparency_desc">Ring-Transparenz</string>
+    <string name="switch_speed_desc">Animationsgeschwindigkeit</string>
 
     <!-- Impressum -->
     <string name="impressum_title">Impressum</string>
     <string name="impressum_content">Angaben gemäß § 5 TMG:\n\nStephan Heuscher\n[Adresse wird auf Anfrage mitgeteilt]\n\nKontakt:\nE-Mail: s.heuscher@gmail.com\n\nVerantwortlich für den Inhalt nach § 55 Abs. 2 RStV:\nStephan Heuscher\n[Adresse wird auf Anfrage mitgeteilt]</string>
     <string name="disclaimer_title">Haftungsausschluss</string>
-    <string name="disclaimer_content">Die Nutzung dieser App erfolgt auf eigene Gefahr. Der Entwickler übernimmt keine Haftung für Schäden, die durch die Nutzung der App entstehen.\n\nDie App ist ein Hilfsmittel und ersetzt keine professionelle Beratung oder Therapie bei motorischen Einschränkungen. Konsultieren Sie bei gesundheitlichen Fragen immer einen Arzt oder Therapeuten.</string>
+    <string name="disclaimer_content">Die Nutzung dieser App erfolgt auf eigene Gefahr. Der Entwickler übernimmt keine Haftung für Schäden, die durch die Nutzung der App entstehen.\n\nDiese App nutzt KI zur Unterstützung und liefert möglicherweise nicht immer genaue Informationen. Überprüfen Sie wichtige Informationen immer unabhängig.\n\nIhr API-Schlüssel wird sicher auf Ihrem Gerät gespeichert und niemals an unsere Server gesendet. Alle KI-Interaktionen gehen direkt an Googles Gemini API.</string>
     <string name="contact_title">Kontakt</string>
     <string name="contact_content">Bei Fragen, Problemen oder Feedback:\n\nE-Mail: s.heuscher@gmail.com\nGitHub: https://github.com/Stephan-Heuscher/Back_Home_Dot\n\nIch bemühe mich, Anfragen innerhalb von 48 Stunden zu beantworten.</string>
     <string name="open_source_title">Open Source</string>

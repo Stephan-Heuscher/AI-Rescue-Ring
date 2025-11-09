@@ -1,4 +1,4 @@
-package ch.heuscher.back_home_dot
+package ch.heuscher.airescuering
 
 import android.os.Bundle
 import android.widget.Button

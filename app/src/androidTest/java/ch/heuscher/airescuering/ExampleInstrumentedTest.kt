@@ -1,4 +1,4 @@
-package ch.heuscher.back_home_dot
+package ch.heuscher.airescuering
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("ch.heuscher.back_home_dot", appContext.packageName)
+        assertEquals("ch.heuscher.airescuering", appContext.packageName)
     }
 }
