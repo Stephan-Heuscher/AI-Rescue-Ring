@@ -10,13 +10,13 @@
 -renamesourcefileattribute SourceFile
 
 # Keep AccessibilityService
--keep class ch.heuscher.back_home_dot.BackHomeAccessibilityService { *; }
+-keep class ch.heuscher.airescuering.BackHomeAccessibilityService { *; }
 
 # Keep Services
--keep class ch.heuscher.back_home_dot.OverlayService { *; }
+-keep class ch.heuscher.airescuering.service.overlay.OverlayService { *; }
 
 # Keep MainActivity
--keep class ch.heuscher.back_home_dot.MainActivity { *; }
+-keep class ch.heuscher.airescuering.MainActivity { *; }
 
 # Keep all public classes and methods that are referenced in AndroidManifest.xml
 -keep public class * extends android.app.Activity
