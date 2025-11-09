@@ -30,7 +30,7 @@ class SecureAIHelperDataSource(
         private const val KEY_VOICE_INPUT = "ai_helper_voice_input"
         private const val KEY_AUTO_EXECUTE = "ai_helper_auto_execute"
         private const val KEY_MODEL = "ai_helper_model"
-        private const val DEFAULT_MODEL = "gemini-2.0-flash-exp"
+        private const val DEFAULT_MODEL = "gemini-2.5-computer-use-preview-10-2025"
         private const val KEY_MIGRATED = "migrated_from_encrypted"
     }
 
