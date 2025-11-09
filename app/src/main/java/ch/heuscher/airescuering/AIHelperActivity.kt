@@ -1,9 +1,11 @@
 package ch.heuscher.airescuering
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognizerIntent
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -105,17 +107,75 @@ class AIHelperActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val apiKey = ServiceLocator.aiHelperRepository.getApiKey().firstOrNull() ?: ""
             if (apiKey.isEmpty()) {
-                // Show prominent warning in chat
+                // Show prominent warning in chat with option to enter API key
                 val warningMessage = AIMessage(
                     id = UUID.randomUUID().toString(),
-                    content = "⚠️ API Key Not Configured\n\nTo use the AI assistant, you need to set up a Gemini API key:\n\n1. Open the main app settings\n2. Navigate to AI Helper settings\n3. Enter your Gemini API key\n\nUntil then, you can still type messages here, but they won't be sent to the AI.",
+                    content = "⚠️ API Key Not Configured\n\nTo use the AI assistant, you need to set up a Gemini API key.\n\nTap the button below to enter your API key now, or you can set it later in the app settings.",
                     role = MessageRole.ASSISTANT
                 )
                 addMessage(warningMessage)
+
+                // Show dialog to enter API key
+                showApiKeyDialog()
                 return@launch
             }
             geminiService = GeminiApiService(apiKey, debug = true)
         }
+    }
+
+    private fun showApiKeyDialog() {
+        val input = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_TEXT
+            hint = "Enter your Gemini API key"
+            setPadding(50, 40, 50, 40)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Enter API Key")
+            .setMessage("Enter your Google Gemini API key to enable AI assistance.\n\nYou can get a free API key from: https://aistudio.google.com/app/apikey")
+            .setView(input)
+            .setPositiveButton("Save") { dialog, _ ->
+                val apiKey = input.text.toString().trim()
+                if (apiKey.isNotEmpty()) {
+                    lifecycleScope.launch {
+                        ServiceLocator.aiHelperRepository.setApiKey(apiKey)
+                        ServiceLocator.aiHelperRepository.setEnabled(true)
+
+                        // Initialize Gemini service with new key
+                        geminiService = GeminiApiService(apiKey, debug = true)
+
+                        // Add success message
+                        val successMessage = AIMessage(
+                            id = UUID.randomUUID().toString(),
+                            content = "✅ API Key Configured!\n\nYour API key has been saved. You can now chat with the AI assistant!",
+                            role = MessageRole.ASSISTANT
+                        )
+                        addMessage(successMessage)
+
+                        Toast.makeText(
+                            this@AIHelperActivity,
+                            "API key saved successfully!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    Toast.makeText(
+                        this@AIHelperActivity,
+                        "API key cannot be empty",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setNeutralButton("Open Settings") { dialog, _ ->
+                val intent = Intent(this@AIHelperActivity, MainActivity::class.java)
+                startActivity(intent)
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun sendMessage(text: String) {

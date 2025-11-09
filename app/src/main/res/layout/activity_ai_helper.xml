@@ -43,7 +43,9 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:padding="16dp"
+        android:paddingBottom="24dp"
         android:clipToPadding="false"
+        android:scrollbarStyle="outsideOverlay"
         tools:listitem="@layout/item_chat_message" />
 
     <!-- Loading Indicator -->
@@ -60,7 +62,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:padding="12dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
         android:gravity="center_vertical"
         android:background="?android:attr/colorBackground"
         android:elevation="8dp">
@@ -71,25 +75,28 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="Ask me anything..."
-            android:minHeight="48dp"
+            android:minHeight="56dp"
             android:background="@android:drawable/edit_text"
-            android:padding="12dp"
+            android:padding="16dp"
             android:inputType="textCapSentences|textMultiLine"
-            android:maxLines="4" />
+            android:maxLines="4"
+            android:textSize="16sp" />
 
         <Button
             android:id="@+id/voiceButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:text="🎤"
+            android:textSize="20sp"
             android:layout_marginStart="8dp"
             style="?android:attr/borderlessButtonStyle" />
 
         <Button
             android:id="@+id/sendButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:text="➤"
+            android:textSize="20sp"
             android:layout_marginStart="4dp"
             style="?android:attr/borderlessButtonStyle" />
     </LinearLayout>
