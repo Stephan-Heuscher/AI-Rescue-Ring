@@ -86,7 +86,7 @@ object ServiceLocator {
         getCurrentPosition: () -> DotPosition?,
         getCurrentRotation: () -> Int,
         getUsableScreenSize: () -> Point,
-        getSettings: suspend () -> ch.heuscher.back_home_dot.domain.model.OverlaySettings,
+        getSettings: suspend () -> ch.heuscher.airescuering.domain.model.OverlaySettings,
         isUserDragging: () -> Boolean
     ): KeyboardManager {
         return KeyboardManager(

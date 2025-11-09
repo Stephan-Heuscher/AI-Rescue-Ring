@@ -20,7 +20,7 @@ interface HandleGestureUseCase {
     /**
      * Executes the appropriate action for the given gesture in the specified mode.
      */
-    suspend fun execute(gesture: ch.heuscher.back_home_dot.domain.model.Gesture, mode: ch.heuscher.back_home_dot.domain.model.OverlayMode)
+    suspend fun execute(gesture: ch.heuscher.airescuering.domain.model.Gesture, mode: ch.heuscher.airescuering.domain.model.OverlayMode)
 }
 
 /**

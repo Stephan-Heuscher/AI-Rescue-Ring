@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -227,7 +228,7 @@ class AIHelperActivity : AppCompatActivity() {
     }
 
     private fun showSuggestionDialog(suggestion: String) {
-        val dialog = ch.heuscher.back_home_dot.ui.AISuggestionDialog(
+        val dialog = ch.heuscher.airescuering.ui.AISuggestionDialog(
             context = this,
             suggestion = suggestion,
             onApprove = {

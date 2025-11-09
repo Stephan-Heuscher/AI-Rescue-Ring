@@ -326,7 +326,7 @@ class OverlayService : Service() {
                 launchAIHelper()
             } else {
                 // AI First: double tap for settings
-                val intent = Intent(this@OverlayService, ch.heuscher.back_home_dot.SettingsActivity::class.java).apply {
+                val intent = Intent(this@OverlayService, ch.heuscher.airescuering.SettingsActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 }
                 startActivity(intent)
@@ -336,7 +336,7 @@ class OverlayService : Service() {
 
     private fun handleTripleTap() {
         // Triple tap always opens settings
-        val intent = Intent(this, ch.heuscher.back_home_dot.SettingsActivity::class.java).apply {
+        val intent = Intent(this, ch.heuscher.airescuering.SettingsActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         startActivity(intent)
@@ -344,7 +344,7 @@ class OverlayService : Service() {
 
     private fun handleQuadrupleTap() {
         // Quadruple tap opens main activity
-        val intent = Intent(this, ch.heuscher.back_home_dot.MainActivity::class.java).apply {
+        val intent = Intent(this, ch.heuscher.airescuering.MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         startActivity(intent)
@@ -365,13 +365,13 @@ class OverlayService : Service() {
 
             if (aiEnabled && apiKey.isNotEmpty()) {
                 // AI Helper is configured, open AI chat
-                val intent = Intent(this@OverlayService, ch.heuscher.back_home_dot.AIHelperActivity::class.java).apply {
+                val intent = Intent(this@OverlayService, ch.heuscher.airescuering.AIHelperActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 }
                 startActivity(intent)
             } else {
                 // AI Helper not configured, open MainActivity for setup
-                val intent = Intent(this@OverlayService, ch.heuscher.back_home_dot.MainActivity::class.java).apply {
+                val intent = Intent(this@OverlayService, ch.heuscher.airescuering.MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 }
                 startActivity(intent)

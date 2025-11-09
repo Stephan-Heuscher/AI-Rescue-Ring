@@ -50,8 +50,8 @@ object AppConstants {
     const val DEFAULT_SCREEN_HEIGHT = 1920
 
     // Intent actions
-    const val ACTION_UPDATE_SETTINGS = "ch.heuscher.back_home_dot.UPDATE_SETTINGS"
-    const val ACTION_UPDATE_KEYBOARD = "ch.heuscher.back_home_dot.UPDATE_KEYBOARD"
+    const val ACTION_UPDATE_SETTINGS = "ch.heuscher.airescuering.UPDATE_SETTINGS"
+    const val ACTION_UPDATE_KEYBOARD = "ch.heuscher.airescuering.UPDATE_KEYBOARD"
 
     // SharedPreferences
     const val PREFS_NAME = "overlay_settings"
