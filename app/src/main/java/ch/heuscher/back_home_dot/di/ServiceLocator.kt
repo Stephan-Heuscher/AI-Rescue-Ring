@@ -3,10 +3,14 @@ package ch.heuscher.back_home_dot.di
 import android.content.Context
 import android.graphics.Point
 import android.view.ViewConfiguration
+import ch.heuscher.back_home_dot.data.local.AIHelperDataSource
+import ch.heuscher.back_home_dot.data.local.SecureAIHelperDataSource
 import ch.heuscher.back_home_dot.data.local.SettingsDataSource
 import ch.heuscher.back_home_dot.data.local.SharedPreferencesDataSource
+import ch.heuscher.back_home_dot.data.repository.AIHelperRepositoryImpl
 import ch.heuscher.back_home_dot.data.repository.SettingsRepositoryImpl
 import ch.heuscher.back_home_dot.domain.model.DotPosition
+import ch.heuscher.back_home_dot.domain.repository.AIHelperRepository
 import ch.heuscher.back_home_dot.domain.repository.SettingsRepository
 import ch.heuscher.back_home_dot.service.overlay.GestureDetector
 import ch.heuscher.back_home_dot.service.overlay.KeyboardDetector
@@ -36,6 +40,14 @@ object ServiceLocator {
 
     val settingsDataSource: SettingsDataSource by lazy {
         SharedPreferencesDataSource(applicationContext)
+    }
+
+    val aiHelperRepository: AIHelperRepository by lazy {
+        AIHelperRepositoryImpl(aiHelperDataSource)
+    }
+
+    val aiHelperDataSource: AIHelperDataSource by lazy {
+        SecureAIHelperDataSource(applicationContext)
     }
 
     val keyboardDetector: KeyboardDetector by lazy {

@@ -335,10 +335,25 @@ class OverlayService : Service() {
     }
 
     private fun handleQuadrupleTap() {
-        val intent = Intent(this, ch.heuscher.back_home_dot.MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        // Launch AI Helper
+        serviceScope.launch {
+            val aiEnabled = ServiceLocator.aiHelperRepository.isEnabled().first()
+            val apiKey = ServiceLocator.aiHelperRepository.getApiKey().first()
+
+            if (aiEnabled && apiKey.isNotEmpty()) {
+                // AI Helper is configured, open AI chat
+                val intent = Intent(this@OverlayService, ch.heuscher.back_home_dot.AIHelperActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                startActivity(intent)
+            } else {
+                // AI Helper not configured, open MainActivity for setup
+                val intent = Intent(this@OverlayService, ch.heuscher.back_home_dot.MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                startActivity(intent)
+            }
         }
-        startActivity(intent)
     }
 
     private fun handleLongPress() {

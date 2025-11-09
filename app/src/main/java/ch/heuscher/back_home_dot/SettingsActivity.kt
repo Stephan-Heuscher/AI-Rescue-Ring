@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -11,8 +12,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import androidx.lifecycle.lifecycleScope
 import ch.heuscher.back_home_dot.di.ServiceLocator
+import ch.heuscher.back_home_dot.domain.repository.AIHelperRepository
 import ch.heuscher.back_home_dot.domain.repository.SettingsRepository
 import ch.heuscher.back_home_dot.util.AppConstants
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class SettingsActivity : AppCompatActivity() {
@@ -31,7 +34,13 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var advancedArrow: TextView
     private var isAdvancedExpanded = false
 
+    // AI Helper fields
+    private lateinit var aiHelperSwitch: androidx.appcompat.widget.SwitchCompat
+    private lateinit var apiKeyInput: EditText
+    private lateinit var voiceInputSwitch: androidx.appcompat.widget.SwitchCompat
+
     private lateinit var settingsRepository: SettingsRepository
+    private lateinit var aiHelperRepository: AIHelperRepository
 
     // UI state holders
     private var currentAlpha = 255
@@ -46,9 +55,11 @@ class SettingsActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         settingsRepository = ServiceLocator.settingsRepository
+        aiHelperRepository = ServiceLocator.aiHelperRepository
 
         initializeViews()
         observeSettings()
+        observeAIHelperSettings()
         setupBackButton()
         setupImpressumButton()
         setupAdvancedToggle()
@@ -57,6 +68,7 @@ class SettingsActivity : AppCompatActivity() {
         setupKeyboardAvoidanceSwitch()
         setupTapBehaviorRadioGroup()
         setupColorButtons()
+        setupAIHelperControls()
     }
 
     private fun initializeViews() {
@@ -72,6 +84,11 @@ class SettingsActivity : AppCompatActivity() {
         advancedToggleCard = findViewById(R.id.advanced_toggle_card)
         advancedContent = findViewById(R.id.advanced_content)
         advancedArrow = findViewById(R.id.advanced_arrow)
+
+        // AI Helper views
+        aiHelperSwitch = findViewById(R.id.ai_helper_switch)
+        apiKeyInput = findViewById(R.id.api_key_input)
+        voiceInputSwitch = findViewById(R.id.voice_input_switch)
     }
 
     private fun setupBackButton() {
@@ -270,5 +287,60 @@ class SettingsActivity : AppCompatActivity() {
             }
             .setNegativeButton(getString(R.string.cancel), null)
             .show()
+    }
+
+    private fun setupAIHelperControls() {
+        // AI Helper enable switch
+        aiHelperSwitch.setOnCheckedChangeListener { _, isChecked ->
+            lifecycleScope.launch {
+                aiHelperRepository.setEnabled(isChecked)
+            }
+        }
+
+        // API Key input with save on focus loss
+        apiKeyInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val apiKey = apiKeyInput.text.toString().trim()
+                lifecycleScope.launch {
+                    aiHelperRepository.setApiKey(apiKey)
+                }
+            }
+        }
+
+        // Voice input switch
+        voiceInputSwitch.setOnCheckedChangeListener { _, isChecked ->
+            lifecycleScope.launch {
+                aiHelperRepository.setUseVoiceInput(isChecked)
+            }
+        }
+    }
+
+    private fun observeAIHelperSettings() {
+        lifecycleScope.launch {
+            // Observe AI Helper enabled state
+            aiHelperRepository.isEnabled().collect { enabled ->
+                if (aiHelperSwitch.isChecked != enabled) {
+                    aiHelperSwitch.isChecked = enabled
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            // Observe API key
+            aiHelperRepository.getApiKey().collect { apiKey ->
+                if (apiKeyInput.text.toString() != apiKey && !apiKeyInput.hasFocus()) {
+                    apiKeyInput.setText(apiKey)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            // Observe voice input setting
+            aiHelperRepository.useVoiceInput().collect { useVoice ->
+                if (voiceInputSwitch.isChecked != useVoice) {
+                    voiceInputSwitch.isChecked = useVoice
+                }
+            }
+        }
     }
 }
