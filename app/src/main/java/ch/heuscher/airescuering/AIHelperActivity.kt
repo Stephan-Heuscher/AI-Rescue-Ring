@@ -279,26 +279,23 @@ class AIHelperActivity : AppCompatActivity() {
             holder.timeText.text = timeFormat.format(Date(message.timestamp))
 
             // Style based on role
-            val layoutParams = holder.messageCard.layoutParams as ViewGroup.MarginLayoutParams
             when (message.role) {
                 MessageRole.USER -> {
-                    (holder.messageCard.parent as View).layoutParams =
-                        (holder.messageCard.parent.layoutParams as ViewGroup.LayoutParams).apply {
-                            if (this is LinearLayout.LayoutParams) {
-                                gravity = android.view.Gravity.END
-                            }
-                        }
+                    val params = holder.messageCard.layoutParams
+                    if (params is LinearLayout.LayoutParams) {
+                        params.gravity = android.view.Gravity.END
+                        holder.messageCard.layoutParams = params
+                    }
                     holder.messageCard.setCardBackgroundColor(0xFF2196F3.toInt())
                     holder.roleText.setTextColor(0xFFFFFFFF.toInt())
                     holder.messageText.setTextColor(0xFFFFFFFF.toInt())
                 }
                 MessageRole.ASSISTANT -> {
-                    (holder.messageCard.parent as View).layoutParams =
-                        (holder.messageCard.parent.layoutParams as ViewGroup.LayoutParams).apply {
-                            if (this is LinearLayout.LayoutParams) {
-                                gravity = android.view.Gravity.START
-                            }
-                        }
+                    val params = holder.messageCard.layoutParams
+                    if (params is LinearLayout.LayoutParams) {
+                        params.gravity = android.view.Gravity.START
+                        holder.messageCard.layoutParams = params
+                    }
                     holder.messageCard.setCardBackgroundColor(0xFFEEEEEE.toInt())
                     holder.roleText.setTextColor(0xFF000000.toInt())
                     holder.messageText.setTextColor(0xFF000000.toInt())
