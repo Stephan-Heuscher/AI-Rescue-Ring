@@ -1,381 +1,277 @@
-# AssistiPunkt (Assistive Tap)
+# AI Rescue Ring
 
-> **Ihr Tipp-Helfer zur Navigation** – Eine barrierefreie Android-App für intuitive Navigation mit einem schwebendem Punkt
+> **Your intelligent assistant, always ready to help** – An AI-powered Android app providing instant assistance through a floating rescue ring
 
 [![Android](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com/)
 [![Kotlin](https://img.shields.io/badge/Language-Kotlin-purple.svg)](https://kotlinlang.org/)
 [![API Level](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://developer.android.com/about/versions/oreo)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## 📱 Was macht die App?
+## 🛟 What does the app do?
 
-Stell dir vor, deine Oma hätte Probleme, die Handy-Tasten unten zu erreichen. Mit diesem kleinen Punkt auf dem Bildschirm kommt sie mit dem Daumen immer wieder nach Hause - egal wo sie gerade ist.
+AI Rescue Ring is your intelligent companion on Android - always visible, always ready to help. Tap the rescue ring whenever you need assistance, and a powerful AI will help you with any task on your device.
 
-Und weil so ein Punkt praktisch ist, habe ich ihn für Ein-Daumen-Bedienung erweitert:
+### Key Features
 
-### Standard-Modus
-- **1x tippen** → Home
-- **2x tippen** → Zurück
-- **3x tippen** → Offene Apps
-- **Lang drücken** → Home
-- **Verschieben** → Sofort ziehbar
+- **🤖 AI-Powered Help**: Tap the ring to chat with AI via voice or text
+- **🎨 Customizable Ring**: Choose colors, transparency, and position
+- **⌨️ Smart Positioning**: Automatically moves away from keyboard
+- **🔒 Privacy-First**: Your API key stays on your device
+- **♿ Accessibility**: Built with accessibility in mind
 
-### Safe-Home-Modus (für maximale Sicherheit)
-- **Alle Taps** → Home (Oma kommt immer nach Hause)
-- **Viereck-Design** → Wie Android-Navigation
-- **Lang drücken + Ziehen** → Button verschieben (überall möglich)
-- **Halo-Effekt** → Zeigt, wann der Button verschoben werden kann
+### Tap Modes
 
-Alles mit einem Daumen, ohne das Handy umzugreifen.
+#### AI First Mode (Recommended)
+- **Tap** → Open AI chat
+- **Voice input** → Speak your question
+- **Long press + drag** → Reposition ring
 
-## 🖼️ Screenshots
+#### Quick Nav Mode
+- **Tap** → Back button
+- **Long press** → AI assistance
+- **Long press + drag** → Reposition ring
 
-<p align="center">
-  <img src="screenshots/Screenshot_20251103_212422_Assistive Tap.jpg" width="30%" alt="Hauptbildschirm" />
-  <img src="screenshots/Screenshot_20251103_212431_Assistive Tap.jpg" width="30%" alt="Einstellungen" />
-  <img src="screenshots/floating_dot.jpg" width="30%" alt="AssistiPunkt in Aktion" />
-</p>
-
-<p align="center">
-  <em>Hauptbildschirm • Einstellungen • AssistiPunkt in Aktion</em>
-</p>
+#### Safe Mode
+- **All taps** → AI help
+- **Long press + drag** → Move ring (shows glow when ready)
+- **Perfect for** → Preventing accidental taps
 
 ## 🚀 Installation
 
-### Voraussetzungen
-- Android 8.0 (API Level 26) oder höher
-- Zwei Berechtigungen erforderlich:
-  - **Overlay-Berechtigung**: Für den schwebenden Punkt
-  - **Bedienungshilfe-Zugriff**: Für Navigationsaktionen
+### Requirements
+- Android 8.0 (API Level 26) or higher
+- Google Gemini API key (free from [ai.google.dev](https://ai.google.dev))
+- Two permissions required:
+  - **Overlay permission**: For the floating ring
+  - **Accessibility access**: For system assistance features
 
-### Download & Installation
+### Download & Setup
 
-1. APK von [Releases](../../releases) herunterladen
-2. APK auf dem Gerät installieren
-3. App öffnen und den Anweisungen folgen
-4. Berechtigungen erteilen:
-   - Overlay-Berechtigung aktivieren
-   - "AssistiPunkt" in den Bedienungshilfen einschalten
+1. Download APK from [Releases](../../releases)
+2. Install APK on your device
+3. Open app and follow setup instructions
+4. Grant permissions:
+   - Enable overlay permission
+   - Turn on "AI Rescue Ring" in accessibility settings
+5. Add your Gemini API key in settings
 
-## 🎮 So funktioniert's
+## 🎮 How it works
 
-1. **Punkt einschalten**: Schalter in der App aktivieren
-2. **Modus wählen**: Standard oder Safe-Home in den Einstellungen
-3. **Punkt verschieben**:
-   - **Standard-Modus**: Punkt sofort ziehen
-   - **Safe-Home-Modus**: Punkt 500ms lang drücken (Halo erscheint), dann ziehen
-4. **Navigieren**:
-   - **Standard**: 1x tippen = Home, 2x tippen = Zurück
-   - **Safe-Home**: Alle Taps = Home (für maximale Sicherheit)
-5. **Anpassen**: Farbe, Durchsichtigkeit und Modus in den Einstellungen ändern
+1. **Enable ring**: Activate the switch in the app
+2. **Choose mode**: AI First, Quick Nav, or Safe Mode in settings
+3. **Move ring**: Long press + drag to reposition
+4. **Get help**: Tap the ring and ask your question
+5. **Customize**: Adjust color, transparency, and behavior in settings
 
-Der Punkt weicht automatisch der Tastatur aus und bleibt auch beim Drehen des Handys an der richtigen Stelle.
+The ring automatically avoids the keyboard and stays in the correct position when rotating the device.
 
-## 🛠️ Technische Details
+## 🛠️ Technical Details
 
-### 🏗️ Architektur
+### 🏗️ Architecture
 
-**AssistiPunkt** folgt den **Clean Architecture** Prinzipien mit klarer Trennung der Verantwortlichkeiten:
+**AI Rescue Ring** follows **Clean Architecture** principles with clear separation of concerns:
 
 ```
-AssistiPunkt/
-├── domain/                    # Geschäftslogik & Modelle
+AI Rescue Ring/
+├── domain/                    # Business logic & models
 │   ├── model/
-│   │   ├── DotPosition.kt     # Position-Modell
-│   │   ├── Gesture.kt         # Gesten-Enumeration
-│   │   └── OverlaySettings.kt # Einstellungen-Modell
+│   │   ├── DotPosition.kt     # Position model
+│   │   ├── Gesture.kt         # Gesture enumeration
+│   │   ├── OverlaySettings.kt # Settings model
+│   │   ├── AIHelperConfig.kt  # AI configuration
+│   │   └── AIMessage.kt       # AI message model
 │   └── repository/
-│       └── SettingsRepository.kt # Daten-Zugriffs-Interface
-├── data/                      # Daten-Zugriffsschicht
+│       ├── SettingsRepository.kt    # Settings data access
+│       └── AIHelperRepository.kt    # AI helper data access
+├── data/                      # Data access layer
 │   ├── local/
-│   │   └── SharedPreferencesDataSource.kt # SharedPreferences-Implementierung
+│   │   ├── SharedPreferencesDataSource.kt
+│   │   └── SecureAIHelperDataSource.kt # Encrypted API key storage
+│   ├── api/
+│   │   ├── GeminiApiService.kt
+│   │   └── GeminiApiModels.kt
 │   └── repository/
-│       └── SettingsRepositoryImpl.kt # Repository-Implementierung
-├── service/                   # Service-Komponenten
+│       ├── SettingsRepositoryImpl.kt
+│       └── AIHelperRepositoryImpl.kt
+├── service/                   # Service components
 │   └── overlay/
-│       ├── OverlayService.kt       # Hauptservice (459 Zeilen - Lifecycle-Management)
-│       ├── KeyboardManager.kt      # Tastatur-Vermeidung (273 Zeilen)
-│       ├── PositionAnimator.kt     # Positions-Animationen (86 Zeilen)
-│       ├── OrientationHandler.kt   # Rotation-Transformationen (97 Zeilen)
-│       ├── KeyboardDetector.kt     # Tastatur-Erkennung
-│       ├── GestureDetector.kt      # Gesten-Erkennung
-│       └── OverlayViewManager.kt   # Overlay-Verwaltung
-├── ui/                        # Benutzeroberfläche
-│   ├── MainActivity.kt        # Hauptansicht & Berechtigungen
-│   ├── SettingsActivity.kt    # Einstellungen
-│   └── ImpressumActivity.kt   # Impressum
-├── util/                      # Hilfsfunktionen
-│   └── AppConstants.kt        # Zentralisierte Konstanten
+│       ├── OverlayService.kt       # Main service
+│       ├── KeyboardManager.kt      # Keyboard avoidance
+│       ├── PositionAnimator.kt     # Position animations
+│       ├── OrientationHandler.kt   # Rotation handling
+│       ├── KeyboardDetector.kt     # Keyboard detection
+│       ├── GestureDetector.kt      # Gesture recognition
+│       └── OverlayViewManager.kt   # Overlay management
+├── ui/                        # User interface
+│   ├── MainActivity.kt        # Main screen
+│   ├── SettingsActivity.kt    # Settings screen
+│   ├── AIHelperActivity.kt    # AI chat interface
+│   └── ImpressumActivity.kt   # Legal notice
+├── util/                      # Utilities
+│   └── AppConstants.kt        # Centralized constants
 ├── di/                        # Dependency Injection
-│   ├── ServiceLocator.kt      # Manuelle DI (ServiceLocator-Pattern)
-│   └── AppModule.kt           # Hilt-Modul (für zukünftige Migration)
-└── BackHomeAccessibilityService.kt # Accessibility Service
+│   ├── ServiceLocator.kt      # Manual DI
+│   └── AppModule.kt           # Hilt module
+└── BackHomeAccessibilityService.kt # Accessibility service
 ```
 
-### 🧩 Architektur-Prinzipien
+### 🧩 Architecture Principles
 
-- **🧹 Clean Architecture**: Strenge Trennung zwischen Domain, Data und Presentation Layer
-- **🔄 Dependency Inversion**: Abhängigkeiten zeigen nur nach innen (Domain)
-- **📦 Single Responsibility**: Jede Klasse hat genau eine Verantwortlichkeit
-- **🧪 Testability**: Komponenten sind isoliert testbar
-- **🔧 Dependency Injection**: Lose Kopplung durch ServiceLocator (bereit für Hilt-Migration)
+- **🧹 Clean Architecture**: Strict separation between Domain, Data and Presentation layers
+- **🔄 Dependency Inversion**: Dependencies only point inward (to Domain)
+- **📦 Single Responsibility**: Each class has exactly one responsibility
+- **🧪 Testability**: Components are independently testable
+- **🔧 Dependency Injection**: Loose coupling through ServiceLocator (Hilt-ready)
 
-### 📱 Service-Komponenten
+### 🤖 AI Integration
 
-#### OverlayService (Hauptservice)
-- **Verantwortlichkeit**: Lifecycle-Management und Komponenten-Orchestrierung
-- **Reduziert**: Von 670 auf ~459 Zeilen (31% Reduktion)
-- **Pattern**: Composition über Vererbung
-- **Rotation Handling**: Intelligente Erkennung mit 16ms Polling
+- **Gemini API**: Google's powerful AI model (Gemini 2.5 Flash)
+- **Secure Storage**: API keys encrypted with Android KeyStore
+- **Privacy**: All API calls go directly to Google - no intermediary servers
+- **Voice Input**: Speech-to-text for hands-free interaction
 
-#### KeyboardManager (273 Zeilen)
-- **Funktion**: Vollständiges Tastatur-Vermeidungs-Management
-- **Features**: Keyboard Detection, Position Adjustment, Snapshot/Restore
-- **Debouncing**: Verhindert Position-Flackern
-- **Smart Margin**: 1.5x Punkt-Durchmesser Abstand zur Tastatur
+### 🔧 Technology Stack
 
-#### PositionAnimator (86 Zeilen)
-- **Funktion**: Sanfte Positions-Animationen
-- **Features**: ValueAnimator-basiert, konfigurierbare Dauer
-- **Use Cases**: Drag-End Animation, Edge-Snapping
-
-#### OrientationHandler (97 Zeilen)
-- **Funktion**: Bildschirm-Rotation-Transformationen
-- **Features**: Mathematische Position-Transformation für alle Rotationen (0°, 90°, 180°, 270°)
-- **Smart Detection**: Dynamisches Polling (16ms) bis Dimensionsänderung erkannt wird
-- **Zero Jump**: Punkt wird während Rotation versteckt, dann an korrekter Position angezeigt
-
-#### KeyboardDetector
-- **Funktion**: Tastatur-Sichtbarkeit und Höhen-Erkennung
-- **APIs**: WindowInsets (Android R+), InputMethodManager
-- **Fallback**: Heuristische Schätzung bei API-Limitierungen
-
-#### GestureDetector
-- **Funktion**: Touch-Gesten-Erkennung und -Verarbeitung
-- **Gesten**: Tap, Double-Tap, Triple-Tap, Quadruple-Tap, Long-Press, Drag
-- **Timeouts**: System-konforme Timeouts für natürliches Feeling
-
-#### OverlayViewManager
-- **Funktion**: Overlay-Erstellung, Positionierung und Darstellung
-- **Features**: WindowManager-Integration, Sichtbarkeits-Kontrolle
-- **Rendering**: WindowManager mit TYPE_APPLICATION_OVERLAY
-
-### 💾 Daten-Management
-
-#### Reactive Data Flow
-- **Kotlin Flows**: Reaktive Datenströme für Echtzeit-Updates
-- **SharedPreferences**: Persistente Datenspeicherung
-- **Repository Pattern**: Abstraktion der Daten-Zugriffsschicht
-
-#### Einstellungen-Struktur
-```kotlin
-data class OverlaySettings(
-    val isEnabled: Boolean,
-    val color: Int,
-    val alpha: Int,
-    val position: DotPosition,
-    val positionPercent: DotPositionPercent,
-    val recentsTimeout: Long,
-    val keyboardAvoidanceEnabled: Boolean,
-    val tapBehavior: String,  // "STANDARD", "NAVI", or "SAFE_HOME"
-    val screenWidth: Int,
-    val screenHeight: Int,
-    val rotation: Int
-)
-```
-
-### 🔧 Technologie-Stack
-
-- **Sprache**: Kotlin 1.9+
+- **Language**: Kotlin 1.9+
 - **Min SDK**: 26 (Android 8.0 Oreo)
 - **Target SDK**: 36
 - **UI Framework**: Material Design 3
-- **Architecture**: Clean Architecture mit ServiceLocator DI
+- **Architecture**: Clean Architecture with ServiceLocator DI
 - **Async**: Kotlin Coroutines + Flows
+- **Security**: Android KeyStore for API key encryption
+- **Networking**: OkHttp + Kotlin Serialization
 - **Build**: Gradle Kotlin DSL
-- **Testing**: JUnit 4 + Mockito (bereit für Erweiterung)
 
-### 📡 Verwendete Android-APIs
+### 📡 Android APIs Used
 
 - **Overlay API**: `WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY`
-- **Accessibility API**: `AccessibilityService` für System-Navigation
-- **WindowInsets API**: Tastatur-Höhen-Erkennung (Android R+)
-- **SharedPreferences**: Persistente Konfiguration
-- **Gesture Detection**: Custom Touch-Handler mit System-Timeouts
-- **LocalBroadcastManager**: Interne Kommunikation (deprecated, geplant: LiveData/Flow)
+- **Accessibility API**: `AccessibilityService` for system integration
+- **WindowInsets API**: Keyboard height detection (Android R+)
+- **KeyStore API**: Secure API key storage
+- **Speech Recognition**: Voice input for AI queries
+- **SharedPreferences**: Persistent configuration
+- **Gesture Detection**: Custom touch handler
 
-## ♿ Barrierefreiheit
+## 🔒 Privacy & Security
 
-Die App wurde nach den **WCAG 2.1 Level AA** Richtlinien entwickelt:
+- ✅ **No data collection**: App doesn't collect or store your data
+- ✅ **Secure API storage**: Your Gemini API key is encrypted locally
+- ✅ **Direct API calls**: All AI requests go directly to Google
+- ✅ **No tracking**: No analytics, no advertising networks
+- ✅ **Open source**: Full transparency - review the code yourself
 
-- ✅ **Touch-Targets**: Mindestens 48dp, empfohlen 64dp
-- ✅ **Kontrast**: Hoher Kontrast für alle UI-Elemente
-- ✅ **TalkBack**: Vollständige Screen-Reader-Unterstützung
-- ✅ **Große Schrift**: Texte in 16-28sp für bessere Lesbarkeit
-- ✅ **Einfache Sprache**: A1-Level Deutsch für maximale Verständlichkeit
-- ✅ **Dark Mode**: Automatische Anpassung an System-Theme
+## 💻 Development
 
-##  Entwicklung
-
-### 🚀 Build-Anleitung
+### 🚀 Build Instructions
 
 ```bash
-# Repository klonen
-git clone https://github.com/Stephan-Heuscher/Back_Home_Dot.git
-cd Back_Home_Dot
+# Clone repository
+git clone https://github.com/Stephan-Heuscher/AI-Rescue-Ring.git
+cd AI-Rescue-Ring
 
-# Mit Android Studio öffnen
-# File → Open → Projektordner auswählen
+# Open with Android Studio
+# File → Open → Select project folder
 
-# Abhängigkeiten synchronisieren
+# Sync dependencies
 ./gradlew build
 
-# Debug-Build erstellen
+# Create debug build
 ./gradlew assembleDebug
 
-# Release-Build erstellen (Version wird automatisch erhöht)
+# Create release build (version auto-incremented)
 ./gradlew assembleRelease
 
-# Unit-Tests ausführen
+# Run unit tests
 ./gradlew testDebugUnitTest
 ```
 
-#### 🔢 Automatische Versionierung
+#### 🔢 Automatic Versioning
 
-Release-Builds erhöhen automatisch die Versionsnummer:
-- **Version Code**: Wird bei jedem Release-Build um 1 erhöht
-- **Version Name**: Patch-Version (letzte Zahl) wird um 1 erhöht
-- **Beispiel**: `1.1.0` (Code: 6) → `1.1.1` (Code: 7)
+Release builds automatically increment the version:
+- **Version Code**: Incremented by 1 on each release build
+- **Version Name**: Patch version (last digit) incremented by 1
+- **Example**: `1.1.0` (Code: 6) → `1.1.1` (Code: 7)
 
-Die Version wird in `version.properties` gespeichert und vor jedem Release-Build aktualisiert.
-
-### 🏗️ Projekt-Struktur & Clean Architecture
-
-Das Projekt folgt **Clean Architecture** Prinzipien:
-
-- **`domain/`**: Reine Geschäftslogik ohne Android-Abhängigkeiten
-- **`data/`**: Daten-Zugriffsschicht (Repository-Pattern)
-- **`service/`**: Android-Service-Komponenten
-- **`ui/`**: Benutzeroberfläche (Activities, Fragments)
-- **`util/`**: Hilfsfunktionen und Konstanten
-- **`di/`**: Dependency Injection (ServiceLocator + Hilt-Module)
-
-### 🔄 Aktuelle Verbesserungen (v2.1.0)
-
-**Safe-Home-Modus & UX-Verbesserungen 2025**
-
-- ✅ **Safe-Home-Modus**: Neuer Modus für maximale Sicherheit - alle Taps führen nach Hause
-- ✅ **Viereck-Design**: Button wird im Safe-Home-Modus zum Viereck (wie Android-Navigation)
-- ✅ **Long-Press Drag**: Im Safe-Home-Modus nur nach langem Drücken verschiebbar
-- ✅ **Halo-Effekt**: Pulsierender 128dp Halo zeigt, wann der Button verschoben werden kann
-- ✅ **Modus-basiertes Design**: Kreis (Standard/Navi) vs. Viereck (Safe-Home)
-- ✅ **Auto-Restart nach Update**: App startet automatisch nach Updates neu
-- ✅ **Tablet-Fix**: Button kann jetzt über den gesamten Bildschirm verschoben werden
-- ✅ **Architektur-Überarbeitung**: Von monolithischem Service zu komponentenbasierter Architektur
-- ✅ **Spezialisierte Komponenten**: Extrahierte KeyboardManager (273L), PositionAnimator (86L), OrientationHandler (97L)
-- ✅ **Code-Reduktion**: OverlayService von 670 auf ~459 Zeilen reduziert (31%)
-- ✅ **Testbarkeit**: Komponenten sind isoliert testbar
-- ✅ **Wartbarkeit**: Klare Trennung der Verantwortlichkeiten
-- ✅ **Tastatur-Vermeidung**: Vollständig extrahiert mit optimaler Margin
-- ✅ **Rotation ohne Sprung**: Punkt wird während Rotation versteckt, erscheint an korrekter Position
-- ✅ **Intelligente Rotation-Erkennung**: Dynamisches 16ms-Polling bis Dimensionsänderung erkannt
-- ✅ **Reaktive Daten**: Kotlin Flows für Echtzeit-Updates
-- ✅ **Dependency Injection**: ServiceLocator-Pattern (Hilt-ready)
+Version stored in `version.properties` and updated before each release build.
 
 ### 🧪 Testing
 
 ```bash
-# Unit-Tests für alle Module
+# Unit tests for all modules
 ./gradlew test
 
-# Coverage-Report generieren
+# Generate coverage report
 ./gradlew jacocoTestReport
 
-# Integration-Tests (zukünftig)
+# Integration tests (future)
 ./gradlew connectedAndroidTest
 ```
 
-### 📦 ProGuard & R8
+### Contributing
 
-Release-Builds verwenden ProGuard für Code-Optimierung:
-- Konfiguration in `app/proguard-rules.pro`
-- Clean Architecture sorgt für optimale Obfuscation
-
-### Beitragen
-
-Beiträge sind willkommen! Bitte:
-1. Fork das Repository
-2. Erstelle einen Feature-Branch (`git checkout -b feature/AmazingFeature`)
-3. Committe deine Änderungen (`git commit -m 'Add: AmazingFeature'`)
-4. Push zum Branch (`git push origin feature/AmazingFeature`)
-5. Öffne einen Pull Request
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add: AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## 📋 Roadmap
 
-### 🚀 **Abgeschlossen (v2.0.0)**
-- ✅ **Clean Architecture**: Vollständige Umstellung auf moderne Architektur
-- ✅ **Komponenten-basierte Services**: OverlayService in fokussierte Komponenten zerlegt
-- ✅ **Verbesserte Tastatur-Vermeidung**: 1.5x Punkt-Durchmesser Margin
-- ✅ **Reaktive Datenströme**: Kotlin Flows für Echtzeit-Updates
-- ✅ **Dependency Injection**: ServiceLocator-Pattern (Hilt-ready)
-- ✅ **Deprecation Fixes**: Alle veralteten APIs aktualisiert (LocalBroadcastManager, versionCode, etc.)
-- ✅ **Tipp-Verhalten Modi**: Standard- und Zurück-Modi implementiert
-- ✅ **Dynamische Anweisungen**: Hauptbildschirm zeigt kontextabhängige Anweisungen
-- ✅ **Einstellungen-Optimierung**: Tipp-Verhalten an oberste Stelle der Einstellungen verschoben
+### 🚀 **Planned Features**
 
-### 🚀 **Geplante Features**
+Development is driven by **your feedback**!
 
-Die Weiterentwicklung wird durch **Ihr Feedback** gesteuert!
+#### 🎯 **High Priority**
+- **Hilt Migration**: From ServiceLocator to Hilt DI
+- **Extended Tests**: Unit tests for all components
+- **Performance Monitoring**: Battery and memory optimization
+- **Accessibility Audit**: Full WCAG 2.2 AA compliance
 
-#### 🎯 **Hoch priorisiert**
-- **Hilt Migration**: Von ServiceLocator zu Hilt DI
-- **Erweiterte Tests**: Unit-Tests für alle Komponenten
-- **Performance Monitoring**: Battery- und Memory-Optimierung
-- **Accessibility Audit**: Vollständige WCAG 2.2 AA Konformität
+#### 💡 **Possible Features**
+- **Custom Prompts**: Pre-configured AI prompts for common tasks
+- **Conversation History**: Save and review past AI interactions
+- **Offline Mode**: Basic functionality without internet
+- **Multi-Language**: Support for more languages
+- **Themes**: Dark/light theme for overlay
+- **Backup/Restore**: Export and import settings
 
-#### 💡 **Mögliche Features**
-- **Custom Gesten**: Benutzerdefinierte Gesten-Konfiguration
-- **Themes**: Dunkles/Licht-Theme für Overlay
-- **Animations**: Sanfte Übergänge und Feedback
-- **Multi-Device**: Wear OS Companion App
-- **Statistics**: Nutzungsstatistiken und Insights
-- **Backup/Restore**: Einstellungen sichern/wiederherstellen
+### 💬 **Give Feedback**
 
-### 💬 **Feedback geben**
+- **GitHub Issues**: [Create new request](../../issues/new)
+- **Feature Requests**: Tag with "enhancement" label
+- **Bug Reports**: Tag with "bug" label and include reproduction steps
 
-- **GitHub Issues**: [Neue Anfrage erstellen](../../issues/new)
-- **Feature Requests**: Mit "enhancement" Label versehen
-- **Bug Reports**: Mit "bug" Label und Reproduktionsschritten
+## 🐛 Known Limitations
 
-## 🐛 Bekannte Einschränkungen
+- **Overlay over System UI**: Android doesn't allow overlays over system settings (security feature)
+- **Battery Optimization**: Aggressive battery optimization may stop the service
+- **API Key Required**: You need a free Google Gemini API key for AI features
 
-- **Overlay über System-UI**: Ab Android 8.0 erlaubt Google aus Sicherheitsgründen keine Overlays über System-Einstellungen
-- **Akku-Optimierung**: Bei aggressiver Akku-Optimierung kann der Service beendet werden
+## 📄 License
 
-## 📄 Lizenz
+This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
 
-Dieses Projekt steht unter der MIT-Lizenz - siehe [LICENSE](LICENSE) Datei für Details.
-
-## 👤 Autor
+## 👤 Author
 
 **Stephan Heuscher**
 
 - GitHub: [@Stephan-Heuscher](https://github.com/Stephan-Heuscher)
 
-## 🙏 Danksagungen
+## 🙏 Acknowledgments
 
-- Entwickelt mit Unterstützung von Claude (Anthropic)
-- Icons von Material Design
-- Inspiriert von iOS AssistiveTouch
+- Developed with support from Claude (Anthropic)
+- Icons from Material Design
+- AI powered by Google Gemini
 
 ## 📞 Support
 
-Bei Fragen oder Problemen:
-- Öffne ein [Issue](../../issues)
-- Kontaktiere den Entwickler über GitHub
+For questions or issues:
+- Open an [Issue](../../issues)
+- Contact the developer via GitHub
 
 ---
 
-**Hinweis**: Diese App ist ein Hilfsmittel und ersetzt keine professionelle Beratung oder Therapie bei motorischen Einschränkungen. Konsultiere bei gesundheitlichen Fragen immer einen Arzt oder Therapeuten.
+**Note**: This app uses AI to provide assistance and may not always provide accurate information. Always verify important information independently. Your API key is stored securely on your device and never sent to our servers.
 
-Made with ❤️ for accessibility
+Made with ❤️ for everyone who needs a helping hand

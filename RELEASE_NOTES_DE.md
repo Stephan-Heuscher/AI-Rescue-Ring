@@ -1,109 +1,118 @@
-# Release Notes - AssistiPunkt
+# Release Notes - AI Rescue Ring
+
+## Version 3.0.0 (2025-11-09)
+
+### Komplettes Rebranding & KI-Integration
+
+Wir freuen uns, **AI Rescue Ring v3.0.0** vorzustellen - eine vollständige Transformation von einem Navigationsassistent zu einem intelligenten KI-gestützten Helfer!
+
+#### 🤖 KI-gestützte Hilfe (NEU!)
+- **Gemini-Integration**: Tippen Sie auf den Rettungsring, um mit Googles Gemini 2.5 Flash KI zu chatten
+- **Spracheingabe**: Stellen Sie Ihre Fragen natürlich per Sprache
+- **Texteingabe**: Tippen Sie Ihre Anfragen
+- **Direkte API-Verbindung**: Ihre Anfragen gehen direkt an Google - wir speichern nichts
+- **Sichere Speicherung**: API-Schlüssel verschlüsselt mit Android KeyStore
+- **Sofortige Hilfe**: KI-Unterstützung überall auf Ihrem Gerät
+
+#### 🎨 Komplettes visuelles Rebranding
+- **Neuer Name**: Assistive Tap → AI Rescue Ring
+- **Package-Änderung**: `ch.heuscher.back_home_dot` → `ch.heuscher.airescuering`
+- **Aktualisierte UI**: Alle Texte fokussieren sich auf KI-Unterstützung
+- **Rettungsring-Thema**: Neues Branding mit Fokus auf Hilfe und Unterstützung
+- **Ring-Icon**: 🛟 Rettungsring-Emoji symbolisiert Hilfe
+
+#### ⚙️ Aktualisierte Verhaltensmodi
+**KI Zuerst Modus (NEU - Empfohlen):**
+- Tippen = KI-Chat öffnen
+- Sprach- oder Texteingabe unterstützt
+- Lang drücken + ziehen = Ring neu positionieren
+
+**Schnell-Navi Modus:**
+- Tippen = Zurück-Button
+- Lang drücken = KI-Unterstützung
+- Lang drücken + ziehen = Ring neu positionieren
+
+**Sicherer Modus:**
+- Alle Taps = KI-Hilfe
+- Lang drücken + ziehen = Ring verschieben (leuchtet wenn bereit)
+- Perfekt zur Vermeidung versehentlicher Taps
+
+#### 🔒 Privatsphäre & Sicherheit
+- **Keine Datensammlung**: Wir sammeln oder speichern Ihre Gespräche nicht
+- **Verschlüsselte API-Schlüssel**: Ihr Gemini API-Schlüssel mit Android KeyStore gespeichert
+- **Direkte Kommunikation**: Alle KI-Anfragen gehen direkt an Google
+- **Open Source**: Volle Transparenz - überprüfen Sie den Code selbst
+
+#### 📱 Neue Funktionen
+- **AI Helper Activity**: Dedizierte Chat-Oberfläche für KI-Gespräche
+- **Settings-Integration**: Einfache API-Schlüssel-Verwaltung
+- **Spracherkennung**: Integrierte Sprache-zu-Text-Funktion
+- **Sichere Datenspeicherung**: Alle sensiblen Daten verschlüsselt
+
+### Technische Änderungen
+- **Package umbenannt**: `ch.heuscher.back_home_dot` → `ch.heuscher.airescuering`
+- **Neue Dependencies**: OkHttp, Kotlinx Serialization, Security Crypto
+- **Erweiterte Architektur**: KI-Repository-Layer hinzugefügt
+- **Internet-Berechtigung**: Für Gemini API-Kommunikation hinzugefügt
+- **Audio-Berechtigung**: Für Spracheingabe hinzugefügt
+
+### Breaking Changes
+- **Neuer Package-Name**: Nutzer müssen App neu installieren (kein Update von alter Version)
+- **API-Schlüssel erforderlich**: KI-Funktionen benötigen kostenlosen Google Gemini API-Schlüssel
+- **Neue Berechtigungen**: Internet- und Mikrofon-Zugriff für KI-Funktionen erforderlich
+
+---
 
 ## Version 2.1.0 (2025-11-08)
 
 ### Safe-Home-Modus & UX-Verbesserungen
 
-Wir freuen uns, **AssistiPunkt v2.1.0** mit dem neuen **Safe-Home-Modus** vorzustellen - perfekt für Nutzer, die maximale Sicherheit benötigen!
-
-#### 🏠 Safe-Home-Modus (Neu!)
-- **Immer nach Hause**: Alle Taps führen zur Startseite - keine Verwirrung mehr
-- **Viereck-Design**: Button wird zum abgerundeten Viereck (8dp Radius) - wie Android-Navigationsbuttons
+#### 🏠 Safe-Home-Modus
+- **Immer nach Hause**: Alle Taps führen zur Startseite
+- **Viereck-Design**: Button wird zum abgerundeten Viereck (8dp Radius)
 - **Geschütztes Verschieben**: Button nur nach 500ms langem Drücken verschiebbar
-- **Visuelles Feedback**: Pulsierender weißer Halo (128dp) zeigt an, wann der Button verschoben werden kann
-- **Überall verschiebbar**: Im Drag-Modus kann der Button überall platziert werden
+- **Visuelles Feedback**: Pulsierender weißer Halo (128dp) zeigt Verschiebbarkeit
+- **Überall verschiebbar**: Im Drag-Modus überall platzierbar
 
 #### 🎨 Design-Verbesserungen
-- **Modus-basiertes Design**:
-  - **Standard/Navi**: Klassisches Kreis-Design
-  - **Safe-Home**: Modernes Viereck-Design (wie Android-Navigation)
-- **Halo-Effekt**: Doppelt so groß (128dp statt 64dp) für bessere Sichtbarkeit
-- **Sanfte Animation**: Pulsierender Halo (300ms-700ms Alpha) während Drag-Modus
+- **Modus-basiertes Design**: Kreis (Standard/Navi) vs. Viereck (Safe-Home)
+- **Halo-Effekt**: Doppelt so groß (128dp) für bessere Sichtbarkeit
+- **Sanfte Animation**: Pulsierender Halo während Drag-Modus
 
 #### 🔧 Technische Verbesserungen
-- **Automatischer Neustart**: App startet automatisch nach Updates neu (PackageUpdateReceiver)
-- **Tablet-Fix**: Tastatur-Erkennung korrigiert - Button kann jetzt über gesamten Bildschirm verschoben werden
-- **Layout-Optimierung**: Feste 128dp Layoutgröße verhindert Button-Verschiebung beim Halo-Erscheinen
-- **Intelligente Gesten**: Modus-bewusste Drag-Logik (sofort vs. long-press)
-
-#### 🎯 Verhalten pro Modus
-**Standard-Modus:**
-- Kreis-Design
-- Sofortiges Verschieben per Drag
-- 1x Tap = Home, 2x Tap = Zurück
-- Long-Press = Home
-
-**Navi-Modus:**
-- Kreis-Design
-- Sofortiges Verschieben per Drag
-- 1x Tap = Zurück, 2x Tap = Letzte App
-- Long-Press = Home
-
-**Safe-Home-Modus:**
-- Viereck-Design (8dp Radius)
-- Verschieben nur nach Long-Press (500ms) mit Halo-Feedback
-- Alle Taps = Home (maximale Sicherheit)
-- Long-Press = Drag-Modus aktivieren
+- **Auto-Neustart**: App startet automatisch nach Updates neu
+- **Tablet-Fix**: Button kann über gesamten Bildschirm verschoben werden
+- **Layout-Optimierung**: Feste 128dp Layout-Größe verhindert Verschiebung
 
 ### Fehlerbehebungen
-- **Tablet-Problem behoben**: Button war auf Tablets auf 62% des Bildschirms beschränkt (Tastatur-Erkennung gab immer 38% zurück)
-- **Halo verschiebt Button nicht mehr**: Layout-Größe fix auf 128dp, verhindert Verschiebung beim Halo-Erscheinen
-- **Keyboard-Erkennung**: getKeyboardHeight() gibt jetzt 0 zurück wenn Tastatur nicht sichtbar
-
-### Technische Details
-- **Neue Konstante**: `OVERLAY_LAYOUT_SIZE_DP = 128` für Layout mit Halo
-- **GestureDetector**: Mode-aware drag logic mit `requiresLongPressToDrag` Flag
-- **OverlayViewManager**: Dynamisches Shape-Rendering basierend auf tapBehavior
-- **PackageUpdateReceiver**: Lauscht auf `ACTION_MY_PACKAGE_REPLACED` Intent
+- Tablet-Einschränkung behoben (war auf 62% des Bildschirms beschränkt)
+- Halo verschiebt Button-Position nicht mehr
+- Tastatur-Erkennung gibt 0 zurück wenn Tastatur nicht sichtbar
 
 ---
 
 ## Version 2.0.0 (2025-11-05)
 
-### Großes Refactoring - Clean Architecture & Spezialisierte Komponenten
-
-Wir freuen uns, **AssistiPunkt v2.0.0** vorzustellen, eine vollständige Architektur-Überarbeitung die Codequalität, Wartbarkeit und Benutzererfahrung signifikant verbessert!
+### Großes Refactoring - Clean Architecture
 
 #### 🏗️ Architektur-Verbesserungen
-- **Komponenten-Extraktion**: Spezialisierte Komponenten aus monolithischem OverlayService extrahiert
-  - **KeyboardManager** (273 Zeilen): Vollständiges Tastatur-Vermeidungs-Management mit Debouncing
-  - **PositionAnimator** (86 Zeilen): Sanfte Positions-Animationen mit ValueAnimator
-  - **OrientationHandler** (97 Zeilen): Mathematische Rotations-Transformationen für alle Ausrichtungen
-- **Code-Reduktion**: OverlayService von 670 auf ~459 Zeilen reduziert (31% Reduktion)
-- **Clean Architecture**: Strikte Trennung zwischen Domain, Data und Presentation Layern
-- **Testbarkeit**: Alle Komponenten sind nun unabhängig testbar
-- **Dependency Injection**: ServiceLocator-Pattern bereit für Hilt-Migration
+- **Komponenten-Extraktion**: Spezialisierte Komponenten aus monolithischem Service
+  - KeyboardManager (273 Zeilen): Komplette Tastatur-Vermeidung
+  - PositionAnimator (86 Zeilen): Sanfte Animationen
+  - OrientationHandler (97 Zeilen): Rotations-Transformationen
+- **Code-Reduktion**: OverlayService um 31% reduziert (670→459 Zeilen)
+- **Clean Architecture**: Strikte Layer-Trennung
+- **Testbarkeit**: Alle Komponenten unabhängig testbar
 
 #### 🔄 Rotations-Handling - Kein Springen
-- **Versteckt während Rotation**: Punkt wird während Bildschirm-Rotation versteckt um sichtbares Springen zu eliminieren
-- **Intelligente Erkennung**: Dynamisches 16ms-Polling erkennt Dimensionsänderungen sofort
-- **Perfekte Positionierung**: Punkt erscheint an mathematisch korrekter Position nach Rotation
-- **Mathematische Transformation**: Präzise Mittelpunkt-Transformation für alle Rotationswinkel (0°, 90°, 180°, 270°)
+- **Versteckt während Rotation**: Punkt versteckt um Springen zu eliminieren
+- **Intelligente Erkennung**: 16ms-Polling erkennt Änderungen sofort
+- **Perfekte Positionierung**: Erscheint an korrekter Position wieder
 
-#### ⌨️ Tastatur-Vermeidungs-Verbesserungen
-- **Vollständig extrahiert**: Komplettes Tastatur-Management in dedizierter KeyboardManager-Klasse
-- **Intelligenter Abstand**: 1.5x Punkt-Durchmesser Abstand zur Tastatur
-- **Debouncing**: Verhindert Positions-Flackern während Tastatur-Übergängen
-- **Snapshot/Restore**: Positions-Speicher für Tastatur-Erscheinen/Verschwinden-Zyklen
-
-#### 🎨 Benutzererfahrung
-- **Kein Springen**: Punkt springt nicht mehr während Rotation
-- **Schnellere Reaktion**: Intelligente Erkennung bietet optimales Timing (~16ms auf den meisten Geräten)
-- **Nahtlose Übergänge**: Alle Animationen und Positions-Updates sind flüssig
-
-#### 🔧 Technische Details
-- **Repository-Pattern**: BackHomeAccessibilityService zu Repository-Pattern migriert
-- **Reaktive Daten**: Kotlin Flows für Echtzeit-Einstellungs-Updates
-- **Komponenten-Komposition**: Composition over Inheritance Pattern durchgehend
-- **ServiceLocator**: Factory-Methoden für alle spezialisierten Komponenten
-
-### Breaking Changes
-- Keine - alle Änderungen sind interne Architektur-Verbesserungen
-
-### Fehlerbehebungen
-- Punkt-Springen während Bildschirm-Rotation behoben
-- Verbesserte Tastatur-Vermeidungs-Zuverlässigkeit
-- Bessere Positions-Berechnungs-Genauigkeit
+#### ⌨️ Tastatur-Vermeidung
+- **Vollständig extrahiert**: Dedizierte KeyboardManager-Klasse
+- **Intelligenter Abstand**: 1.5x Punkt-Durchmesser von Tastatur
+- **Debouncing**: Verhindert Positions-Flackern
 
 ---
 
@@ -111,51 +120,20 @@ Wir freuen uns, **AssistiPunkt v2.0.0** vorzustellen, eine vollständige Archite
 
 ### Neue Funktionen
 
-Wir freuen uns, **AssistiPunkt v1.1.1** mit bedeutenden Verbesserungen der Tipp-Verhaltens-Anpassung und einem optimierten Benutzererlebnis vorzustellen!
-
 #### 🎯 Tipp-Verhaltens-Modi
-- **Zwei Verhaltensoptionen**: Wählen Sie zwischen STANDARD und ZURÜCK Tipp-Verhaltens-Modi
-- **STANDARD-Modus** (empfohlen): 1x tippen = Home, 2x tippen = Zurück (intuitive Android-Navigation)
-- **ZURÜCK-Modus**: 1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln (traditionelles Verhalten)
-- **Immer verfügbar**: 3x tippen = Alle offenen Apps, 4x tippen = App öffnen, langes Drücken = Startseite
-
-#### 🎨 Dynamische Benutzeroberfläche
-- **Kontextabhängige Anweisungen**: Hauptbildschirm-Anweisungen aktualisieren sich automatisch basierend auf gewähltem Tipp-Verhalten
-- **Einstellungs-Optimierung**: Tipp-Verhaltens-Auswahl an oberste Stelle der Einstellungen verschoben für bessere Auffindbarkeit
-
-#### 🔧 Technische Verbesserungen
-- **Automatische Versionierung**: Release-Builds erhöhen nun automatisch Versionsnummern
-- **Build-Prozess-Verbesserung**: Versionscode und Patch-Version werden automatisch bei jedem Release erhöht
-- **Verbesserte Build-Scripts**: Gradle Build-Prozess mit dynamischer Versionierung optimiert
-
-### Änderungen
-
-#### ✅ Erweiterte Funktionen
-- **Tipp-Verhaltens-Auswahl**: Radio-Buttons in Einstellungen für einfache Modus-Umschaltung
-- **Echtzeit-Anweisungen**: Hauptbildschirm-Text aktualisiert sich sofort bei Verhaltensänderung
-- **Einstellungs-Neustrukturierung**: Wichtigste Einstellung (Tipp-Verhalten) an oberste Stelle verschoben
-
-#### ✅ Technische Aktualisierungen
-- **Versions-Eigenschaften**: Neue `version.properties` Datei für automatische Versionsverwaltung
-- **Build-Automatisierung**: Release-Builds erhöhen automatisch Versionsnummern
-- **Dokumentations-Aktualisierungen**: README und technische Dokumentation aktualisiert
-
----
-
-## Version 1.1.0 (2025-10-30)
-
-### Neue Funktionen
-
-Wir freuen uns, **AssistiPunkt v1.1.0** mit Tastatur-Vermeidung vorzustellen!
+- **STANDARD-Modus**: 1x tippen = Home, 2x tippen = Zurück
+- **ZURÜCK-Modus**: 1x tippen = Zurück, 2x tippen = Zu vorheriger App wechseln
+- **Immer verfügbar**: 3x tippen = Alle Apps, 4x tippen = App öffnen, lang drücken = Home
 
 #### ⌨️ Tastatur-Vermeidung
-- **Automatische Positionierung**: Schwebender Punkt bewegt sich automatisch nach oben, wenn Tastatur erscheint
-- **Intelligente Erkennung**: Erkennt Tastatur-Sichtbarkeit und passt Position entsprechend an
-- **Nahtloses Erlebnis**: Kein manuelles Neupositionieren beim Tippen nötig
+- Automatische Positionierung wenn Tastatur erscheint
+- Intelligente Erkennung und Anpassung
+- Nahtloses Tipp-Erlebnis
 
-#### 🎨 Verbesserungen der Benutzerfreundlichkeit
-- **Verbesserte Touch-Verarbeitung**: Bessere Gesten-Erkennung
-- **Erweiterte Barrierefreiheit**: Aktualisierte Texte und Beschreibungen
+#### 🎨 Dynamische UI
+- Kontextabhängige Anweisungen
+- Einstellungs-Optimierung
+- Verbesserte Barrierefreiheit
 
 ---
 
@@ -163,125 +141,38 @@ Wir freuen uns, **AssistiPunkt v1.1.0** mit Tastatur-Vermeidung vorzustellen!
 
 ### Erstveröffentlichung
 
-Wir freuen uns, die erste öffentliche Version von **AssistiPunkt** (international: **Assistive Tap**) vorzustellen - Ihre barrierefreie Android-App für intuitive Navigation!
-
----
-
-## Hauptfunktionen
-
-### Navigation per Gesten
-- **Einfachklick**: Zurück-Navigation
-- **Doppelklick**: Zur letzten App wechseln
-- **Dreifachklick**: Alle offenen Apps anzeigen
-- **Vierfachklick**: AssistiPunkt-App öffnen
-- **Langes Drücken**: Zur Startseite
-
-### Anpassungsmöglichkeiten
-- **Farbauswahl**: Wählen Sie Ihre bevorzugte Farbe für den Punkt
-- **Durchsichtigkeit**: Stellen Sie die Transparenz ein (0-100%)
-- **Freie Positionierung**: Verschieben Sie den Punkt an beliebige Stellen
-- **Wechsel-Geschwindigkeit**: Konfigurierbare Verzögerung beim App-Wechsel (50-300ms)
-
-### Barrierefreiheit
-- **WCAG 2.1 Level AA konform**: Entwickelt nach internationalen Barrierefreiheits-Standards
-- **TalkBack-Unterstützung**: Vollständige Screen-Reader-Kompatibilität
-- **Einfache Sprache**: Texte in A1-Level Deutsch für maximale Verständlichkeit
-- **Große Schrift**: Optimierte Textgrößen (16-28sp) für bessere Lesbarkeit
-- **Dark Mode**: Automatische Anpassung an System-Theme
-- **Touch-Targets**: Mindestens 48dp große Berührungsflächen
-
-### Design & Benutzerfreundlichkeit
-- **Design-Galerie**: Inspirationen für Farben und Designs in den Einstellungen
-- **Neues App-Icon**: Modernes, wiedererkennbares Icon
-- **Material Design 3**: Zeitgemäße, intuitive Benutzeroberfläche
-- **Intelligente Berechtigungsanzeige**: Klare Anleitung bei fehlenden Berechtigungen
-
-### Internationalisierung
-- **Mehrsprachig**: Vollständige Unterstützung für Deutsch und Englisch
-- **Automatische Spracherkennung**: App passt sich an System-Sprache an
-
-### Unterstützung der Entwicklung
-- **Rewarded Ads**: Freiwillige Werbung zur Unterstützung der App-Entwicklung
-- **Keine In-App-Käufe**: Alle Funktionen sind kostenlos verfügbar
-- **Open Source**: Vollständiger Quellcode auf GitHub verfügbar
-
----
-
-## Technische Details
-
-### Systemanforderungen
-- **Android-Version**: 8.0 (API Level 26) oder höher
-- **Berechtigungen**:
-  - Overlay-Berechtigung (für schwebenden Punkt)
-  - Bedienungshilfe-Zugriff (für Navigationsaktionen)
-  - Nutzungszugriff (für direkten App-Wechsel)
-
-### Architektur
-- **Sprache**: Kotlin
-- **Target SDK**: 36
-- **UI-Framework**: Material Design 3
-- **Services**: OverlayService + AccessibilityService
-- **Code-Optimierung**: ProGuard für Release-Builds
-
----
-
-## Behobene Probleme
-
-### Rotation & Positionierung
-- Punkt bleibt beim Bildschirm-Drehen an gleicher physischer Position
-- Korrekte Rotations-Transformation (Gegen den Uhrzeigersinn)
-- Punkt verschwindet nicht mehr am Bildschirmrand
-- Center-Point Transformation behebt Durchmesser-Verschiebung
-
-### Stabilität
-- App-Beenden stoppt Services zuverlässig ohne Status-Änderung
-- 4-fach-Klick öffnet App zuverlässig
-- Overlay-Sichtbarkeit garantiert
-- Robustere Fehlerbehandlung
-
-### Benutzeroberfläche
-- Dark Mode funktioniert korrekt
-- Switches schalten zuverlässig
-- Dialoge verwenden konsistente Bezeichnung "Assistive Tap"
-- Optimierte Button-Texte und Beschreibungen
-
----
-
-## Bekannte Einschränkungen
-
-- **Overlay über System-UI**: Ab Android 8.0 erlaubt Google aus Sicherheitsgründen keine Overlays über System-Einstellungen
-- **Akku-Optimierung**: Bei aggressiver Akku-Optimierung kann der Service beendet werden
+Erste öffentliche Version des Navigationsassistenten (vor KI-Integration).
 
 ---
 
 ## Installation
 
-1. APK von [GitHub Releases](https://github.com/Stephan-Heuscher/Back_Home_Dot/releases) herunterladen
-2. APK auf dem Gerät installieren
-3. App öffnen und Anweisungen folgen
-4. Erforderliche Berechtigungen erteilen
+1. APK von [GitHub Releases](https://github.com/Stephan-Heuscher/AI-Rescue-Ring/releases) herunterladen
+2. Kostenlosen Gemini API-Schlüssel von [ai.google.dev](https://ai.google.dev) holen
+3. APK auf Gerät installieren
+4. App öffnen und Setup-Anweisungen folgen
+5. Erforderliche Berechtigungen erteilen
+6. Gemini API-Schlüssel in Einstellungen hinzufügen
 
 ---
 
 ## Feedback & Unterstützung
 
-Wir freuen uns über Ihr Feedback!
-
-- **GitHub Issues**: [Problem melden](https://github.com/Stephan-Heuscher/Back_Home_Dot/issues)
-- **Feature-Wünsche**: [Enhancement vorschlagen](https://github.com/Stephan-Heuscher/Back_Home_Dot/issues/new)
-- **Diskussionen**: [An Diskussion teilnehmen](https://github.com/Stephan-Heuscher/Back_Home_Dot/discussions)
+- **GitHub Issues**: [Problem melden](https://github.com/Stephan-Heuscher/AI-Rescue-Ring/issues)
+- **Feature-Wünsche**: [Enhancement vorschlagen](https://github.com/Stephan-Heuscher/AI-Rescue-Ring/issues/new)
+- **Email**: s.heuscher@gmail.com
 
 ---
 
 ## Credits
 
 - **Entwickelt von**: Stephan Heuscher
+- **KI powered by**: Google Gemini
 - **Mit Unterstützung von**: Claude (Anthropic)
 - **Icons**: Material Design
-- **Inspiriert von**: iOS AssistiveTouch
 
 ---
 
-**Hinweis**: Diese App ist ein Hilfsmittel und ersetzt keine professionelle Beratung oder Therapie bei motorischen Einschränkungen.
+**Hinweis**: Diese App nutzt KI zur Unterstützung und liefert möglicherweise nicht immer genaue Informationen. Überprüfen Sie wichtige Informationen immer unabhängig.
 
-Made with ❤️ for accessibility
+Made with ❤️ für alle, die eine helfende Hand brauchen
