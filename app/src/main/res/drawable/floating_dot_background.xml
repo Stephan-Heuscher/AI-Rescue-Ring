@@ -1,12 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <solid android:color="@color/floating_dot_color" />
-    <stroke
-        android:width="2dp"
-        android:color="@android:color/white" />
-    <corners android:radius="8dp" />
-    <size
-        android:width="48dp"
-        android:height="48dp" />
-</shape>
+<!-- AI Rescue Ring - Donut shaped ring with center hole -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Outer ring (main color) -->
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/floating_dot_color" />
+            <size
+                android:width="48dp"
+                android:height="48dp" />
+        </shape>
+    </item>
+
+    <!-- Inner hole (transparent center) -->
+    <item
+        android:top="12dp"
+        android:bottom="12dp"
+        android:left="12dp"
+        android:right="12dp">
+        <shape android:shape="oval">
+            <solid android:color="#00000000" />
+        </shape>
+    </item>
+
+    <!-- White stripes for rescue ring effect -->
+    <item
+        android:top="2dp"
+        android:bottom="2dp"
+        android:left="2dp"
+        android:right="2dp">
+        <shape android:shape="oval">
+            <stroke
+                android:width="3dp"
+                android:color="@android:color/white"
+                android:dashWidth="8dp"
+                android:dashGap="8dp" />
+        </shape>
+    </item>
+
+    <!-- Outer border for definition -->
+    <item>
+        <shape android:shape="oval">
+            <stroke
+                android:width="2dp"
+                android:color="@android:color/white" />
+            <size
+                android:width="48dp"
+                android:height="48dp" />
+        </shape>
+    </item>
+
+</layer-list>

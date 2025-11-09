@@ -1,93 +1,103 @@
 <resources>
     <!-- App Name -->
-    <string name="app_name">Assistive Tap</string>
+    <string name="app_name">AI Rescue Ring</string>
 
     <!-- Permissions -->
-    <string name="accessibility_service_description">Lets Assistive Tap press Back, Home and app switch buttons for you</string>
-    <string name="overlay_permission_needed">Show over apps needed</string>
-    <string name="accessibility_service_needed">Help service needed</string>
-    <string name="please_enable_overlay">Please allow this app to show over other apps</string>
-    <string name="please_enable_accessibility">Please turn on the help service for this app in settings</string>
+    <string name="accessibility_service_description">Lets AI Rescue Ring help you with device tasks using AI assistance</string>
+    <string name="overlay_permission_needed">Display rescue ring needed</string>
+    <string name="accessibility_service_needed">AI assistant service needed</string>
+    <string name="please_enable_overlay">Please allow this app to display the rescue ring</string>
+    <string name="please_enable_accessibility">Please turn on the AI assistant service for this app</string>
     <string name="open_settings">Open settings</string>
 
     <!-- Main Screen -->
-    <string name="app_title">Assistive Tap</string>
-    <string name="app_subtitle">Your tap helper for navigation</string>
-    <string name="missing_permissions">Missing permissions</string>
+    <string name="app_title">🛟 AI Rescue Ring</string>
+    <string name="app_subtitle">Your intelligent assistant, always ready to help</string>
+    <string name="missing_permissions">Setup required</string>
 
     <!-- Permission Cards -->
-    <string name="show_assistipoint">Show Assistive Tap</string>
-    <string name="shows_assistipoint_over_apps">Shows Assistive Tap over apps</string>
+    <string name="show_assistipoint">Display Rescue Ring</string>
+    <string name="shows_assistipoint_over_apps">Shows your AI rescue ring over all apps</string>
     <string name="allow">Allow</string>
-    <string name="allow_navigation">Allow navigation</string>
-    <string name="for_back_home_app_switch">For Back, Home and App Switch</string>
+    <string name="allow_navigation">Enable AI Assistant</string>
+    <string name="for_back_home_app_switch">For intelligent device assistance</string>
 
     <!-- Main Switch -->
-    <string name="assistipoint_on_off">Assistive Tap On/Off</string>
-    <string name="shows_the_assistipoint">Shows the Assistive Tap</string>
+    <string name="assistipoint_on_off">Rescue Ring Active</string>
+    <string name="shows_the_assistipoint">Shows your AI rescue ring on screen</string>
 
     <!-- Buttons -->
-    <string name="settings">⚙ Settings</string>
-    <string name="stop_app">⛔ Stop app</string>
-    <string name="uninstall_app">🗑 Uninstall app</string>
+    <string name="settings">⚙️ Settings</string>
+    <string name="stop_app">⛔ Stop Rescue Ring</string>
+    <string name="uninstall_app">🗑️ Uninstall</string>
     <string name="uninstall">Uninstall</string>
-    <string name="uninstall_app_confirmation">Do you want to uninstall Assistive Tap?</string>
+    <string name="uninstall_app_confirmation">Do you want to uninstall AI Rescue Ring?</string>
     <string name="uninstall_app_desc">Uninstall app</string>
 
     <!-- Help Section -->
-    <string name="how_it_works">ℹ️ How it works</string>
-    <string name="instructions">• Tap once = Home\n• Tap twice = Back\n• Tap 3 times = All open apps\n• Tap 4 times = Open Assistive Tap\n• Long press = Home screen</string>
-    <string name="instructions_normal_mode">• Tap once = Home\n• Tap twice = Back\n• Tap 3 times = All open apps\n• Tap 4 times = Open Assistive Tap\n• Long press = Home screen</string>
-    <string name="instructions_back_mode">• Tap once = Back\n• Tap twice = Switch to previous app\n• Tap 3 times = All open apps\n• Tap 4 times = Open Assistive Tap\n• Long press = Home screen</string>
+    <string name="how_it_works">🛟 How it works</string>
+    <string name="instructions">🛟 Tap the rescue ring to ask for help!\n\n• Single tap = Open AI Assistant\n• Voice or text = Tell me what you need\n• Long press + drag = Reposition ring\n\nThe AI will help you with any task on your device!</string>
+    <string name="instructions_normal_mode">🛟 Tap the rescue ring to get AI help with anything!\n\n• Tap = Open AI chat\n• Voice input supported\n• Long press + drag = Move ring</string>
+    <string name="instructions_back_mode">🛟 Tap the rescue ring for intelligent assistance!\n\n• Tap = Ask AI for help\n• Speak or type your request\n• Long press + drag = Reposition</string>
 
     <!-- Settings Screen -->
     <string name="back">Back</string>
     <string name="settings_title">Settings</string>
-    <string name="color">Color</string>
-    <string name="color_blue">Blue</string>
-    <string name="color_red">Red</string>
-    <string name="color_green">Green</string>
-    <string name="color_orange">Orange</string>
+    <string name="color">Ring Color</string>
+    <string name="color_blue">Ocean Blue</string>
+    <string name="color_red">Rescue Red</string>
+    <string name="color_green">Safety Green</string>
+    <string name="color_orange">Alert Orange</string>
     <string name="color_purple">Purple</string>
     <string name="color_cyan">Cyan</string>
-    <string name="color_yellow">Yellow</string>
-    <string name="color_gray">Gray</string>
+    <string name="color_yellow">Warning Yellow</string>
+    <string name="color_gray">Subtle Gray</string>
     <string name="custom_color">Custom color</string>
 
     <!-- Keyboard Avoidance -->
-    <string name="keyboard_avoidance">Move away from keyboard</string>
-    <string name="keyboard_avoidance_desc">Move the dot away when keyboard shows up</string>
-    <string name="avoid_keyboard">Move away from keyboard</string>
+    <string name="keyboard_avoidance">Auto-move from keyboard</string>
+    <string name="keyboard_avoidance_desc">Automatically move ring when keyboard appears</string>
+    <string name="avoid_keyboard">Auto-move from keyboard</string>
 
     <!-- Tap Behavior -->
-    <string name="tap_behavior">What taps do</string>
-    <string name="tap_behavior_desc">Choose what happens when you tap the dot</string>
-    <string name="tap_behavior_standard">Standard: 1 tap = Home, 2 taps = Back</string>
-    <string name="tap_behavior_back">Navi: 1 tap = Back, 2 taps = Switch to previous app</string>
-    <string name="tap_behavior_safe_home">Safe Home: All taps go home, long-press + drag to move anywhere</string>
-    <string name="tap_behavior_standard_name">Standard</string>
-    <string name="tap_behavior_back_name">Navi</string>
-    <string name="tap_behavior_safe_home_name">Safe Home</string>
-    <string name="tap_behavior_standard_description">1 tap = Home, 2 taps = Back</string>
-    <string name="tap_behavior_back_description">1 tap = Back, 2 taps = Switch to previous app</string>
-    <string name="tap_behavior_safe_home_description">All taps = Home, long-press + drag to move</string>
-    <string name="instructions_safe_home_mode">• All taps = Home\n• Long-press + drag to move (halo shows when ready)\n• Square design for safety</string>
+    <string name="tap_behavior">Rescue Ring Behavior</string>
+    <string name="tap_behavior_desc">How the rescue ring responds to interaction</string>
+    <string name="tap_behavior_standard">AI First: Tap for AI help (recommended)</string>
+    <string name="tap_behavior_back">Quick Nav: Tap for back button, long press for AI</string>
+    <string name="tap_behavior_safe_home">Safe Mode: All taps for AI, long-press to move</string>
+    <string name="tap_behavior_standard_name">AI First</string>
+    <string name="tap_behavior_back_name">Quick Nav</string>
+    <string name="tap_behavior_safe_home_name">Safe Mode</string>
+    <string name="tap_behavior_standard_description">Tap = AI assistance</string>
+    <string name="tap_behavior_back_description">Tap = Back, Long press = AI</string>
+    <string name="tap_behavior_safe_home_description">All taps = AI, Long-press to move</string>
+    <string name="instructions_safe_home_mode">🛟 Safe Mode\n• All taps = AI help\n• Long-press + drag to move (ring glows when ready)\n• Perfect for preventing accidental taps</string>
 
     <!-- Advanced Settings -->
-    <string name="for_experts">More settings</string>
-    <string name="transparency">See-through</string>
-    <string name="how_transparent_the_point_is">How see-through the dot is</string>
-    <string name="switch_speed">Speed</string>
-    <string name="wait_time_for_app_switch">Wait time when switching apps</string>
+    <string name="for_experts">Advanced</string>
+    <string name="transparency">Transparency</string>
+    <string name="how_transparent_the_point_is">How transparent the rescue ring appears</string>
+    <string name="switch_speed">Animation Speed</string>
+    <string name="wait_time_for_app_switch">Animation timing adjustment</string>
+
+    <!-- AI Helper -->
+    <string name="ai_helper_title">🤖 AI Assistant</string>
+    <string name="ai_helper_description">Configure your intelligent rescue assistant</string>
+    <string name="ai_helper_enabled">AI assistance enabled</string>
+    <string name="ai_api_key_label">Gemini API Key</string>
+    <string name="ai_api_key_hint">Enter your Gemini API key</string>
+    <string name="ai_api_key_help">Get your free API key from ai.google.dev</string>
+    <string name="ai_voice_input">Voice input enabled</string>
+    <string name="ai_setup_required">Set up API key to enable AI assistance</string>
 
     <!-- Dialogs -->
-    <string name="allow_assistipoint_display">Allow Assistive Tap display</string>
-    <string name="allow_assistipoint_message">Allow Assistive Tap to be displayed over other apps.</string>
-    <string name="allow_navigation_title">Allow navigation</string>
-    <string name="allow_navigation_message">Allow the app to navigate for you (Back, Home, App Switch).\n\nTurn on \"Assistive Tap\".</string>
+    <string name="allow_assistipoint_display">Display Rescue Ring</string>
+    <string name="allow_assistipoint_message">Allow AI Rescue Ring to be displayed over other apps for instant help.</string>
+    <string name="allow_navigation_title">Enable AI Assistant</string>
+    <string name="allow_navigation_message">Enable the AI assistant service to help you with device tasks.\n\nTurn on \"AI Rescue Ring\" in accessibility settings.</string>
     <string name="open">Open</string>
     <string name="cancel">Cancel</string>
-    <string name="choose_custom_color">Choose custom color</string>
+    <string name="choose_custom_color">Choose rescue ring color</string>
     <string name="ok">OK</string>
 
     <!-- Color Picker -->
@@ -96,23 +106,23 @@
     <string name="color_component_blue">Blue</string>
 
     <!-- Content Descriptions -->
-    <string name="assistipoint_app">Assistive Tap app</string>
-    <string name="your_tap_helper_for_navigation">Your tap helper for navigation</string>
-    <string name="allow_assistipoint_over_apps">Allow Assistive Tap to display over apps</string>
-    <string name="allow_navigation_desc">Allow navigation</string>
-    <string name="switch_assistipoint_on_off">Switch Assistive Tap on or off</string>
-    <string name="adjust_color_and_speed">Adjust color and speed</string>
-    <string name="instructions_desc">How it works: Tap once for Back, Tap twice for recent app, Tap 3 times for all open apps, Tap 4 times to open Assistive Tap, Long press for home screen</string>
-    <string name="stop_app_desc">Stop app</string>
-    <string name="choose_custom_color_desc">Choose custom color</string>
-    <string name="transparency_desc">Transparency</string>
-    <string name="switch_speed_desc">Switch speed</string>
+    <string name="assistipoint_app">AI Rescue Ring app</string>
+    <string name="your_tap_helper_for_navigation">Your intelligent assistant, always ready to help</string>
+    <string name="allow_assistipoint_over_apps">Allow rescue ring to display over apps</string>
+    <string name="allow_navigation_desc">Enable AI assistance</string>
+    <string name="switch_assistipoint_on_off">Toggle rescue ring on or off</string>
+    <string name="adjust_color_and_speed">Customize rescue ring appearance</string>
+    <string name="instructions_desc">Tap the rescue ring to get AI help with any task on your device</string>
+    <string name="stop_app_desc">Stop rescue ring service</string>
+    <string name="choose_custom_color_desc">Choose custom rescue ring color</string>
+    <string name="transparency_desc">Ring transparency</string>
+    <string name="switch_speed_desc">Animation speed</string>
 
     <!-- Impressum -->
     <string name="impressum_title">Legal Notice</string>
     <string name="impressum_content">Information according to § 5 TMG:\n\nStephan Heuscher\n[Address provided upon request]\n\nContact:\nEmail: s.heuscher@gmail.com\n\nResponsible for content according to § 55 Abs. 2 RStV:\nStephan Heuscher\n[Address provided upon request]</string>
     <string name="disclaimer_title">Disclaimer</string>
-    <string name="disclaimer_content">Use of this app is at your own risk. The developer assumes no liability for damages arising from the use of the app.\n\nThis app is an assistive tool and does not replace professional advice or therapy for motor impairments. Always consult a doctor or therapist for health-related questions.</string>
+    <string name="disclaimer_content">Use of this app is at your own risk. The developer assumes no liability for damages arising from the use of the app.\n\nThis app uses AI to provide assistance and may not always provide accurate information. Always verify important information independently.\n\nYour API key is stored securely on your device and never sent to our servers. All AI interactions go directly to Google\'s Gemini API.</string>
     <string name="contact_title">Contact</string>
     <string name="contact_content">For questions, problems, or feedback:\n\nEmail: s.heuscher@gmail.com\nGitHub: https://github.com/Stephan-Heuscher/Back_Home_Dot\n\nI strive to respond to inquiries within 48 hours.</string>
     <string name="open_source_title">Open Source</string>

@@ -300,42 +300,65 @@ class OverlayService : Service() {
     }
 
     private fun handleTap() {
+        // Single tap opens AI Helper (primary function)
         serviceScope.launch {
             val tapBehavior = settingsRepository.getTapBehavior().first()
+
             when (tapBehavior) {
-                "STANDARD" -> BackHomeAccessibilityService.instance?.performHomeAction()
-                "NAVI" -> BackHomeAccessibilityService.instance?.performBackAction()
-                "SAFE_HOME" -> BackHomeAccessibilityService.instance?.performHomeAction()
-                else -> BackHomeAccessibilityService.instance?.performBackAction()
+                "NAVI" -> {
+                    // Quick Nav mode: single tap for back button
+                    BackHomeAccessibilityService.instance?.performBackAction()
+                }
+                else -> {
+                    // AI First and Safe Mode: tap for AI assistance
+                    launchAIHelper()
+                }
             }
         }
     }
 
     private fun handleDoubleTap() {
+        // Double tap always opens AI Helper or settings
         serviceScope.launch {
             val tapBehavior = settingsRepository.getTapBehavior().first()
-            when (tapBehavior) {
-                "STANDARD" -> BackHomeAccessibilityService.instance?.performBackAction()
-                "NAVI" -> BackHomeAccessibilityService.instance?.performRecentsAction()
-                "SAFE_HOME" -> BackHomeAccessibilityService.instance?.performHomeAction()
-                else -> BackHomeAccessibilityService.instance?.performRecentsAction()
+            if (tapBehavior == "NAVI") {
+                // Quick Nav mode: double tap for AI
+                launchAIHelper()
+            } else {
+                // AI First: double tap for settings
+                val intent = Intent(this@OverlayService, ch.heuscher.back_home_dot.SettingsActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                startActivity(intent)
             }
         }
     }
 
     private fun handleTripleTap() {
-        serviceScope.launch {
-            val tapBehavior = settingsRepository.getTapBehavior().first()
-            if (tapBehavior == "SAFE_HOME") {
-                BackHomeAccessibilityService.instance?.performHomeAction()
-            } else {
-                BackHomeAccessibilityService.instance?.performRecentsOverviewAction()
-            }
+        // Triple tap always opens settings
+        val intent = Intent(this, ch.heuscher.back_home_dot.SettingsActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
+        startActivity(intent)
     }
 
     private fun handleQuadrupleTap() {
-        // Launch AI Helper
+        // Quadruple tap opens main activity
+        val intent = Intent(this, ch.heuscher.back_home_dot.MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        startActivity(intent)
+    }
+
+    private fun handleLongPress() {
+        // Long press always activates drag mode (for repositioning the ring)
+        serviceScope.launch {
+            // The drag mode is already activated by GestureDetector's onDragModeChanged callback
+            Log.d(TAG, "Long press detected - drag mode activated (repositioning rescue ring)")
+        }
+    }
+
+    private fun launchAIHelper() {
         serviceScope.launch {
             val aiEnabled = ServiceLocator.aiHelperRepository.isEnabled().first()
             val apiKey = ServiceLocator.aiHelperRepository.getApiKey().first()
@@ -352,20 +375,6 @@ class OverlayService : Service() {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 }
                 startActivity(intent)
-            }
-        }
-    }
-
-    private fun handleLongPress() {
-        serviceScope.launch {
-            val tapBehavior = settingsRepository.getTapBehavior().first()
-            if (tapBehavior == "SAFE_HOME") {
-                // Safe-Home mode: Long press activates drag mode
-                // The drag mode is already activated by GestureDetector's onDragModeChanged callback
-                Log.d(TAG, "Long press detected - drag mode activated (Safe-Home)")
-            } else {
-                // Standard/Navi mode: Long press performs home action
-                BackHomeAccessibilityService.instance?.performHomeAction()
             }
         }
     }
