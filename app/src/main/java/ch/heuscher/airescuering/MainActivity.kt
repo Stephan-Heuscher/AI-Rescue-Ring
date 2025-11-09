@@ -132,8 +132,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        overlayPermissionButton.setOnClickListener { requestOverlayPermission() }
-        accessibilityButton.setOnClickListener { openAccessibilitySettings() }
+        overlayPermissionButton.setOnClickListener {
+            Log.d(TAG, "setupClickListeners: Overlay permission button clicked")
+            requestOverlayPermission()
+        }
+        accessibilityButton.setOnClickListener {
+            Log.d(TAG, "setupClickListeners: Accessibility button clicked")
+            openAccessibilitySettings()
+        }
         stopServiceButton.setOnClickListener { showStopServiceDialog() }
         uninstallButton.setOnClickListener { showUninstallDialog() }
         settingsButton.setOnClickListener { openSettings() }
@@ -192,15 +198,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openAccessibilitySettings() {
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.allow_navigation_title))
-            .setMessage(getString(R.string.allow_navigation_message))
-            .setPositiveButton(getString(R.string.open)) { _, _ ->
-                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                startActivity(intent)
-            }
-            .setNegativeButton(getString(R.string.cancel), null)
-            .show()
+        Log.d(TAG, "openAccessibilitySettings: Called")
+        try {
+            AlertDialog.Builder(this)
+                .setTitle(getString(R.string.allow_navigation_title))
+                .setMessage(getString(R.string.allow_navigation_message))
+                .setPositiveButton(getString(R.string.open)) { _, _ ->
+                    Log.d(TAG, "openAccessibilitySettings: User clicked Open button")
+                    try {
+                        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                        startActivity(intent)
+                        Log.d(TAG, "openAccessibilitySettings: Started accessibility settings activity")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "openAccessibilitySettings: Failed to open settings", e)
+                        android.widget.Toast.makeText(
+                            this,
+                            "Failed to open accessibility settings: ${e.message}",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+                .setNegativeButton(getString(R.string.cancel), null)
+                .show()
+            Log.d(TAG, "openAccessibilitySettings: Dialog shown")
+        } catch (e: Exception) {
+            Log.e(TAG, "openAccessibilitySettings: Failed to create dialog", e)
+        }
     }
 
     private fun openSettings() {
