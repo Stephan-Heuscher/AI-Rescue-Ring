@@ -15,6 +15,10 @@ class GestureDetector(
     private val viewConfiguration: ViewConfiguration
 ) {
 
+    companion object {
+        private const val TAG = "GestureDetector"
+    }
+
     private val mainHandler = Handler(Looper.getMainLooper())
 
     // Gesture state
@@ -93,6 +97,8 @@ class GestureDetector(
         isLongPress = false
         hasMoved = false
 
+        android.util.Log.d(TAG, "ACTION_DOWN at (${event.rawX}, ${event.rawY}), touchSlop=$touchSlop")
+
         // Start long press timer
         mainHandler.postDelayed(longPressRunnable, longPressTimeout)
     }
@@ -102,11 +108,14 @@ class GestureDetector(
         val totalDeltaY = event.rawY - initialY
 
         if (!hasMoved) {
+            android.util.Log.d(TAG, "ACTION_MOVE: delta=(${totalDeltaX}, ${totalDeltaY}), touchSlop=$touchSlop, requiresLongPress=$requiresLongPressToDrag, isDragMode=$isDragMode")
+
             if (requiresLongPressToDrag) {
                 // Safe-Home mode: Only allow dragging if in drag mode (long-press detected)
                 if (isDragMode) {
                     if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
                         hasMoved = true
+                        android.util.Log.d(TAG, "ACTION_MOVE: Drag started in Safe-Home mode")
                         // Now show the halo when user starts moving
                         onDragModeChanged?.invoke(true)
                         onGesture?.invoke(Gesture.DRAG_START)
@@ -116,6 +125,7 @@ class GestureDetector(
                 } else {
                     // Not in drag mode yet, check if user moved too much (cancel long press)
                     if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
+                        android.util.Log.d(TAG, "ACTION_MOVE: Movement exceeds touchSlop, canceling long press")
                         mainHandler.removeCallbacks(longPressRunnable)
                     }
                     return true
@@ -124,6 +134,7 @@ class GestureDetector(
                 // Standard/Navi mode: Allow immediate dragging
                 if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
                     hasMoved = true
+                    android.util.Log.d(TAG, "ACTION_MOVE: Drag started in STANDARD mode (delta exceeded touchSlop)")
                     mainHandler.removeCallbacks(longPressRunnable) // Cancel long press
                     onGesture?.invoke(Gesture.DRAG_START)
                 } else {
@@ -146,12 +157,18 @@ class GestureDetector(
     private fun handleActionUp(event: MotionEvent) {
         mainHandler.removeCallbacks(longPressRunnable)
 
+        android.util.Log.d(TAG, "ACTION_UP: hasMoved=$hasMoved, isLongPress=$isLongPress")
+
         if (hasMoved) {
             // Drag ended
+            android.util.Log.d(TAG, "ACTION_UP: Drag ended")
             onGesture?.invoke(Gesture.DRAG_END)
         } else if (!isLongPress) {
             // Handle click
+            android.util.Log.d(TAG, "ACTION_UP: Click detected, calling handleClick()")
             handleClick()
+        } else {
+            android.util.Log.d(TAG, "ACTION_UP: Long press detected, no click")
         }
 
         // Reset drag mode
@@ -184,6 +201,7 @@ class GestureDetector(
             else -> return
         }
 
+        android.util.Log.d(TAG, "processClicks: Firing $gesture gesture (clickCount=$clickCount)")
         onGesture?.invoke(gesture)
         clickCount = 0
     }

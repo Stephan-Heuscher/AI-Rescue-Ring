@@ -4,16 +4,19 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/messageCard"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="start"
-        app:cardCornerRadius="12dp"
+        app:cardCornerRadius="16dp"
         app:cardElevation="2dp"
-        app:contentPadding="12dp">
+        app:contentPadding="16dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -27,7 +30,7 @@
                 android:text="User"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="6dp" />
 
             <TextView
                 android:id="@+id/messageText"
@@ -35,16 +38,17 @@
                 android:layout_height="wrap_content"
                 android:text="Message content"
                 android:textSize="16sp"
-                android:maxWidth="280dp" />
+                android:lineSpacingMultiplier="1.2"
+                android:maxWidth="300dp" />
 
             <TextView
                 android:id="@+id/messageTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="12:34"
-                android:textSize="10sp"
+                android:textSize="11sp"
                 android:textColor="?android:attr/textColorSecondary"
-                android:layout_marginTop="4dp" />
+                android:layout_marginTop="6dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
