@@ -5,30 +5,44 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
-import android.widget.Toast
 import ch.heuscher.airescuering.service.overlay.OverlayService
+import ch.heuscher.airescuering.di.ServiceLocator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            // Check if accessibility service is enabled
-            if (isAccessibilityServiceEnabled(context)) {
-                // Start the overlay service
-                val overlayIntent = Intent(context, OverlayService::class.java)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    context.startForegroundService(overlayIntent)
-                } else {
-                    context.startService(overlayIntent)
+            // Check if overlay permissions and accessibility are enabled
+            if (hasOverlayPermission(context) && isAccessibilityServiceEnabled(context)) {
+                // Initialize ServiceLocator
+                ServiceLocator.initialize(context)
+
+                // Check if overlay is enabled in settings before starting
+                CoroutineScope(Dispatchers.IO).launch {
+                    val isEnabled = ServiceLocator.settingsRepository.isOverlayEnabled().first()
+                    if (isEnabled) {
+                        // Start the overlay service
+                        val overlayIntent = Intent(context, OverlayService::class.java)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            context.startForegroundService(overlayIntent)
+                        } else {
+                            context.startService(overlayIntent)
+                        }
+                    }
                 }
-            } else {
-                // Show notification that accessibility service needs to be enabled
-                Toast.makeText(
-                    context,
-                    "Bitte aktivieren Sie den Accessibility Service für Assistive Tap",
-                    Toast.LENGTH_LONG
-                ).show()
             }
+        }
+    }
+
+    private fun hasOverlayPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Settings.canDrawOverlays(context)
+        } else {
+            true
         }
     }
 

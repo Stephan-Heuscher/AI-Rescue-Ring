@@ -20,18 +20,9 @@ import kotlinx.coroutines.launch
 
 class SettingsActivity : AppCompatActivity() {
 
-    private lateinit var alphaSeekBar: SeekBar
-    private lateinit var alphaValueText: TextView
-    private lateinit var timeoutSeekBar: SeekBar
-    private lateinit var timeoutValueText: TextView
     private lateinit var keyboardAvoidanceSwitch: androidx.appcompat.widget.SwitchCompat
-    private lateinit var advancedToggleCard: androidx.cardview.widget.CardView
-    private lateinit var advancedContent: androidx.cardview.widget.CardView
-    private lateinit var advancedArrow: TextView
-    private var isAdvancedExpanded = false
 
     // AI Helper fields
-    private lateinit var aiHelperSwitch: androidx.appcompat.widget.SwitchCompat
     private lateinit var apiKeyInput: EditText
     private lateinit var voiceInputSwitch: androidx.appcompat.widget.SwitchCompat
 
@@ -39,8 +30,6 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var aiHelperRepository: AIHelperRepository
 
     // UI state holders
-    private var currentAlpha = 255
-    private var currentTimeout = 100L
     private var currentColor = 0xFF2196F3.toInt()
     private var keyboardAvoidanceEnabled = false
 
@@ -57,26 +46,15 @@ class SettingsActivity : AppCompatActivity() {
         observeAIHelperSettings()
         setupBackButton()
         setupImpressumButton()
-        setupAdvancedToggle()
-        setupAlphaSeekBar()
-        setupTimeoutSeekBar()
         setupKeyboardAvoidanceSwitch()
         setupColorButtons()
         setupAIHelperControls()
     }
 
     private fun initializeViews() {
-        alphaSeekBar = findViewById(R.id.alpha_seekbar)
-        alphaValueText = findViewById(R.id.alpha_value_text)
-        timeoutSeekBar = findViewById(R.id.timeout_seekbar)
-        timeoutValueText = findViewById(R.id.timeout_value_text)
         keyboardAvoidanceSwitch = findViewById(R.id.keyboard_avoidance_switch)
-        advancedToggleCard = findViewById(R.id.advanced_toggle_card)
-        advancedContent = findViewById(R.id.advanced_content)
-        advancedArrow = findViewById(R.id.advanced_arrow)
 
         // AI Helper views
-        aiHelperSwitch = findViewById(R.id.ai_helper_switch)
         apiKeyInput = findViewById(R.id.api_key_input)
         voiceInputSwitch = findViewById(R.id.voice_input_switch)
     }
@@ -92,52 +70,6 @@ class SettingsActivity : AppCompatActivity() {
             val intent = Intent(this, ImpressumActivity::class.java)
             startActivity(intent)
         }
-    }
-
-    private fun setupAdvancedToggle() {
-        advancedToggleCard.setOnClickListener {
-            isAdvancedExpanded = !isAdvancedExpanded
-            advancedContent.visibility = if (isAdvancedExpanded) View.VISIBLE else View.GONE
-            advancedArrow.text = if (isAdvancedExpanded) "▲" else "▼"
-        }
-    }
-
-    private fun setupAlphaSeekBar() {
-        alphaSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                currentAlpha = progress
-                updateAlphaText(progress)
-                lifecycleScope.launch {
-                    settingsRepository.setAlpha(progress)
-                }
-                broadcastSettingsUpdate()
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-    }
-
-    private fun updateAlphaText(alpha: Int) {
-        val percentage = (alpha * 100) / 255
-        alphaValueText.text = "$percentage%"
-    }
-
-    private fun setupTimeoutSeekBar() {
-        timeoutSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                currentTimeout = progress.toLong()
-                updateTimeoutText(progress)
-                lifecycleScope.launch {
-                    settingsRepository.setRecentsTimeout(progress.toLong())
-                }
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-    }
-
-    private fun updateTimeoutText(timeout: Int) {
-        timeoutValueText.text = "$timeout ms"
     }
 
     private fun setupKeyboardAvoidanceSwitch() {
@@ -163,22 +95,6 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun observeSettings() {
-        lifecycleScope.launch {
-            settingsRepository.getAlpha().collect { alpha ->
-                currentAlpha = alpha
-                alphaSeekBar.progress = alpha
-                updateAlphaText(alpha)
-            }
-        }
-
-        lifecycleScope.launch {
-            settingsRepository.getRecentsTimeout().collect { timeout ->
-                currentTimeout = timeout
-                timeoutSeekBar.progress = timeout.toInt()
-                updateTimeoutText(timeout.toInt())
-            }
-        }
-
         lifecycleScope.launch {
             settingsRepository.getColor().collect { color ->
                 currentColor = color
@@ -253,19 +169,16 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun setupAIHelperControls() {
-        // AI Helper enable switch
-        aiHelperSwitch.setOnCheckedChangeListener { _, isChecked ->
-            lifecycleScope.launch {
-                aiHelperRepository.setEnabled(isChecked)
-            }
-        }
-
         // API Key input with save on focus loss
         apiKeyInput.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 val apiKey = apiKeyInput.text.toString().trim()
                 lifecycleScope.launch {
                     aiHelperRepository.setApiKey(apiKey)
+                    // Auto-enable AI helper when API key is provided
+                    if (apiKey.isNotEmpty()) {
+                        aiHelperRepository.setEnabled(true)
+                    }
                 }
             }
         }
@@ -279,15 +192,6 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun observeAIHelperSettings() {
-        lifecycleScope.launch {
-            // Observe AI Helper enabled state
-            aiHelperRepository.isEnabled().collect { enabled ->
-                if (aiHelperSwitch.isChecked != enabled) {
-                    aiHelperSwitch.isChecked = enabled
-                }
-            }
-        }
-
         lifecycleScope.launch {
             // Observe API key
             aiHelperRepository.getApiKey().collect { apiKey ->

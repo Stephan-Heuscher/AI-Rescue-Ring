@@ -290,9 +290,6 @@ class OverlayService : Service() {
         serviceScope.launch {
             when (gesture) {
                 Gesture.TAP -> handleTap()
-                Gesture.DOUBLE_TAP -> handleDoubleTap()
-                Gesture.TRIPLE_TAP -> handleTripleTap()
-                Gesture.QUADRUPLE_TAP -> handleQuadrupleTap()
                 Gesture.LONG_PRESS -> handleLongPress()
                 else -> { /* No-op */ }
             }
@@ -300,62 +297,14 @@ class OverlayService : Service() {
     }
 
     private fun handleTap() {
-        // Single tap opens AI Helper (primary function)
-        serviceScope.launch {
-            val tapBehavior = settingsRepository.getTapBehavior().first()
-
-            when (tapBehavior) {
-                "NAVI" -> {
-                    // Quick Nav mode: single tap for back button
-                    BackHomeAccessibilityService.instance?.performBackAction()
-                }
-                else -> {
-                    // AI First and Safe Mode: tap for AI assistance
-                    launchAIHelper()
-                }
-            }
-        }
-    }
-
-    private fun handleDoubleTap() {
-        // Double tap always opens AI Helper or settings
-        serviceScope.launch {
-            val tapBehavior = settingsRepository.getTapBehavior().first()
-            if (tapBehavior == "NAVI") {
-                // Quick Nav mode: double tap for AI
-                launchAIHelper()
-            } else {
-                // AI First: double tap for settings
-                val intent = Intent(this@OverlayService, ch.heuscher.airescuering.SettingsActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                }
-                startActivity(intent)
-            }
-        }
-    }
-
-    private fun handleTripleTap() {
-        // Triple tap always opens settings
-        val intent = Intent(this, ch.heuscher.airescuering.SettingsActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-        startActivity(intent)
-    }
-
-    private fun handleQuadrupleTap() {
-        // Quadruple tap opens main activity
-        val intent = Intent(this, ch.heuscher.airescuering.MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-        startActivity(intent)
+        // Single tap opens AI Helper
+        launchAIHelper()
     }
 
     private fun handleLongPress() {
-        // Long press always activates drag mode (for repositioning the ring)
-        serviceScope.launch {
-            // The drag mode is already activated by GestureDetector's onDragModeChanged callback
-            Log.d(TAG, "Long press detected - drag mode activated (repositioning rescue ring)")
-        }
+        // Long press + drag repositions the button
+        // The drag mode is already activated by GestureDetector's onDragModeChanged callback
+        Log.d(TAG, "Long press detected - drag mode activated (repositioning rescue ring)")
     }
 
     private fun launchAIHelper() {
