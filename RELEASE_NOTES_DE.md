@@ -21,21 +21,10 @@ Wir freuen uns, **AI Rescue Ring v3.0.0** vorzustellen - eine vollständige Tran
 - **Rettungsring-Thema**: Neues Branding mit Fokus auf Hilfe und Unterstützung
 - **Ring-Icon**: 🛟 Rettungsring-Emoji symbolisiert Hilfe
 
-#### ⚙️ Aktualisierte Verhaltensmodi
-**KI Zuerst Modus (NEU - Empfohlen):**
-- Tippen = KI-Chat öffnen
-- Sprach- oder Texteingabe unterstützt
-- Lang drücken + ziehen = Ring neu positionieren
-
-**Schnell-Navi Modus:**
-- Tippen = Zurück-Button
-- Lang drücken = KI-Unterstützung
-- Lang drücken + ziehen = Ring neu positionieren
-
-**Sicherer Modus:**
-- Alle Taps = KI-Hilfe
-- Lang drücken + ziehen = Ring verschieben (leuchtet wenn bereit)
-- Perfekt zur Vermeidung versehentlicher Taps
+#### 🎮 Einfache Bedienung
+- **Tippen** = KI-Chat öffnen
+- **Sprach- oder Texteingabe** = Frage stellen
+- **Lang drücken + ziehen** = Ring neu positionieren
 
 #### 🔒 Privatsphäre & Sicherheit
 - **Keine Datensammlung**: Wir sammeln oder speichern Ihre Gespräche nicht

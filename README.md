@@ -19,22 +19,11 @@ AI Rescue Ring is your intelligent companion on Android - always visible, always
 - **🔒 Privacy-First**: Your API key stays on your device
 - **♿ Accessibility**: Built with accessibility in mind
 
-### Tap Modes
+### How to Use
 
-#### AI First Mode (Recommended)
 - **Tap** → Open AI chat
-- **Voice input** → Speak your question
+- **Voice or text** → Ask your question
 - **Long press + drag** → Reposition ring
-
-#### Quick Nav Mode
-- **Tap** → Back button
-- **Long press** → AI assistance
-- **Long press + drag** → Reposition ring
-
-#### Safe Mode
-- **All taps** → AI help
-- **Long press + drag** → Move ring (shows glow when ready)
-- **Perfect for** → Preventing accidental taps
 
 ## 🚀 Installation
 
@@ -58,10 +47,9 @@ AI Rescue Ring is your intelligent companion on Android - always visible, always
 ## 🎮 How it works
 
 1. **Enable ring**: Activate the switch in the app
-2. **Choose mode**: AI First, Quick Nav, or Safe Mode in settings
-3. **Move ring**: Long press + drag to reposition
-4. **Get help**: Tap the ring and ask your question
-5. **Customize**: Adjust color, transparency, and behavior in settings
+2. **Move ring**: Long press + drag to reposition
+3. **Get help**: Tap the ring and ask your question
+4. **Customize**: Adjust color and transparency in settings
 
 The ring automatically avoids the keyboard and stays in the correct position when rotating the device.
 

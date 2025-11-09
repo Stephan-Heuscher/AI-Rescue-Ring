@@ -36,9 +36,7 @@
 
     <!-- Help Section -->
     <string name="how_it_works">🛟 So funktioniert es</string>
-    <string name="instructions">🛟 Tippen Sie auf den Rettungsring, um Hilfe zu erhalten!\n\n• Einmal tippen = KI-Assistent öffnen\n• Sprache oder Text = Sagen Sie mir, was Sie brauchen\n• Lang drücken + ziehen = Ring neu positionieren\n\nDie KI hilft Ihnen bei jeder Aufgabe auf Ihrem Gerät!</string>
-    <string name="instructions_normal_mode">🛟 Tippen Sie auf den Rettungsring für KI-Hilfe bei allem!\n\n• Tippen = KI-Chat öffnen\n• Spracheingabe unterstützt\n• Lang drücken + ziehen = Ring bewegen</string>
-    <string name="instructions_back_mode">🛟 Tippen Sie auf den Rettungsring für intelligente Unterstützung!\n\n• Tippen = KI um Hilfe fragen\n• Sprechen oder tippen Sie Ihre Anfrage\n• Lang drücken + ziehen = Neu positionieren</string>
+    <string name="instructions">🛟 Tippen Sie auf den Rettungsring, um Hilfe zu erhalten!\n\n• Tippen = KI-Assistent öffnen\n• Sprache oder Text = Sagen Sie mir, was Sie brauchen\n• Lang drücken + ziehen = Ring neu positionieren\n\nDie KI hilft Ihnen bei jeder Aufgabe auf Ihrem Gerät!</string>
 
     <!-- Settings Screen -->
     <string name="back">Zurück</string>
@@ -58,20 +56,6 @@
     <string name="keyboard_avoidance">Auto-Verschiebung bei Tastatur</string>
     <string name="keyboard_avoidance_desc">Ring automatisch verschieben wenn Tastatur erscheint</string>
     <string name="avoid_keyboard">Auto-Verschiebung bei Tastatur</string>
-
-    <!-- Tap Behavior -->
-    <string name="tap_behavior">Rettungsring Verhalten</string>
-    <string name="tap_behavior_desc">Wie der Rettungsring auf Interaktion reagiert</string>
-    <string name="tap_behavior_standard">KI zuerst: Tippen für KI-Hilfe (empfohlen)</string>
-    <string name="tap_behavior_back">Schnell-Navi: Tippen für Zurück, Lang drücken für KI</string>
-    <string name="tap_behavior_safe_home">Sicherer Modus: Alle Taps für KI, Lang drücken zum Verschieben</string>
-    <string name="tap_behavior_standard_name">KI zuerst</string>
-    <string name="tap_behavior_back_name">Schnell-Navi</string>
-    <string name="tap_behavior_safe_home_name">Sicherer Modus</string>
-    <string name="tap_behavior_standard_description">Tippen = KI-Unterstützung</string>
-    <string name="tap_behavior_back_description">Tippen = Zurück, Lang drücken = KI</string>
-    <string name="tap_behavior_safe_home_description">Alle Taps = KI, Lang drücken zum Verschieben</string>
-    <string name="instructions_safe_home_mode">🛟 Sicherer Modus\n• Alle Taps = KI-Hilfe\n• Lang drücken + ziehen zum Verschieben (Ring leuchtet wenn bereit)\n• Perfekt zur Vermeidung versehentlicher Taps</string>
 
     <!-- Advanced Settings -->
     <string name="for_experts">Erweitert</string>

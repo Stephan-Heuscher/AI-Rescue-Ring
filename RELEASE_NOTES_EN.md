@@ -21,21 +21,10 @@ We're excited to announce **AI Rescue Ring v3.0.0** - a complete transformation 
 - **Rescue Ring Theme**: New branding emphasizing help and assistance
 - **Ring Icon**: 🛟 Life ring emoji representing rescue/help
 
-#### ⚙️ Behavior Modes Updated
-**AI First Mode (NEW - Recommended):**
-- Tap = Open AI chat
-- Voice or text input supported
-- Long press + drag = Reposition ring
-
-**Quick Nav Mode:**
-- Tap = Back button
-- Long press = AI assistance
-- Long press + drag = Reposition ring
-
-**Safe Mode:**
-- All taps = AI help
-- Long press + drag = Move ring (shows glow when ready)
-- Perfect for preventing accidental taps
+#### 🎮 Simple Interaction
+- **Tap** = Open AI chat
+- **Voice or text input** = Ask your question
+- **Long press + drag** = Reposition ring
 
 #### 🔒 Privacy & Security
 - **No data collection**: We don't collect or store your conversations
