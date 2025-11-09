@@ -24,11 +24,11 @@ fun getVersionName(): String {
 }
 
 android {
-    namespace = "ch.heuscher.back_home_dot"
+    namespace = "ch.heuscher.airescuering"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "ch.heuscher.back_home_dot"
+        applicationId = "ch.heuscher.airescuering"
         minSdk = 26
         targetSdk = 36
         versionCode = getVersionCode()

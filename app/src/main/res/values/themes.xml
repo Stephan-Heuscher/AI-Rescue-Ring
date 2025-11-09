@@ -1,9 +1,9 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.Back_Home_Dot" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.AIRescueRing" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
-    <style name="Theme.Back_Home_Dot" parent="Base.Theme.Back_Home_Dot" />
+    <style name="Theme.AIRescueRing" parent="Base.Theme.AIRescueRing" />
 </resources>
