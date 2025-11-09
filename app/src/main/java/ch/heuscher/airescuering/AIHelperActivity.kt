@@ -61,7 +61,7 @@ class AIHelperActivity : AppCompatActivity() {
         // Add welcome message
         addMessage(AIMessage(
             id = UUID.randomUUID().toString(),
-            content = "Hello! I'm your AI assistant. Tap the rescue ring and tell me what you'd like help with.",
+            content = "Hello! I'm your AI assistant. You can type your questions below or use the microphone button 🎤 for voice input.",
             role = MessageRole.ASSISTANT
         ))
     }
@@ -105,11 +105,13 @@ class AIHelperActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val apiKey = ServiceLocator.aiHelperRepository.getApiKey().firstOrNull() ?: ""
             if (apiKey.isEmpty()) {
-                Toast.makeText(
-                    this@AIHelperActivity,
-                    "Please set API key in settings",
-                    Toast.LENGTH_LONG
-                ).show()
+                // Show prominent warning in chat
+                val warningMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "⚠️ API Key Not Configured\n\nTo use the AI assistant, you need to set up a Gemini API key:\n\n1. Open the main app settings\n2. Navigate to AI Helper settings\n3. Enter your Gemini API key\n\nUntil then, you can still type messages here, but they won't be sent to the AI.",
+                    role = MessageRole.ASSISTANT
+                )
+                addMessage(warningMessage)
                 return@launch
             }
             geminiService = GeminiApiService(apiKey, debug = true)

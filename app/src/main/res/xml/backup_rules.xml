@@ -7,6 +7,9 @@
     <!-- Include all shared preferences (DataStore uses this) -->
     <include domain="sharedpref" path="."/>
 
+    <!-- Exclude EncryptedSharedPreferences - cannot be restored on different device -->
+    <exclude domain="sharedpref" path="ai_helper_secure_prefs.xml"/>
+
     <!-- Include DataStore preferences specifically -->
     <include domain="file" path="datastore/"/>
 </full-backup-content>

@@ -312,28 +312,13 @@ class OverlayService : Service() {
         Log.d(TAG, "launchAIHelper: Ring clicked, attempting to launch activity")
         serviceScope.launch {
             try {
-                val aiEnabled = ServiceLocator.aiHelperRepository.isEnabled().first()
-                val apiKey = ServiceLocator.aiHelperRepository.getApiKey().first()
-
-                Log.d(TAG, "launchAIHelper: aiEnabled=$aiEnabled, apiKey=${if (apiKey.isEmpty()) "empty" else "configured"}")
-
-                if (aiEnabled && apiKey.isNotEmpty()) {
-                    // AI Helper is configured, open AI chat
-                    Log.d(TAG, "launchAIHelper: Launching AIHelperActivity")
-                    val intent = Intent(this@OverlayService, ch.heuscher.airescuering.AIHelperActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    }
-                    startActivity(intent)
-                    Log.d(TAG, "launchAIHelper: AIHelperActivity launched successfully")
-                } else {
-                    // AI Helper not configured, open MainActivity for setup
-                    Log.d(TAG, "launchAIHelper: Launching MainActivity for setup")
-                    val intent = Intent(this@OverlayService, ch.heuscher.airescuering.MainActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    }
-                    startActivity(intent)
-                    Log.d(TAG, "launchAIHelper: MainActivity launched successfully")
+                // Always open AI chat interface, even without API key configured
+                Log.d(TAG, "launchAIHelper: Launching AIHelperActivity")
+                val intent = Intent(this@OverlayService, ch.heuscher.airescuering.AIHelperActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 }
+                startActivity(intent)
+                Log.d(TAG, "launchAIHelper: AIHelperActivity launched successfully")
             } catch (e: Exception) {
                 Log.e(TAG, "launchAIHelper: Error launching activity", e)
             }
