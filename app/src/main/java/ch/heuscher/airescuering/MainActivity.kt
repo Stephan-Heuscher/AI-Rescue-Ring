@@ -270,28 +270,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        lifecycleScope.launch {
-            Log.d(TAG, "observeSettings: Launching tap behavior observer")
-            try {
-                settingsRepository.getTapBehavior().collect { behavior ->
-                    Log.d(TAG, "observeSettings: Tap behavior changed to $behavior")
-                    updateInstructionsText(behavior)
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "observeSettings: Error observing tap behavior", e)
-            }
-        }
-        Log.d(TAG, "observeSettings: Observers launched")
-    }
-
-    private fun updateInstructionsText(tapBehavior: String) {
-        val instructions = when (tapBehavior) {
-            "STANDARD" -> getString(R.string.instructions_normal_mode)
-            "NAVI" -> getString(R.string.instructions_back_mode)
-            "SAFE_HOME" -> getString(R.string.instructions_safe_home_mode)
-            else -> getString(R.string.instructions_normal_mode)
-        }
-        instructionsText.text = instructions
+        // Set instructions text once (no longer dynamic based on tap behavior)
+        instructionsText.text = getString(R.string.instructions)
+        Log.d(TAG, "observeSettings: Instructions text set")
     }
 
     private fun hasOverlayPermission(): Boolean {
