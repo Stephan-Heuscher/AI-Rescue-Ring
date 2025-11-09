@@ -297,6 +297,7 @@ class OverlayService : Service() {
     }
 
     private fun handleTap() {
+        Log.d(TAG, "handleTap: Tap gesture detected on ring")
         // Single tap opens AI Helper
         launchAIHelper()
     }
@@ -308,22 +309,33 @@ class OverlayService : Service() {
     }
 
     private fun launchAIHelper() {
+        Log.d(TAG, "launchAIHelper: Ring clicked, attempting to launch activity")
         serviceScope.launch {
-            val aiEnabled = ServiceLocator.aiHelperRepository.isEnabled().first()
-            val apiKey = ServiceLocator.aiHelperRepository.getApiKey().first()
+            try {
+                val aiEnabled = ServiceLocator.aiHelperRepository.isEnabled().first()
+                val apiKey = ServiceLocator.aiHelperRepository.getApiKey().first()
 
-            if (aiEnabled && apiKey.isNotEmpty()) {
-                // AI Helper is configured, open AI chat
-                val intent = Intent(this@OverlayService, ch.heuscher.airescuering.AIHelperActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                Log.d(TAG, "launchAIHelper: aiEnabled=$aiEnabled, apiKey=${if (apiKey.isEmpty()) "empty" else "configured"}")
+
+                if (aiEnabled && apiKey.isNotEmpty()) {
+                    // AI Helper is configured, open AI chat
+                    Log.d(TAG, "launchAIHelper: Launching AIHelperActivity")
+                    val intent = Intent(this@OverlayService, ch.heuscher.airescuering.AIHelperActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    }
+                    startActivity(intent)
+                    Log.d(TAG, "launchAIHelper: AIHelperActivity launched successfully")
+                } else {
+                    // AI Helper not configured, open MainActivity for setup
+                    Log.d(TAG, "launchAIHelper: Launching MainActivity for setup")
+                    val intent = Intent(this@OverlayService, ch.heuscher.airescuering.MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    }
+                    startActivity(intent)
+                    Log.d(TAG, "launchAIHelper: MainActivity launched successfully")
                 }
-                startActivity(intent)
-            } else {
-                // AI Helper not configured, open MainActivity for setup
-                val intent = Intent(this@OverlayService, ch.heuscher.airescuering.MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                }
-                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "launchAIHelper: Error launching activity", e)
             }
         }
     }
