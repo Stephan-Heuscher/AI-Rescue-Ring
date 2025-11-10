@@ -223,17 +223,29 @@ class AIHelperActivity : AppCompatActivity() {
                 )
 
                 result.onSuccess { response ->
-                    val assistantMessage = AIMessage(
-                        id = UUID.randomUUID().toString(),
-                        content = response,
-                        role = MessageRole.ASSISTANT
-                    )
-                    addMessage(assistantMessage)
+                    // Check if the response proposes an action that requires confirmation
+                    val requiresConfirmation = response.contains("suggest", ignoreCase = true) ||
+                        response.contains("recommend", ignoreCase = true) ||
+                        response.contains("should", ignoreCase = true) ||
+                        response.contains("could", ignoreCase = true) ||
+                        response.contains("would", ignoreCase = true) ||
+                        response.contains("can", ignoreCase = true) ||
+                        response.contains("will", ignoreCase = true) ||
+                        response.contains("let me", ignoreCase = true) ||
+                        response.contains("I'll", ignoreCase = true) ||
+                        response.contains("I will", ignoreCase = true)
 
-                    // Check if we should show suggestion dialog
-                    if (response.contains("suggest", ignoreCase = true) ||
-                        response.contains("recommend", ignoreCase = true)) {
-                        showSuggestionDialog(response)
+                    if (requiresConfirmation) {
+                        // Show confirmation dialog before displaying the message
+                        showActionConfirmationDialog(response)
+                    } else {
+                        // For informational responses, display directly
+                        val assistantMessage = AIMessage(
+                            id = UUID.randomUUID().toString(),
+                            content = response,
+                            role = MessageRole.ASSISTANT
+                        )
+                        addMessage(assistantMessage)
                     }
                 }.onFailure { error ->
                     Toast.makeText(
@@ -289,18 +301,37 @@ class AIHelperActivity : AppCompatActivity() {
         }
     }
 
-    private fun showSuggestionDialog(suggestion: String) {
+    private fun showActionConfirmationDialog(aiResponse: String) {
         val dialog = ch.heuscher.airescuering.ui.AISuggestionDialog(
             context = this,
-            suggestion = suggestion,
+            suggestion = aiResponse,
             onApprove = {
-                Toast.makeText(this, "Suggestion approved", Toast.LENGTH_SHORT).show()
-                // TODO: Execute the approved action
+                // User approved the action - display the AI response
+                val assistantMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = aiResponse,
+                    role = MessageRole.ASSISTANT
+                )
+                addMessage(assistantMessage)
+                Toast.makeText(this, "Action approved by user", Toast.LENGTH_SHORT).show()
+
+                // TODO: When computer use model is integrated, execute the approved action here
             },
             onRefine = {
                 Toast.makeText(this, "Let's refine the suggestion", Toast.LENGTH_SHORT).show()
-                messageInput.setText("I'd like to refine that suggestion...")
+                messageInput.setText("Please refine your suggestion: ")
+                messageInput.setSelection(messageInput.text.length)
                 messageInput.requestFocus()
+            },
+            onReject = {
+                // User rejected the action - show rejection message
+                val rejectionMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "❌ Action rejected by user. The AI suggestion was not performed.",
+                    role = MessageRole.SYSTEM
+                )
+                addMessage(rejectionMessage)
+                Toast.makeText(this, "Action rejected", Toast.LENGTH_SHORT).show()
             }
         )
         dialog.show()

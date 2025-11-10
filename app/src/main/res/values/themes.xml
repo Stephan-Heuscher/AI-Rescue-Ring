@@ -6,4 +6,15 @@
     </style>
 
     <style name="Theme.AIRescueRing" parent="Base.Theme.AIRescueRing" />
+
+    <!-- Translucent overlay theme for AI Helper Activity -->
+    <style name="Theme.AIRescueRing.Translucent" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation</item>
+    </style>
 </resources>

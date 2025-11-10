@@ -10,10 +10,19 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="AI Suggestion"
+        android:text="⚠️ Confirm AI Action"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="?android:attr/textColorPrimary"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Confirmation Message -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="The AI is proposing an action. Please review and approve before proceeding."
+        android:textSize="14sp"
+        android:textColor="?android:attr/textColorSecondary"
         android:layout_marginBottom="16dp" />
 
     <!-- Suggestion Content -->
@@ -57,6 +66,16 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="end">
+
+        <Button
+            android:id="@+id/rejectButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reject"
+            android:minHeight="48dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="#F44336"
+            android:textColor="#FFFFFF" />
 
         <Button
             android:id="@+id/refineButton"

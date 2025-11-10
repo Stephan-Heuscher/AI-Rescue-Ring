@@ -10,13 +10,14 @@ import ch.heuscher.airescuering.R
 import ch.heuscher.airescuering.domain.model.AISuggestion
 
 /**
- * Dialog for showing AI suggestions with approve/refine options.
+ * Dialog for showing AI suggestions with approve/reject/refine options.
  */
 class AISuggestionDialog(
     context: Context,
     private val suggestion: String,
     private val onApprove: () -> Unit,
-    private val onRefine: () -> Unit
+    private val onRefine: () -> Unit,
+    private val onReject: () -> Unit = {}
 ) : Dialog(context) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,6 +28,7 @@ class AISuggestionDialog(
         val suggestionText = findViewById<TextView>(R.id.suggestionText)
         val approveButton = findViewById<Button>(R.id.approveButton)
         val refineButton = findViewById<Button>(R.id.refineButton)
+        val rejectButton = findViewById<Button>(R.id.rejectButton)
 
         suggestionText.text = suggestion
 
@@ -40,6 +42,12 @@ class AISuggestionDialog(
             dismiss()
         }
 
-        setCancelable(true)
+        rejectButton.setOnClickListener {
+            onReject()
+            dismiss()
+        }
+
+        // Dialog must be explicitly dismissed - prevent accidental dismissal
+        setCancelable(false)
     }
 }
