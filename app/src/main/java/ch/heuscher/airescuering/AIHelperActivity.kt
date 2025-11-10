@@ -3,12 +3,14 @@ package ch.heuscher.airescuering
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -53,6 +55,23 @@ class AIHelperActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Set up window for overlay with 85% alpha (15% transparency)
+        window.apply {
+            setFlags(
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            )
+            // Make status bar and navigation bar transparent
+            statusBarColor = Color.TRANSPARENT
+            navigationBarColor = Color.TRANSPARENT
+            // Set dim amount to 15% (making content 85% visible)
+            attributes = attributes.apply {
+                dimAmount = 0.15f
+                flags = flags or WindowManager.LayoutParams.FLAG_DIM_BEHIND
+            }
+        }
+
         setContentView(R.layout.activity_ai_helper)
 
         initViews()
@@ -230,9 +249,8 @@ class AIHelperActivity : AppCompatActivity() {
                     )
                     addMessage(assistantMessage)
 
-                    // Check if we should show suggestion dialog
-                    if (response.contains("suggest", ignoreCase = true) ||
-                        response.contains("recommend", ignoreCase = true)) {
+                    // Check if response contains actionable suggestions
+                    if (containsActionableSuggestion(response)) {
                         showSuggestionDialog(response)
                     }
                 }.onFailure { error ->
@@ -289,21 +307,73 @@ class AIHelperActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Checks if the AI response contains actionable suggestions that require user confirmation.
+     * This includes keywords like "suggest", "recommend", "should", "can", "try", etc.
+     */
+    private fun containsActionableSuggestion(response: String): Boolean {
+        val actionKeywords = listOf(
+            "suggest", "recommend", "should", "could", "try",
+            "open", "go to", "navigate", "tap", "click",
+            "enable", "disable", "turn on", "turn off",
+            "install", "uninstall", "download", "delete",
+            "send", "call", "message", "email",
+            "settings", "permission", "allow", "grant"
+        )
+
+        val lowerResponse = response.lowercase()
+        return actionKeywords.any { keyword -> lowerResponse.contains(keyword) }
+    }
+
+    /**
+     * Shows confirmation dialog for AI-suggested actions.
+     * Users must explicitly approve actions before they are performed.
+     */
     private fun showSuggestionDialog(suggestion: String) {
         val dialog = ch.heuscher.airescuering.ui.AISuggestionDialog(
             context = this,
             suggestion = suggestion,
             onApprove = {
-                Toast.makeText(this, "Suggestion approved", Toast.LENGTH_SHORT).show()
-                // TODO: Execute the approved action
+                Toast.makeText(this, "Action approved - executing...", Toast.LENGTH_SHORT).show()
+                executeApprovedAction(suggestion)
             },
             onRefine = {
                 Toast.makeText(this, "Let's refine the suggestion", Toast.LENGTH_SHORT).show()
-                messageInput.setText("I'd like to refine that suggestion...")
+                messageInput.setText("I'd like to refine that suggestion: ")
+                messageInput.setSelection(messageInput.text.length)
                 messageInput.requestFocus()
+            },
+            onCancel = {
+                Toast.makeText(this, "Action cancelled", Toast.LENGTH_SHORT).show()
             }
         )
         dialog.show()
+    }
+
+    /**
+     * Executes the action approved by the user.
+     * TODO: Implement actual action execution based on the suggestion content.
+     */
+    private fun executeApprovedAction(suggestion: String) {
+        // Add a message to show the action is being executed
+        val executionMessage = AIMessage(
+            id = UUID.randomUUID().toString(),
+            content = "✓ Executing approved action...\n\nAction: ${suggestion.take(100)}${if (suggestion.length > 100) "..." else ""}",
+            role = MessageRole.SYSTEM
+        )
+        addMessage(executionMessage)
+
+        // TODO: Parse the suggestion and execute the corresponding action
+        // This would involve:
+        // - Parsing the suggestion to extract the action type and parameters
+        // - Using Android APIs to perform the action (e.g., opening apps, changing settings)
+        // - Reporting success/failure back to the user
+
+        Toast.makeText(
+            this,
+            "Action execution not yet implemented. This is a placeholder.",
+            Toast.LENGTH_LONG
+        ).show()
     }
 
     /**

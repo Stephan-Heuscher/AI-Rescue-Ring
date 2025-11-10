@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?android:attr/colorBackground"
+    android:background="#D9000000"
+    android:fitsSystemWindows="true"
     tools:context=".AIHelperActivity">
 
     <!-- Top Bar -->
@@ -13,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="?attr/colorPrimary"
+        android:background="#D91976D2"
         android:padding="16dp"
         android:gravity="center_vertical"
         android:elevation="4dp">
@@ -66,7 +67,7 @@
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
         android:gravity="center_vertical"
-        android:background="?android:attr/colorBackground"
+        android:background="#D9424242"
         android:elevation="8dp">
 
         <EditText
