@@ -2,6 +2,7 @@ package ch.heuscher.airescuering.data.api
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Data models for Gemini API requests and responses
@@ -25,7 +26,13 @@ data class Content(
 
 @Serializable
 data class Part(
-    val text: String? = null
+    val text: String? = null,
+    @SerialName("functionCall")
+    val functionCall: FunctionCall? = null,
+    @SerialName("functionResponse")
+    val functionResponse: FunctionResponse? = null,
+    @SerialName("inlineData")
+    val inlineData: InlineData? = null
 )
 
 @Serializable
@@ -104,3 +111,40 @@ object Environment {
     const val BROWSER = "ENVIRONMENT_BROWSER"
     const val DESKTOP = "ENVIRONMENT_DESKTOP"
 }
+
+/**
+ * Function call from the model
+ */
+@Serializable
+data class FunctionCall(
+    val name: String,
+    val args: Map<String, JsonElement> = emptyMap()
+)
+
+/**
+ * Function response back to the model
+ */
+@Serializable
+data class FunctionResponse(
+    val name: String,
+    val response: Map<String, JsonElement> = emptyMap()
+)
+
+/**
+ * Inline data for images/screenshots
+ */
+@Serializable
+data class InlineData(
+    @SerialName("mimeType")
+    val mimeType: String,
+    val data: String  // Base64 encoded
+)
+
+/**
+ * Safety decision from the model
+ */
+@Serializable
+data class SafetyDecision(
+    val decision: String,  // "require_confirmation", "allow", "block"
+    val explanation: String? = null
+)
