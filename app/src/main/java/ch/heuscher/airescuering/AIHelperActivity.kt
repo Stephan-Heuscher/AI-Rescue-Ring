@@ -15,6 +15,8 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.lifecycleScope
@@ -47,13 +49,25 @@ class AIHelperActivity : AppCompatActivity() {
 
     private var geminiService: GeminiApiService? = null
 
-    companion object {
-        private const val VOICE_RECOGNITION_REQUEST_CODE = 1001
-    }
+    // Activity Result Launcher for voice recognition
+    private lateinit var voiceRecognitionLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ai_helper)
+
+        // Initialize voice recognition launcher
+        voiceRecognitionLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val results = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                results?.firstOrNull()?.let { text ->
+                    messageInput.setText(text)
+                    sendMessage(text)
+                }
+            }
+        }
 
         initViews()
         setupRecyclerView()
@@ -271,21 +285,9 @@ class AIHelperActivity : AppCompatActivity() {
         }
 
         try {
-            startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE)
+            voiceRecognitionLauncher.launch(intent)
         } catch (e: Exception) {
             Toast.makeText(this, "Voice recognition not available", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            val results = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-            results?.firstOrNull()?.let { text ->
-                messageInput.setText(text)
-                sendMessage(text)
-            }
         }
     }
 

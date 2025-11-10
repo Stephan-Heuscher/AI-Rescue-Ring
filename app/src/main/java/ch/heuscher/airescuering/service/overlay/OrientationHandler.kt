@@ -22,7 +22,7 @@ class OrientationHandler(private val context: Context) {
     fun getCurrentRotation(): Int {
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            windowManager.defaultDisplay.rotation
+            context.display?.rotation ?: 0
         } else {
             @Suppress("DEPRECATION")
             windowManager.defaultDisplay.rotation

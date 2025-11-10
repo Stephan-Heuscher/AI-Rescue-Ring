@@ -170,7 +170,7 @@ Be concise and actionable. Focus on what can be done right now on their device.
         }
 
         return generateContent(
-            model = "gemini-2.0-flash-exp",
+            model = "gemini-1.5-flash",
             messages = listOf("user" to userMessage),
             systemPrompt = systemPrompt
         )
