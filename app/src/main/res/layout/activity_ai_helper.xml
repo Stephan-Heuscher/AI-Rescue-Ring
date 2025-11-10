@@ -62,9 +62,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="12dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:paddingTop="16dp"
-        android:paddingBottom="16dp"
+        android:paddingBottom="32dp"
         android:gravity="center_vertical"
         android:background="?android:attr/colorBackground"
         android:elevation="8dp">
@@ -77,10 +78,11 @@
             android:hint="Ask me anything..."
             android:minHeight="56dp"
             android:background="@android:drawable/edit_text"
-            android:padding="16dp"
+            android:padding="18dp"
             android:inputType="textCapSentences|textMultiLine"
             android:maxLines="4"
-            android:textSize="16sp" />
+            android:textSize="17sp"
+            android:lineSpacingExtra="2dp" />
 
         <Button
             android:id="@+id/voiceButton"
