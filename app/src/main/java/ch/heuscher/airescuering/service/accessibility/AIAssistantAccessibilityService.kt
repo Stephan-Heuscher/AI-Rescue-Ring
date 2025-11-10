@@ -57,6 +57,12 @@ class AIAssistantAccessibilityService : AccessibilityService() {
      * @param screenHeight Actual screen height in pixels
      */
     suspend fun performTap(x: Int, y: Int, screenWidth: Int, screenHeight: Int): Boolean {
+        // Validate coordinates
+        if (x < 0 || x > 1000 || y < 0 || y > 1000 || screenWidth <= 0 || screenHeight <= 0) {
+            Log.e(TAG, "Invalid tap coordinates: x=$x, y=$y, screen=${screenWidth}x${screenHeight}")
+            return false
+        }
+
         val actualX = (x / 1000f) * screenWidth
         val actualY = (y / 1000f) * screenHeight
 
@@ -87,6 +93,19 @@ class AIAssistantAccessibilityService : AccessibilityService() {
         screenWidth: Int, screenHeight: Int,
         durationMs: Long = 300
     ): Boolean {
+        // Validate coordinates
+        if (startX < 0 || startX > 1000 || startY < 0 || startY > 1000 ||
+            endX < 0 || endX > 1000 || endY < 0 || endY > 1000 ||
+            screenWidth <= 0 || screenHeight <= 0 || durationMs <= 0) {
+            Log.e(TAG, "Invalid swipe parameters: start=($startX,$startY), end=($endX,$endY), screen=${screenWidth}x${screenHeight}, duration=${durationMs}ms")
+            return false
+        }
+
+        // If start and end coordinates are the same, this is a long press
+        if (startX == endX && startY == endY) {
+            return performLongPress(startX, startY, screenWidth, screenHeight, durationMs)
+        }
+
         val actualStartX = (startX / 1000f) * screenWidth
         val actualStartY = (startY / 1000f) * screenHeight
         val actualEndX = (endX / 1000f) * screenWidth
@@ -123,11 +142,39 @@ class AIAssistantAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Perform the recent apps action
+     * Perform a long press at the specified coordinates
+     * @param x X coordinate (normalized 0-1000)
+     * @param y Y coordinate (normalized 0-1000)
+     * @param screenWidth Actual screen width in pixels
+     * @param screenHeight Actual screen height in pixels
+     * @param durationMs Duration of the long press in milliseconds
      */
-    fun performRecents(): Boolean {
-        Log.d(TAG, "Performing recents action")
-        return performGlobalAction(GLOBAL_ACTION_RECENTS)
+    suspend fun performLongPress(
+        x: Int, y: Int,
+        screenWidth: Int, screenHeight: Int,
+        durationMs: Long = 1000
+    ): Boolean {
+        // Validate coordinates
+        if (x < 0 || x > 1000 || y < 0 || y > 1000 ||
+            screenWidth <= 0 || screenHeight <= 0 || durationMs <= 0) {
+            Log.e(TAG, "Invalid long press parameters: x=$x, y=$y, screen=${screenWidth}x${screenHeight}, duration=${durationMs}ms")
+            return false
+        }
+
+        val actualX = (x / 1000f) * screenWidth
+        val actualY = (y / 1000f) * screenHeight
+
+        Log.d(TAG, "Performing long press at normalized ($x, $y) -> actual ($actualX, $actualY) for ${durationMs}ms")
+
+        val path = Path().apply {
+            moveTo(actualX, actualY)
+        }
+
+        val gesture = GestureDescription.Builder()
+            .addStroke(GestureDescription.StrokeDescription(path, 0, durationMs))
+            .build()
+
+        return dispatchGestureAsync(gesture)
     }
 
     /**
@@ -147,9 +194,14 @@ class AIAssistantAccessibilityService : AccessibilityService() {
                 }
             }
 
-            val dispatched = dispatchGesture(gesture, callback, null)
-            if (!dispatched) {
-                Log.e(TAG, "Failed to dispatch gesture")
+            try {
+                val dispatched = dispatchGesture(gesture, callback, null)
+                if (!dispatched) {
+                    Log.e(TAG, "Failed to dispatch gesture - dispatchGesture returned false")
+                    continuation.resume(false)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception during gesture dispatch", e)
                 continuation.resume(false)
             }
         }

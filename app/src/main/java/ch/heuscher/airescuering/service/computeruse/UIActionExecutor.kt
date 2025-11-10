@@ -216,7 +216,7 @@ class UIActionExecutor(private val context: Context) {
         val actualY = (y / 1000f) * screenHeight
         val scrollDistance = (magnitude / 1000f) * minOf(screenWidth, screenHeight)
 
-        val (startX, startY, endX, endY) = when (direction.lowercase()) {
+        val scrollPoints = when (direction.lowercase()) {
             "up" -> {
                 Pair(actualX.toInt(), (actualY + scrollDistance / 2).toInt()) to
                         Pair(actualX.toInt(), (actualY - scrollDistance / 2).toInt())
@@ -236,11 +236,25 @@ class UIActionExecutor(private val context: Context) {
             else -> return false
         }
 
+        val startPoint = scrollPoints.first
+        val endPoint = scrollPoints.second
+        val startX = startPoint.first
+        val startY = startPoint.second
+        val endX = endPoint.first
+        val endY = endPoint.second
+
         // Convert back to normalized coordinates for the service
-        val normStartX = (startX.toFloat() / screenWidth * 1000).toInt()
-        val normStartY = (startY.toFloat() / screenHeight * 1000).toInt()
-        val normEndX = (endX.toFloat() / screenWidth * 1000).toInt()
-        val normEndY = (endY.toFloat() / screenHeight * 1000).toInt()
+        val startXFloat: Float = startX.toFloat()
+        val startYFloat: Float = startY.toFloat()
+        val endXFloat: Float = endX.toFloat()
+        val endYFloat: Float = endY.toFloat()
+        val screenWidthFloat: Float = screenWidth.toFloat()
+        val screenHeightFloat: Float = screenHeight.toFloat()
+
+        val normStartX = ((startXFloat / screenWidthFloat) * 1000f).toInt()
+        val normStartY = ((startYFloat / screenHeightFloat) * 1000f).toInt()
+        val normEndX = ((endXFloat / screenWidthFloat) * 1000f).toInt()
+        val normEndY = ((endYFloat / screenHeightFloat) * 1000f).toInt()
 
         return service.performSwipe(normStartX, normStartY, normEndX, normEndY, screenWidth, screenHeight)
     }
@@ -261,15 +275,7 @@ class UIActionExecutor(private val context: Context) {
     private suspend fun performLongPress(x: Int, y: Int, screenWidth: Int, screenHeight: Int): Boolean {
         val service = accessibilityService ?: return false
 
-        // Long press is implemented as a long-duration tap
-        val actualX = (x / 1000f) * screenWidth
-        val actualY = (y / 1000f) * screenHeight
-
-        // For long press, we perform a swipe with duration but no movement
-        val normX = x
-        val normY = y
-
-        return service.performSwipe(normX, normY, normX, normY, screenWidth, screenHeight, durationMs = 1000)
+        return service.performLongPress(x, y, screenWidth, screenHeight, durationMs = 1000)
     }
 
     private suspend fun performDragDrop(

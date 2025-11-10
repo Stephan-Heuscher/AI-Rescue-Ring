@@ -265,4 +265,5 @@ Be helpful and specific about which UI elements to interact with if visible in t
             messages = listOf("user" to userMessage),
             systemPrompt = systemPrompt
         )
+    }
 }

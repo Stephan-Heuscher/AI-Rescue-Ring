@@ -42,8 +42,22 @@ class ScreenCaptureManager(private val context: Context) {
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            context.display?.getRealMetrics(displayMetrics)
+            val display = context.display
+            if (display != null) {
+                display.getRealMetrics(displayMetrics)
+            } else {
+                // Fallback to window manager if display is not available
+                @Suppress("DEPRECATION")
+                windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+            }
         } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+        }
+
+        // Ensure we have valid dimensions
+        if (displayMetrics.widthPixels == 0 || displayMetrics.heightPixels == 0) {
+            Log.w(TAG, "Display metrics not properly initialized, using fallback")
             @Suppress("DEPRECATION")
             windowManager.defaultDisplay.getRealMetrics(displayMetrics)
         }
@@ -81,6 +95,13 @@ class ScreenCaptureManager(private val context: Context) {
         val width = displayMetrics.widthPixels
         val height = displayMetrics.heightPixels
         val density = displayMetrics.densityDpi
+
+        // Validate dimensions
+        if (width <= 0 || height <= 0) {
+            Log.e(TAG, "Invalid screen dimensions: ${width}x${height}")
+            continuation.resume(null)
+            return@suspendCancellableCoroutine
+        }
 
         // Create image reader
         val reader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
