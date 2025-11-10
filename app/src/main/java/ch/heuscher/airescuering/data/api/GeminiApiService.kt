@@ -226,7 +226,7 @@ class GeminiApiService(
     }
 
     /**
-     * Generate suggestions for device assistance using Gemini's thinking mode.
+     * Generate suggestions for device assistance using Gemini's computer use model.
      *
      * @param userRequest The user's request description
      * @param screenshot Optional screenshot of the current screen
@@ -260,10 +260,132 @@ Be helpful and specific about which UI elements to interact with if visible in t
             }
         }
 
-        return generateContent(
-            model = "gemini-2.5-computer-use-preview-10-2025",
-            messages = listOf("user" to userMessage),
-            systemPrompt = systemPrompt
-        )
+        return if (screenshot != null) {
+            generateContentWithImage(
+                model = "gemini-2.5-computer-use-preview-10-2025",
+                text = userMessage,
+                image = screenshot,
+                systemPrompt = systemPrompt
+            )
+        } else {
+            generateContent(
+                model = "gemini-2.5-computer-use-preview-10-2025",
+                messages = listOf("user" to userMessage),
+                systemPrompt = systemPrompt
+            )
+        }
     }
+
+    /**
+     * Generate content with both text and image (multimodal).
+     *
+     * @param model The model to use
+     * @param text The text prompt
+     * @param image The image (screenshot) to analyze
+     * @param systemPrompt Optional system instruction
+     * @return Response from the API
+     */
+    private suspend fun generateContentWithImage(
+        model: String,
+        text: String,
+        image: Bitmap,
+        systemPrompt: String? = null
+    ): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            // Convert bitmap to base64
+            val base64Image = bitmapToBase64(image)
+
+            // Create parts with both text and image
+            val parts = listOf(
+                Part(text = text),
+                Part(inlineData = InlineData(
+                    mimeType = "image/jpeg",
+                    data = base64Image
+                ))
+            )
+
+            val contents = listOf(
+                Content(
+                    role = "user",
+                    parts = parts
+                )
+            )
+
+            val request = GeminiRequest(
+                contents = contents,
+                generationConfig = GenerationConfig(
+                    temperature = 1.0,
+                    maxOutputTokens = 8192
+                ),
+                systemInstruction = systemPrompt?.let {
+                    Content(
+                        role = "system",
+                        parts = listOf(Part(text = it))
+                    )
+                }
+            )
+
+            val url = "$BASE_URL/$model:generateContent?key=$apiKey"
+            val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
+                .toRequestBody("application/json".toMediaType())
+
+            val httpRequest = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build()
+
+            if (debug) {
+                Log.d(TAG, "Request with image: text=$text, imageSize=${image.width}x${image.height}")
+            }
+
+            client.newCall(httpRequest).execute().use { response ->
+                val responseBody = response.body?.string() ?: ""
+
+                if (debug) {
+                    Log.d(TAG, "Response code: ${response.code}")
+                    Log.d(TAG, "Response body: $responseBody")
+                }
+
+                if (!response.isSuccessful) {
+                    val errorResponse = try {
+                        json.decodeFromString<GeminiErrorResponse>(responseBody)
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    val errorMessage = errorResponse?.error?.message
+                        ?: "API request failed with code ${response.code}"
+
+                    Log.e(TAG, "API error: $errorMessage")
+                    return@withContext Result.failure(Exception(errorMessage))
+                }
+
+                val geminiResponse = json.decodeFromString<GeminiResponse>(responseBody)
+                val text = geminiResponse.candidates.firstOrNull()
+                    ?.content
+                    ?.parts
+                    ?.firstOrNull()
+                    ?.text
+
+                if (text != null) {
+                    Result.success(text)
+                } else {
+                    Result.failure(Exception("No text in response"))
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating content with image", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Convert Bitmap to Base64 encoded JPEG
+     */
+    private fun bitmapToBase64(bitmap: Bitmap): String {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        // Compress to JPEG with 85% quality to reduce size
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.NO_WRAP)
 }
