@@ -47,10 +47,7 @@
             android:name=".AIHelperActivity"
             android:exported="false"
             android:label="AI Helper"
-            android:theme="@style/Theme.Material3.DayNight.Dialog"
-            android:excludeFromRecents="true"
-            android:taskAffinity=""
-            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.AIRescueRing.Overlay"
             android:launchMode="singleTop" />
 
         <service
