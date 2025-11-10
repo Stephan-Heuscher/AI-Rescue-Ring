@@ -52,22 +52,30 @@ class GeminiApiService(
     /**
      * Generate content using the specified Gemini model.
      *
-     * @param model The model to use (e.g., "gemini-2.0-flash-exp")
+     * @param model The model to use (e.g., "gemini-2.5-computer-use-preview-10-2025")
      * @param messages List of conversation messages
      * @param systemPrompt Optional system instruction
-     * @return Response from the API or null if error
+     * @param useComputerUse Whether to enable Computer Use tools
+     * @return Response from the API (contains text or function call)
      */
     suspend fun generateContent(
         model: String,
         messages: List<Pair<String, String>>, // role to text
-        systemPrompt: String? = null
-    ): Result<String> = withContext(Dispatchers.IO) {
+        systemPrompt: String? = null,
+        useComputerUse: Boolean = false
+    ): Result<GeminiContentResult> = withContext(Dispatchers.IO) {
         try {
             val contents = messages.map { (role, text) ->
                 Content(
                     role = role,
                     parts = listOf(Part(text = text))
                 )
+            }
+
+            val tools = if (useComputerUse) {
+                listOf(Tool(computerUse = ComputerUse()))
+            } else {
+                null
             }
 
             val request = GeminiRequest(
@@ -81,7 +89,8 @@ class GeminiApiService(
                         role = "system",
                         parts = listOf(Part(text = it))
                     )
-                }
+                },
+                tools = tools
             )
 
             val url = "$BASE_URL/$model:generateContent?key=$apiKey"
@@ -120,16 +129,21 @@ class GeminiApiService(
                 }
 
                 val geminiResponse = json.decodeFromString<GeminiResponse>(responseBody)
-                val text = geminiResponse.candidates.firstOrNull()
+                val firstPart = geminiResponse.candidates.firstOrNull()
                     ?.content
                     ?.parts
                     ?.firstOrNull()
-                    ?.text
 
-                if (text != null) {
-                    Result.success(text)
+                val result = when {
+                    firstPart?.text != null -> GeminiContentResult(text = firstPart.text)
+                    firstPart?.functionCall != null -> GeminiContentResult(functionCall = firstPart.functionCall)
+                    else -> null
+                }
+
+                if (result != null) {
+                    Result.success(result)
                 } else {
-                    Result.failure(Exception("No text in response"))
+                    Result.failure(Exception("No text or function call in response"))
                 }
             }
         } catch (e: Exception) {
@@ -139,40 +153,40 @@ class GeminiApiService(
     }
 
     /**
-     * Generate suggestions for device assistance using Gemini's thinking mode.
+     * Generate suggestions for device assistance using Gemini's Computer Use model.
      *
      * @param userRequest The user's request description
      * @param context Additional context about the device state
-     * @return Suggested actions as text
+     * @return Response with text or function call for tool use
      */
     suspend fun generateAssistanceSuggestion(
         userRequest: String,
         context: String = ""
-    ): Result<String> {
+    ): Result<GeminiContentResult> {
         val systemPrompt = """
-You are an AI assistant helping users with their Android device. You have the ability to suggest actions the user can perform on their device.
+You are an AI assistant with computer use capabilities helping users with their Android device.
 
-When the user asks for help, analyze their request and suggest specific actions they can take.
+When the user asks for help, you can:
+1. Provide text responses with guidance and information
+2. Suggest specific UI actions using the computer_use tool
 
-Your response should be structured as follows:
-1. A brief summary of what you understand they want to do
-2. Suggested steps or actions
-3. Any important notes or warnings
+When suggesting actions, describe what you want to do and why. The user will approve or deny your suggestions before they are executed.
 
-Be concise and actionable. Focus on what can be done right now on their device.
+Be helpful, clear, and explain your reasoning.
         """.trimIndent()
 
         val userMessage = buildString {
-            append("User request: $userRequest")
+            append(userRequest)
             if (context.isNotEmpty()) {
-                append("\n\nDevice context: $context")
+                append("\n\nContext: $context")
             }
         }
 
         return generateContent(
-            model = "gemini-2.0-flash-exp",
+            model = "gemini-2.5-computer-use-preview-10-2025",
             messages = listOf("user" to userMessage),
-            systemPrompt = systemPrompt
+            systemPrompt = systemPrompt,
+            useComputerUse = true
         )
     }
 }

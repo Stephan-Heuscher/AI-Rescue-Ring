@@ -13,7 +13,8 @@ data class GeminiRequest(
     @SerialName("generationConfig")
     val generationConfig: GenerationConfig? = null,
     @SerialName("systemInstruction")
-    val systemInstruction: Content? = null
+    val systemInstruction: Content? = null,
+    val tools: List<Tool>? = null
 )
 
 @Serializable
@@ -24,7 +25,9 @@ data class Content(
 
 @Serializable
 data class Part(
-    val text: String? = null
+    val text: String? = null,
+    @SerialName("functionCall")
+    val functionCall: FunctionCall? = null
 )
 
 @Serializable
@@ -76,3 +79,37 @@ data class GeminiError(
     val message: String,
     val status: String
 )
+
+/**
+ * Tool definition for Computer Use
+ */
+@Serializable
+data class Tool(
+    @SerialName("computer_use")
+    val computerUse: ComputerUse? = null
+)
+
+@Serializable
+data class ComputerUse(
+    val environment: String = "ENVIRONMENT_BROWSER"
+)
+
+/**
+ * Function call from the model
+ */
+@Serializable
+data class FunctionCall(
+    val name: String,
+    val args: Map<String, kotlinx.serialization.json.JsonElement>? = null
+)
+
+/**
+ * Result from generateContent that can contain either text or a function call
+ */
+data class GeminiContentResult(
+    val text: String? = null,
+    val functionCall: FunctionCall? = null
+) {
+    val hasText: Boolean get() = text != null
+    val hasFunctionCall: Boolean get() = functionCall != null
+}

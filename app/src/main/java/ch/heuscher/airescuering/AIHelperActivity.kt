@@ -223,17 +223,20 @@ class AIHelperActivity : AppCompatActivity() {
                 )
 
                 result.onSuccess { response ->
-                    val assistantMessage = AIMessage(
-                        id = UUID.randomUUID().toString(),
-                        content = response,
-                        role = MessageRole.ASSISTANT
-                    )
-                    addMessage(assistantMessage)
-
-                    // Check if we should show suggestion dialog
-                    if (response.contains("suggest", ignoreCase = true) ||
-                        response.contains("recommend", ignoreCase = true)) {
-                        showSuggestionDialog(response)
+                    when {
+                        response.hasText -> {
+                            // Regular text response
+                            val assistantMessage = AIMessage(
+                                id = UUID.randomUUID().toString(),
+                                content = response.text!!,
+                                role = MessageRole.ASSISTANT
+                            )
+                            addMessage(assistantMessage)
+                        }
+                        response.hasFunctionCall -> {
+                            // AI wants to perform an action - show approval dialog
+                            showActionApprovalDialog(response.functionCall!!)
+                        }
                     }
                 }.onFailure { error ->
                     Toast.makeText(
@@ -304,6 +307,69 @@ class AIHelperActivity : AppCompatActivity() {
             }
         )
         dialog.show()
+    }
+
+    private fun showActionApprovalDialog(functionCall: ch.heuscher.airescuering.data.api.FunctionCall) {
+        // Format the function call details for display
+        val actionName = functionCall.name
+        val actionArgs = functionCall.args?.entries?.joinToString("\n") { (key, value) ->
+            "  $key: $value"
+        } ?: "No parameters"
+
+        val message = buildString {
+            append("🤖 AI wants to perform an action:\n\n")
+            append("Action: $actionName\n\n")
+            append("Parameters:\n$actionArgs\n\n")
+            append("Do you want to approve this action?")
+        }
+
+        // Add the AI's request as a message
+        val requestMessage = AIMessage(
+            id = UUID.randomUUID().toString(),
+            content = "I'd like to: $actionName",
+            role = MessageRole.ASSISTANT
+        )
+        addMessage(requestMessage)
+
+        AlertDialog.Builder(this)
+            .setTitle("Action Approval Required")
+            .setMessage(message)
+            .setPositiveButton("✓ Approve") { dialog, _ ->
+                // User approved the action
+                val approvalMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "✓ You approved: $actionName",
+                    role = MessageRole.USER
+                )
+                addMessage(approvalMessage)
+
+                Toast.makeText(
+                    this,
+                    "Action approved: $actionName\n(Execution not yet implemented)",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                dialog.dismiss()
+            }
+            .setNegativeButton("✗ Deny") { dialog, _ ->
+                // User denied the action
+                val denialMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "✗ You denied: $actionName",
+                    role = MessageRole.USER
+                )
+                addMessage(denialMessage)
+
+                Toast.makeText(
+                    this,
+                    "Action denied",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                dialog.dismiss()
+            }
+            .setCancelable(false)
+            .show()
     }
 
     /**

@@ -30,7 +30,7 @@ class SecureAIHelperDataSource(
         private const val KEY_VOICE_INPUT = "ai_helper_voice_input"
         private const val KEY_AUTO_EXECUTE = "ai_helper_auto_execute"
         private const val KEY_MODEL = "ai_helper_model"
-        private const val DEFAULT_MODEL = "gemini-2.0-flash-exp"
+        private const val DEFAULT_MODEL = "gemini-2.5-computer-use-preview-10-2025"
         private const val KEY_MIGRATED = "migrated_from_encrypted"
     }
 
@@ -43,21 +43,6 @@ class SecureAIHelperDataSource(
     init {
         // Migrate from encrypted storage if needed
         migrateFromEncryptedStorage()
-
-        // Fix any existing computer-use model in current preferences
-        fixComputerUseModel()
-    }
-
-    /**
-     * Fixes any computer-use model that may have been set previously.
-     * The computer-use model requires special tool configurations that we don't support.
-     */
-    private fun fixComputerUseModel() {
-        val currentModel = prefs.getString(KEY_MODEL, DEFAULT_MODEL) ?: DEFAULT_MODEL
-        if (currentModel.contains("computer-use", ignoreCase = true)) {
-            Log.w(TAG, "Detected unsupported computer-use model: $currentModel, resetting to: $DEFAULT_MODEL")
-            prefs.edit().putString(KEY_MODEL, DEFAULT_MODEL).apply()
-        }
     }
 
     /**
@@ -89,13 +74,7 @@ class SecureAIHelperDataSource(
             val enabled = encryptedPrefs.getBoolean(KEY_ENABLED, false)
             val voiceInput = encryptedPrefs.getBoolean(KEY_VOICE_INPUT, true)
             val autoExecute = encryptedPrefs.getBoolean(KEY_AUTO_EXECUTE, false)
-            var model = encryptedPrefs.getString(KEY_MODEL, DEFAULT_MODEL) ?: DEFAULT_MODEL
-
-            // Fix any computer-use model to use the default model
-            if (model.contains("computer-use", ignoreCase = true)) {
-                Log.d(TAG, "Detected computer-use model, resetting to default: $DEFAULT_MODEL")
-                model = DEFAULT_MODEL
-            }
+            val model = encryptedPrefs.getString(KEY_MODEL, DEFAULT_MODEL) ?: DEFAULT_MODEL
 
             if (apiKey.isNotEmpty() || enabled) {
                 Log.d(TAG, "Migrating from encrypted storage to standard SharedPreferences")
