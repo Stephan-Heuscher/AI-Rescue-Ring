@@ -81,6 +81,11 @@ class GeminiApiService(
                         role = "system",
                         parts = listOf(Part(text = it))
                     )
+                },
+                tools = if (model.contains("computer-use")) {
+                    listOf(Tool(computerUse = ComputerUse(environment = Environment.BROWSER)))
+                } else {
+                    null
                 }
             )
 

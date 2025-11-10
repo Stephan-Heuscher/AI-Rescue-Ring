@@ -13,7 +13,8 @@ data class GeminiRequest(
     @SerialName("generationConfig")
     val generationConfig: GenerationConfig? = null,
     @SerialName("systemInstruction")
-    val systemInstruction: Content? = null
+    val systemInstruction: Content? = null,
+    val tools: List<Tool>? = null
 )
 
 @Serializable
@@ -76,3 +77,30 @@ data class GeminiError(
     val message: String,
     val status: String
 )
+
+/**
+ * Tool configuration for Gemini API
+ */
+@Serializable
+data class Tool(
+    @SerialName("computer_use")
+    val computerUse: ComputerUse? = null
+)
+
+/**
+ * Computer Use tool configuration
+ */
+@Serializable
+data class ComputerUse(
+    val environment: String = "ENVIRONMENT_BROWSER",
+    @SerialName("excluded_predefined_functions")
+    val excludedPredefinedFunctions: List<String>? = null
+)
+
+/**
+ * Environment constants for Computer Use
+ */
+object Environment {
+    const val BROWSER = "ENVIRONMENT_BROWSER"
+    const val DESKTOP = "ENVIRONMENT_DESKTOP"
+}
