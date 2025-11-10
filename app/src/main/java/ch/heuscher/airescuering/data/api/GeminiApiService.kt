@@ -388,4 +388,5 @@ Be helpful and specific about which UI elements to interact with if visible in t
         bitmap.compress(Bitmap.CompressFormat.JPEG, 85, byteArrayOutputStream)
         val byteArray = byteArrayOutputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.NO_WRAP)
+    }
 }
