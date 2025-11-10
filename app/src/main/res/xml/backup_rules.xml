@@ -4,8 +4,11 @@
    See https://developer.android.com/guide/topics/data/autobackup
 -->
 <full-backup-content>
-    <!-- Include all shared preferences (DataStore uses this) -->
+    <!-- Include all shared preferences (includes AI Helper settings and API key) -->
     <include domain="sharedpref" path="."/>
+
+    <!-- Exclude old EncryptedSharedPreferences - deprecated, migrated to standard prefs -->
+    <exclude domain="sharedpref" path="ai_helper_secure_prefs.xml"/>
 
     <!-- Include DataStore preferences specifically -->
     <include domain="file" path="datastore/"/>

@@ -1,9 +1,14 @@
 package ch.heuscher.airescuering
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
+import android.text.InputType
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -44,8 +49,10 @@ class AIHelperActivity : AppCompatActivity() {
     private lateinit var adapter: ChatAdapter
 
     private var geminiService: GeminiApiService? = null
+    private var currentScreenshot: Bitmap? = null
 
     companion object {
+        private const val TAG = "AIHelperActivity"
         private const val VOICE_RECOGNITION_REQUEST_CODE = 1001
     }
 
@@ -58,12 +65,58 @@ class AIHelperActivity : AppCompatActivity() {
         setupListeners()
         initGeminiService()
 
+        // Capture screenshot of the screen before opening chat
+        captureScreenshot()
+
         // Add welcome message
         addMessage(AIMessage(
             id = UUID.randomUUID().toString(),
-            content = "Hello! I'm your AI assistant. Tap the rescue ring and tell me what you'd like help with.",
+            content = "Hello! I'm your AI assistant. I can see what's on your screen and help you with it. What would you like to do?",
             role = MessageRole.ASSISTANT
         ))
+    }
+
+    /**
+     * Capture a screenshot of the screen using accessibility service
+     */
+    private fun captureScreenshot() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Log.d(TAG, "Requesting screenshot capture...")
+            BackHomeAccessibilityService.captureScreen { bitmap ->
+                if (bitmap != null) {
+                    currentScreenshot = bitmap
+                    Log.d(TAG, "Screenshot captured: ${bitmap.width}x${bitmap.height}")
+
+                    // Add message indicating screenshot was captured
+                    runOnUiThread {
+                        val screenshotMessage = AIMessage(
+                            id = UUID.randomUUID().toString(),
+                            content = "📸 I've captured a screenshot of what was on your screen (${bitmap.width}x${bitmap.height}). I can analyze it to help you.",
+                            role = MessageRole.ASSISTANT
+                        )
+                        addMessage(screenshotMessage)
+                    }
+                } else {
+                    Log.w(TAG, "Screenshot capture failed or returned null")
+                    runOnUiThread {
+                        val failureMessage = AIMessage(
+                            id = UUID.randomUUID().toString(),
+                            content = "⚠️ Couldn't capture a screenshot. Make sure accessibility service is enabled. I can still help with text-based questions!",
+                            role = MessageRole.ASSISTANT
+                        )
+                        addMessage(failureMessage)
+                    }
+                }
+            }
+        } else {
+            Log.w(TAG, "Screenshot capture requires Android R (API 30+)")
+            val notSupportedMessage = AIMessage(
+                id = UUID.randomUUID().toString(),
+                content = "⚠️ Screenshot capture requires Android 11+. I can still help with text-based questions!",
+                role = MessageRole.ASSISTANT
+            )
+            addMessage(notSupportedMessage)
+        }
     }
 
     private fun initViews() {
@@ -105,15 +158,75 @@ class AIHelperActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val apiKey = ServiceLocator.aiHelperRepository.getApiKey().firstOrNull() ?: ""
             if (apiKey.isEmpty()) {
-                Toast.makeText(
-                    this@AIHelperActivity,
-                    "Please set API key in settings",
-                    Toast.LENGTH_LONG
-                ).show()
+                // Show prominent warning in chat with option to enter API key
+                val warningMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "⚠️ API Key Not Configured\n\nTo use the AI assistant, you need to set up a Gemini API key.\n\nTap the button below to enter your API key now, or you can set it later in the app settings.",
+                    role = MessageRole.ASSISTANT
+                )
+                addMessage(warningMessage)
+
+                // Show dialog to enter API key
+                showApiKeyDialog()
                 return@launch
             }
             geminiService = GeminiApiService(apiKey, debug = true)
         }
+    }
+
+    private fun showApiKeyDialog() {
+        val input = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_TEXT
+            hint = "Enter your Gemini API key"
+            setPadding(50, 40, 50, 40)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Enter API Key")
+            .setMessage("Enter your Google Gemini API key to enable AI assistance.\n\nYou can get a free API key from: https://aistudio.google.com/app/apikey")
+            .setView(input)
+            .setPositiveButton("Save") { dialog, _ ->
+                val apiKey = input.text.toString().trim()
+                if (apiKey.isNotEmpty()) {
+                    lifecycleScope.launch {
+                        ServiceLocator.aiHelperRepository.setApiKey(apiKey)
+                        ServiceLocator.aiHelperRepository.setEnabled(true)
+
+                        // Initialize Gemini service with new key
+                        geminiService = GeminiApiService(apiKey, debug = true)
+
+                        // Add success message
+                        val successMessage = AIMessage(
+                            id = UUID.randomUUID().toString(),
+                            content = "✅ API Key Configured!\n\nYour API key has been saved. You can now chat with the AI assistant!",
+                            role = MessageRole.ASSISTANT
+                        )
+                        addMessage(successMessage)
+
+                        Toast.makeText(
+                            this@AIHelperActivity,
+                            "API key saved successfully!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    Toast.makeText(
+                        this@AIHelperActivity,
+                        "API key cannot be empty",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setNeutralButton("Open Settings") { dialog, _ ->
+                val intent = Intent(this@AIHelperActivity, MainActivity::class.java)
+                startActivity(intent)
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun sendMessage(text: String) {
@@ -157,6 +270,7 @@ class AIHelperActivity : AppCompatActivity() {
 
                 val result = service.generateAssistanceSuggestion(
                     userRequest = text,
+                    screenshot = currentScreenshot,
                     context = "The user is on their Android device"
                 )
 
