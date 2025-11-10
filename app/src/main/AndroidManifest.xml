@@ -47,7 +47,7 @@
             android:name=".AIHelperActivity"
             android:exported="false"
             android:label="AI Helper"
-            android:theme="@style/Theme.AIRescueRing.Overlay"
+            android:theme="@style/Theme.AIRescueRing"
             android:launchMode="singleTop" />
 
         <service

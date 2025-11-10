@@ -22,7 +22,12 @@ class OrientationHandler(private val context: Context) {
     fun getCurrentRotation(): Int {
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            context.display?.rotation ?: 0
+            try {
+                context.display?.rotation ?: windowManager.defaultDisplay.rotation
+            } catch (e: UnsupportedOperationException) {
+                // Service contexts don't have displays, fall back to WindowManager
+                windowManager.defaultDisplay.rotation
+            }
         } else {
             @Suppress("DEPRECATION")
             windowManager.defaultDisplay.rotation
@@ -36,10 +41,16 @@ class OrientationHandler(private val context: Context) {
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val size = Point()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val windowMetrics = windowManager.currentWindowMetrics
-            val bounds = windowMetrics.bounds
-            size.x = bounds.width()
-            size.y = bounds.height()
+            try {
+                val windowMetrics = windowManager.currentWindowMetrics
+                val bounds = windowMetrics.bounds
+                size.x = bounds.width()
+                size.y = bounds.height()
+            } catch (e: Exception) {
+                // Fall back to default display for service contexts
+                @Suppress("DEPRECATION")
+                windowManager.defaultDisplay.getSize(size)
+            }
         } else {
             @Suppress("DEPRECATION")
             windowManager.defaultDisplay.getSize(size)

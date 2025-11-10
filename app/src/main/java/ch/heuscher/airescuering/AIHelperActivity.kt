@@ -28,6 +28,7 @@ import androidx.cardview.widget.CardView
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import ch.heuscher.airescuering.BackHomeAccessibilityService
 import ch.heuscher.airescuering.data.api.GeminiApiService
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.model.AIMessage
@@ -140,6 +141,20 @@ class AIHelperActivity : AppCompatActivity() {
      */
     private fun captureScreenshot() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Check if accessibility service is enabled
+            if (!BackHomeAccessibilityService.isServiceEnabled()) {
+                Log.w(TAG, "Accessibility service not enabled, cannot capture screenshot")
+                runOnUiThread {
+                    val failureMessage = AIMessage(
+                        id = UUID.randomUUID().toString(),
+                        content = "⚠️ Accessibility service not enabled. Enable it in Settings > Accessibility > AI Rescue Ring to allow screenshot capture.",
+                        role = MessageRole.ASSISTANT
+                    )
+                    addMessage(failureMessage)
+                }
+                return
+            }
+
             Log.d(TAG, "Requesting screenshot capture...")
             BackHomeAccessibilityService.captureScreen { bitmap ->
                 if (bitmap != null) {
@@ -405,8 +420,6 @@ class AIHelperActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Toast.makeText(this, "Voice recognition not available", Toast.LENGTH_SHORT).show()
         }
-    }
-
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
