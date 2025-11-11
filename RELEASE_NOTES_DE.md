@@ -1,5 +1,28 @@
 # Release Notes - AI Rescue Ring
 
+## Version 3.1.0 (2025-11-11)
+
+### Safe-Home-Modus als Standard & Verbesserter Farbwähler
+
+#### 🏠 Safe-Home-Modus jetzt Standard
+- **Standard-Verhalten**: Safe-Home-Modus ist jetzt das Standard-Tipp-Verhalten
+- **Unfallvermeidung**: Langes Drücken (500ms) vor dem Verschieben des Rings erforderlich
+- **Nutzer-Sicherheit**: Verhindert versehentliche Ringbewegungen bei normaler Nutzung
+- **Visuelles Feedback**: Pulsierender weißer Halo zeigt Verschiebbarkeit
+
+#### 🎨 Verbesserter Farbwähler
+- **Hex-Eingabe**: Neues Hex-Farbeingabefeld für präzise Farbwahl
+- **Einfache Eingabe**: Farben direkt im #RRGGBB-Format eingeben
+- **Bidirektionale Synchronisation**: RGB-Schieberegler und Hex-Eingabe bleiben synchronisiert
+- **Benutzerfreundlich**: Einfacher, exakte Markenfarben zu verwenden oder Farbwerte zu teilen
+
+#### 📚 Dokumentations-Updates
+- Alle Dokumentation aktualisiert, um Safe-Home-Modus als Standard zu reflektieren
+- Verbesserte Anweisungen zur Farbwähler-Nutzung
+- Umfassende technische Dokumentation hinzugefügt
+
+---
+
 ## Version 3.0.0 (2025-11-09)
 
 ### Komplettes Rebranding & KI-Integration

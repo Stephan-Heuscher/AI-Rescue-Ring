@@ -125,6 +125,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun showColorPickerDialog() {
         val dialogView = layoutInflater.inflate(R.layout.color_picker_dialog, null)
         val colorPreview = dialogView.findViewById<View>(R.id.color_preview)
+        val hexInput = dialogView.findViewById<EditText>(R.id.hex_input)
         val redSeekBar = dialogView.findViewById<SeekBar>(R.id.red_seekbar)
         val greenSeekBar = dialogView.findViewById<SeekBar>(R.id.green_seekbar)
         val blueSeekBar = dialogView.findViewById<SeekBar>(R.id.blue_seekbar)
@@ -137,18 +138,55 @@ class SettingsActivity : AppCompatActivity() {
         greenSeekBar.progress = Color.green(currentColor)
         blueSeekBar.progress = Color.blue(currentColor)
 
-        fun updateColor() {
+        var isUpdatingFromHex = false
+
+        fun updateColorFromSliders() {
+            if (isUpdatingFromHex) return
             val color = Color.rgb(redSeekBar.progress, greenSeekBar.progress, blueSeekBar.progress)
             colorPreview.setBackgroundColor(color)
             redValue.text = redSeekBar.progress.toString()
             greenValue.text = greenSeekBar.progress.toString()
             blueValue.text = blueSeekBar.progress.toString()
+
+            // Update hex input
+            val hexColor = String.format("#%02X%02X%02X",
+                redSeekBar.progress,
+                greenSeekBar.progress,
+                blueSeekBar.progress)
+            hexInput.setText(hexColor)
         }
-        updateColor()
+        updateColorFromSliders()
+
+        // Handle hex input changes
+        hexInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val hexString = s.toString()
+                if (hexString.matches(Regex("^#[0-9A-Fa-f]{6}$"))) {
+                    try {
+                        isUpdatingFromHex = true
+                        val color = Color.parseColor(hexString)
+                        colorPreview.setBackgroundColor(color)
+                        redSeekBar.progress = Color.red(color)
+                        greenSeekBar.progress = Color.green(color)
+                        blueSeekBar.progress = Color.blue(color)
+                        redValue.text = Color.red(color).toString()
+                        greenValue.text = Color.green(color).toString()
+                        blueValue.text = Color.blue(color).toString()
+                        isUpdatingFromHex = false
+                    } catch (e: IllegalArgumentException) {
+                        // Invalid hex color
+                    }
+                }
+            }
+        })
 
         val seekBarListener = object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                updateColor()
+                if (fromUser) {
+                    updateColorFromSliders()
+                }
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}

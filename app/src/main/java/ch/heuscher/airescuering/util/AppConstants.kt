@@ -73,5 +73,5 @@ object AppConstants {
     const val DEFAULT_COLOR = 0xFF2196F3.toInt() // Blue
     const val DEFAULT_ENABLED = false
     const val DEFAULT_KEYBOARD_AVOIDANCE = true
-    const val DEFAULT_TAP_BEHAVIOR = "STANDARD"
+    const val DEFAULT_TAP_BEHAVIOR = "SAFE_HOME"
 }

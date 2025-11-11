@@ -23,7 +23,7 @@ AI Rescue Ring is your intelligent companion on Android - always visible, always
 
 - **Tap** → Open AI chat
 - **Voice or text** → Ask your question
-- **Long press + drag** → Reposition ring
+- **Long press (500ms) + drag** → Reposition ring (Safe Home mode enabled by default)
 
 ## 🚀 Installation
 
@@ -47,11 +47,11 @@ AI Rescue Ring is your intelligent companion on Android - always visible, always
 ## 🎮 How it works
 
 1. **Enable ring**: Activate the switch in the app
-2. **Move ring**: Long press + drag to reposition
+2. **Move ring**: Long press (500ms) + drag to reposition (Safe Home mode)
 3. **Get help**: Tap the ring and ask your question
-4. **Customize**: Adjust color and transparency in settings
+4. **Customize**: Adjust color with preset colors or custom hex color picker in settings
 
-The ring automatically avoids the keyboard and stays in the correct position when rotating the device.
+The ring operates in Safe Home mode by default, requiring a long press before dragging to prevent accidental movements. The ring automatically avoids the keyboard and stays in the correct position when rotating the device.
 
 ## 🛠️ Technical Details
 

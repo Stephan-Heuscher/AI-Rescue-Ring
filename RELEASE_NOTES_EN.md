@@ -1,5 +1,28 @@
 # Release Notes - AI Rescue Ring
 
+## Version 3.1.0 (2025-11-11)
+
+### Safe Home Mode by Default & Enhanced Color Picker
+
+#### 🏠 Safe Home Mode Now Default
+- **Default Behavior**: Safe Home mode is now the default tap behavior
+- **Accidental Prevention**: Long press (500ms) required before dragging the ring
+- **User Safety**: Prevents accidental ring movements during normal use
+- **Visual Feedback**: Pulsing white halo shows when draggable
+
+#### 🎨 Enhanced Color Picker
+- **Hex Input**: New hex color input field for precise color selection
+- **Easy Entry**: Type colors directly in #RRGGBB format
+- **Bi-directional Sync**: RGB sliders and hex input stay synchronized
+- **User-Friendly**: Easier to use exact brand colors or share color values
+
+#### 📚 Documentation Updates
+- Updated all documentation to reflect Safe Home mode as default
+- Improved color picker usage instructions
+- Added comprehensive technical documentation
+
+---
+
 ## Version 3.0.0 (2025-11-09)
 
 ### Complete Rebranding & AI Integration

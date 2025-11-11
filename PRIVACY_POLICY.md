@@ -31,10 +31,10 @@ AI Rescue Ring itself **does not collect, store, or transmit** any personal info
 The app stores the following settings **only on your device**:
 
 - Position of the floating rescue ring
-- Selected color preferences
+- Selected color preferences (including custom hex colors)
 - Transparency settings
 - Activation status (on/off)
-- Tap behavior mode
+- Tap behavior mode (Safe Home mode is default)
 - Animation speed configuration
 - **Google Gemini API key** (encrypted using Android KeyStore)
 
