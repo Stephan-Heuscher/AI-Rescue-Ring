@@ -28,7 +28,7 @@ class ComputerUseAgent(
     }
 
     private val uiActionExecutor = UIActionExecutor(context)
-    private val conversationHistory = mutableListOf<Content>()
+    private val conversationHistory = mutableListOf<Pair<String, String>>() // role to text
 
     /**
      * Callback for receiving updates during agent execution
@@ -73,15 +73,8 @@ class ComputerUseAgent(
 
             val systemPrompt = buildSystemPrompt()
 
-            conversationHistory.add(
-                Content(
-                    role = "user",
-                    parts = listOf(
-                        Part(text = "Screen size: ${screenWidth}x${screenHeight}\n\nUser goal: $userGoal"),
-                        Part(inlineData = InlineData(mimeType = "image/png", data = initialScreenshot))
-                    )
-                )
-            )
+            // Add initial user message
+            conversationHistory.add("user" to "Screen size: ${screenWidth}x${screenHeight}\n\nUser goal: $userGoal")
 
             callback.onThinking("Analyzing screen and planning actions...")
 
@@ -92,10 +85,11 @@ class ComputerUseAgent(
                 Log.d(TAG, "--- Turn $turn ---")
 
                 // Generate response from model
-                val response = geminiService.generateContentFull(
+                val response = geminiService.generateContent(
                     model = MODEL,
-                    contents = conversationHistory,
-                    systemPrompt = systemPrompt
+                    messages = conversationHistory,
+                    systemPrompt = systemPrompt,
+                    useComputerUse = true
                 )
 
                 if (response.isFailure) {
@@ -103,129 +97,82 @@ class ComputerUseAgent(
                     return
                 }
 
-                val geminiResponse = response.getOrNull() ?: return
-                val candidate = geminiResponse.candidates.firstOrNull()
+                val geminiResult = response.getOrNull() ?: return
 
-                if (candidate == null) {
-                    callback.onError("No response from model")
-                    return
-                }
-
-                // Add model response to history
-                conversationHistory.add(candidate.content)
-
-                // Check if there are function calls
-                val functionCalls = candidate.content.parts.mapNotNull { it.functionCall }
-
-                if (functionCalls.isEmpty()) {
-                    // No more actions - model is done
-                    val finalText = candidate.content.parts.mapNotNull { it.text }.joinToString("\n")
-                    Log.d(TAG, "Agent completed: $finalText")
-                    callback.onCompleted(finalText)
-                    return
-                }
-
-                // Execute function calls
-                callback.onThinking("Executing ${functionCalls.size} action(s)...")
-
-                val functionResponses = mutableListOf<Part>()
-
-                for (functionCall in functionCalls) {
-                    Log.d(TAG, "Executing: ${functionCall.name}")
-
-                    // Check for safety decision
-                    val safetyDecisionJson = functionCall.args["safety_decision"]
-                    val safetyDecision = safetyDecisionJson?.jsonObject
-                    if (safetyDecision != null) {
-                        val decision = safetyDecision["decision"]?.jsonPrimitive?.contentOrNull
-                        val explanation = safetyDecision["explanation"]?.jsonPrimitive?.contentOrNull
-
-                        if (decision == "require_confirmation") {
-                            // Pause and ask user for confirmation
-                            var userConfirmed = false
-                            var userResponded = false
-
-                            callback.onConfirmationRequired(
-                                explanation ?: "The AI wants to perform: ${functionCall.name}",
-                                onConfirm = {
-                                    userConfirmed = true
-                                    userResponded = true
-                                },
-                                onDeny = {
-                                    userConfirmed = false
-                                    userResponded = true
-                                }
-                            )
-
-                            // Wait for user response
-                            while (!userResponded) {
-                                delay(100)
-                            }
-
-                            if (!userConfirmed) {
-                                callback.onError("User denied action: ${functionCall.name}")
-                                return
-                            }
-                        }
-                    }
-
-                    // Execute the action
-                    val executionResult = uiActionExecutor.executeFunctionCall(
-                        functionCall,
-                        screenWidth,
-                        screenHeight
-                    )
-
-                    val success = executionResult["success"] as? Boolean ?: false
-                    callback.onActionExecuted(functionCall.name, success)
-
-                    // Convert execution result to JsonElement map
-                    val responseData = buildMap<String, JsonElement> {
-                        executionResult.forEach { (key, value) ->
-                            put(key, when (value) {
-                                is String -> JsonPrimitive(value)
-                                is Boolean -> JsonPrimitive(value)
-                                is Number -> JsonPrimitive(value)
-                                else -> JsonPrimitive(value.toString())
-                            })
-                        }
-                        // Add safety acknowledgement if needed
-                        if (safetyDecision != null) {
-                            put("safety_acknowledgement", JsonPrimitive("true"))
-                        }
-                    }
-
-                    // Wait a bit for UI to settle
-                    delay(500)
-
-                    // Capture new screenshot
-                    val newScreenshot = screenCaptureManager.captureScreen()
-                    if (newScreenshot == null) {
-                        callback.onError("Failed to capture screen after action")
+                // Handle the response
+                when {
+                    geminiResult.hasText -> {
+                        // Model provided text response - task is complete
+                        val finalText = geminiResult.text!!
+                        Log.d(TAG, "Agent completed: $finalText")
+                        callback.onCompleted(finalText)
                         return
                     }
+                    geminiResult.hasFunctionCall -> {
+                        // Model wants to perform an action
+                        val functionCall = geminiResult.functionCall!!
+                        Log.d(TAG, "Executing: ${functionCall.name}")
 
-                    // Create function response
-                    functionResponses.add(
-                        Part(
-                            functionResponse = FunctionResponse(
-                                name = functionCall.name,
-                                response = responseData
-                            ),
-                            inlineData = InlineData(mimeType = "image/png", data = newScreenshot)
+                        // Check for safety decision
+                        val safetyDecisionJson = functionCall.args?.get("safety_decision")
+                        val safetyDecision = (safetyDecisionJson as? JsonObject)
+                        if (safetyDecision != null) {
+                            val decision = safetyDecision["decision"]?.jsonPrimitive?.contentOrNull
+                            val explanation = safetyDecision["explanation"]?.jsonPrimitive?.contentOrNull
+
+                            if (decision == "require_confirmation") {
+                                // Pause and ask user for confirmation
+                                var userConfirmed = false
+                                var userResponded = false
+
+                                callback.onConfirmationRequired(
+                                    explanation ?: "The AI wants to perform: ${functionCall.name}",
+                                    onConfirm = {
+                                        userConfirmed = true
+                                        userResponded = true
+                                    },
+                                    onDeny = {
+                                        userConfirmed = false
+                                        userResponded = true
+                                    }
+                                )
+
+                                // Wait for user response
+                                while (!userResponded) {
+                                    delay(100)
+                                }
+
+                                if (!userConfirmed) {
+                                    callback.onError("User denied action: ${functionCall.name}")
+                                    return
+                                }
+                            }
+                        }
+
+                        // Execute the action
+                        val executionResult = uiActionExecutor.executeFunctionCall(
+                            functionCall,
+                            screenWidth,
+                            screenHeight
                         )
-                    )
+
+                        val success = executionResult["success"] as? Boolean ?: false
+                        callback.onActionExecuted(functionCall.name, success)
+
+                        // Add model response to conversation
+                        conversationHistory.add("model" to "Executed: ${functionCall.name}")
+
+                        // Wait a bit for UI to settle
+                        delay(500)
+
+                        // Continue the loop for next action
+                        callback.onThinking("Processing results...")
+                    }
+                    else -> {
+                        callback.onError("Unexpected response from model")
+                        return
+                    }
                 }
-
-                // Add function responses to history
-                conversationHistory.add(
-                    Content(
-                        role = "user",
-                        parts = functionResponses
-                    )
-                )
-
-                callback.onThinking("Processing results...")
             }
 
             // Max turns reached

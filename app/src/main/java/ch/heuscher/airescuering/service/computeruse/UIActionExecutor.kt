@@ -65,10 +65,11 @@ class UIActionExecutor(private val context: Context) {
         result["action"] = functionCall.name
 
         try {
+            val args = functionCall.args ?: emptyMap()
             when (functionCall.name) {
                 "click_at" -> {
-                    val x = functionCall.args["x"]?.getIntOrNull() ?: 0
-                    val y = functionCall.args["y"]?.getIntOrNull() ?: 0
+                    val x = args["x"]?.getIntOrNull() ?: 0
+                    val y = args["y"]?.getIntOrNull() ?: 0
                     val success = performClick(x, y, screenWidth, screenHeight)
                     result["success"] = success
                     if (!success) {
@@ -77,11 +78,11 @@ class UIActionExecutor(private val context: Context) {
                 }
 
                 "type_text_at" -> {
-                    val x = functionCall.args["x"]?.getIntOrNull() ?: 0
-                    val y = functionCall.args["y"]?.getIntOrNull() ?: 0
-                    val text = functionCall.args["text"]?.getStringOrNull() ?: ""
-                    val pressEnter = functionCall.args["press_enter"]?.getBooleanOrNull() ?: true
-                    val clearBefore = functionCall.args["clear_before_typing"]?.getBooleanOrNull() ?: true
+                    val x = args["x"]?.getIntOrNull() ?: 0
+                    val y = args["y"]?.getIntOrNull() ?: 0
+                    val text = args["text"]?.getStringOrNull() ?: ""
+                    val pressEnter = args["press_enter"]?.getBooleanOrNull() ?: true
+                    val clearBefore = args["clear_before_typing"]?.getBooleanOrNull() ?: true
 
                     val success = performTypeText(x, y, text, pressEnter, clearBefore, screenWidth, screenHeight)
                     result["success"] = success
@@ -91,10 +92,10 @@ class UIActionExecutor(private val context: Context) {
                 }
 
                 "scroll_at" -> {
-                    val x = functionCall.args["x"]?.getIntOrNull() ?: 500
-                    val y = functionCall.args["y"]?.getIntOrNull() ?: 500
-                    val direction = functionCall.args["direction"]?.getStringOrNull() ?: "down"
-                    val magnitude = functionCall.args["magnitude"]?.getIntOrNull() ?: 800
+                    val x = args["x"]?.getIntOrNull() ?: 500
+                    val y = args["y"]?.getIntOrNull() ?: 500
+                    val direction = args["direction"]?.getStringOrNull() ?: "down"
+                    val magnitude = args["magnitude"]?.getIntOrNull() ?: 800
 
                     val success = performScroll(x, y, direction, magnitude, screenWidth, screenHeight)
                     result["success"] = success
@@ -104,7 +105,7 @@ class UIActionExecutor(private val context: Context) {
                 }
 
                 "scroll_document" -> {
-                    val direction = functionCall.args["direction"]?.getStringOrNull() ?: "down"
+                    val direction = args["direction"]?.getStringOrNull() ?: "down"
                     val success = performDocumentScroll(direction, screenWidth, screenHeight)
                     result["success"] = success
                     if (!success) {
@@ -134,14 +135,14 @@ class UIActionExecutor(private val context: Context) {
                 }
 
                 "open_app" -> {
-                    val appName = functionCall.args["app_name"]?.getStringOrNull()
+                    val appName = args["app_name"]?.getStringOrNull()
                     result["success"] = false
                     result["error"] = "App opening not yet implemented. App requested: $appName"
                 }
 
                 "long_press_at" -> {
-                    val x = functionCall.args["x"]?.getIntOrNull() ?: 0
-                    val y = functionCall.args["y"]?.getIntOrNull() ?: 0
+                    val x = args["x"]?.getIntOrNull() ?: 0
+                    val y = args["y"]?.getIntOrNull() ?: 0
                     val success = performLongPress(x, y, screenWidth, screenHeight)
                     result["success"] = success
                     if (!success) {
@@ -150,10 +151,10 @@ class UIActionExecutor(private val context: Context) {
                 }
 
                 "drag_and_drop" -> {
-                    val x = functionCall.args["x"]?.getIntOrNull() ?: 0
-                    val y = functionCall.args["y"]?.getIntOrNull() ?: 0
-                    val destX = functionCall.args["destination_x"]?.getIntOrNull() ?: 0
-                    val destY = functionCall.args["destination_y"]?.getIntOrNull() ?: 0
+                    val x = args["x"]?.getIntOrNull() ?: 0
+                    val y = args["y"]?.getIntOrNull() ?: 0
+                    val destX = args["destination_x"]?.getIntOrNull() ?: 0
+                    val destY = args["destination_y"]?.getIntOrNull() ?: 0
                     val success = performDragDrop(x, y, destX, destY, screenWidth, screenHeight)
                     result["success"] = success
                     if (!success) {
