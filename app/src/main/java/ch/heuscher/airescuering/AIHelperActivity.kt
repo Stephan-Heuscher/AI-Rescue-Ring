@@ -3,39 +3,27 @@ package ch.heuscher.airescuering
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.speech.RecognizerIntent
 import android.text.InputType
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import ch.heuscher.airescuering.BackHomeAccessibilityService
 import ch.heuscher.airescuering.data.api.GeminiApiService
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.model.AIMessage
 import ch.heuscher.airescuering.domain.model.MessageRole
-import ch.heuscher.airescuering.service.accessibility.AIAssistantAccessibilityService
-import ch.heuscher.airescuering.service.computeruse.ComputerUseAgent
-import ch.heuscher.airescuering.service.screencapture.ScreenCaptureManager
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -58,139 +46,26 @@ class AIHelperActivity : AppCompatActivity() {
     private lateinit var adapter: ChatAdapter
 
     private var geminiService: GeminiApiService? = null
-    private var currentScreenshot: Bitmap? = null
 
     companion object {
-        private const val TAG = "AIHelperActivity"
         private const val VOICE_RECOGNITION_REQUEST_CODE = 1001
     }
 
-    // Activity Result Launcher for voice recognition
-    private lateinit var voiceRecognitionLauncher: ActivityResultLauncher<Intent>
-
-    // Computer Use components
-    private var screenCaptureManager: ScreenCaptureManager? = null
-    private var computerUseAgent: ComputerUseAgent? = null
-    private lateinit var screenCaptureLauncher: ActivityResultLauncher<Intent>
-    private var isComputerUseMode = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Set up window for overlay with 85% alpha (15% transparency)
-        window.apply {
-            setFlags(
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-            )
-            // Make status bar and navigation bar transparent
-            statusBarColor = Color.TRANSPARENT
-            navigationBarColor = Color.TRANSPARENT
-            // Set dim amount to 15% (making content 85% visible)
-            attributes = attributes.apply {
-                dimAmount = 0.15f
-                flags = flags or WindowManager.LayoutParams.FLAG_DIM_BEHIND
-            }
-        }
-
         setContentView(R.layout.activity_ai_helper)
-
-        // Initialize voice recognition launcher
-        voiceRecognitionLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val results = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-                results?.firstOrNull()?.let { text ->
-                    messageInput.setText(text)
-                    sendMessage(text)
-                }
-            }
-        }
-
-        // Initialize screen capture launcher
-        screenCaptureLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
-            if (result.resultCode == Activity.RESULT_OK && result.data != null) {
-                onScreenCapturePermissionGranted(result.resultCode, result.data!!)
-            } else {
-                Toast.makeText(this, "Screen capture permission denied", Toast.LENGTH_SHORT).show()
-            }
-        }
 
         initViews()
         setupRecyclerView()
         setupListeners()
         initGeminiService()
-        initScreenCaptureManager()
-
-        // Capture screenshot of the screen before opening chat
-        captureScreenshot()
 
         // Add welcome message
         addMessage(AIMessage(
             id = UUID.randomUUID().toString(),
-            content = "Hello! I'm your AI assistant.\n\n💬 **Chat Mode** (current)\nAsk me anything and I'll provide answers\n\n🤖 **Computer Use Mode**\nType \"/computer\" to let me control your device\n• I can tap, swipe, scroll, and interact with your screen\n• I'll show you what I'm doing in real-time\n• Type \"/chat\" to switch back\n\n🎤 Tip: Use the microphone button for voice input!",
+            content = "Hello! I'm your AI assistant. You can type your questions below or use the microphone button 🎤 for voice input.",
             role = MessageRole.ASSISTANT
         ))
-    }
-
-    /**
-     * Capture a screenshot of the screen using accessibility service
-     */
-    private fun captureScreenshot() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Check if accessibility service is enabled
-            if (!BackHomeAccessibilityService.isServiceEnabled()) {
-                Log.w(TAG, "Accessibility service not enabled, cannot capture screenshot")
-                runOnUiThread {
-                    val failureMessage = AIMessage(
-                        id = UUID.randomUUID().toString(),
-                        content = "⚠️ Accessibility service not enabled. Enable it in Settings > Accessibility > AI Rescue Ring to allow screenshot capture.",
-                        role = MessageRole.ASSISTANT
-                    )
-                    addMessage(failureMessage)
-                }
-                return
-            }
-
-            Log.d(TAG, "Requesting screenshot capture...")
-            BackHomeAccessibilityService.captureScreen { bitmap ->
-                if (bitmap != null) {
-                    currentScreenshot = bitmap
-                    Log.d(TAG, "Screenshot captured: ${bitmap.width}x${bitmap.height}")
-
-                    // Add message indicating screenshot was captured
-                    runOnUiThread {
-                        val screenshotMessage = AIMessage(
-                            id = UUID.randomUUID().toString(),
-                            content = "📸 I've captured a screenshot of what was on your screen (${bitmap.width}x${bitmap.height}). I can analyze it to help you.",
-                            role = MessageRole.ASSISTANT
-                        )
-                        addMessage(screenshotMessage)
-                    }
-                } else {
-                    Log.w(TAG, "Screenshot capture failed or returned null")
-                    runOnUiThread {
-                        val failureMessage = AIMessage(
-                            id = UUID.randomUUID().toString(),
-                            content = "⚠️ Couldn't capture a screenshot. Make sure accessibility service is enabled. I can still help with text-based questions!",
-                            role = MessageRole.ASSISTANT
-                        )
-                        addMessage(failureMessage)
-                    }
-                }
-            }
-        } else {
-            Log.w(TAG, "Screenshot capture requires Android R (API 30+)")
-            val notSupportedMessage = AIMessage(
-                id = UUID.randomUUID().toString(),
-                content = "⚠️ Screenshot capture requires Android 11+. I can still help with text-based questions!",
-                role = MessageRole.ASSISTANT
-            )
-            addMessage(notSupportedMessage)
-        }
     }
 
     private fun initViews() {
@@ -304,26 +179,6 @@ class AIHelperActivity : AppCompatActivity() {
     }
 
     private fun sendMessage(text: String) {
-        // Check for special commands
-        when {
-            text.equals("enable computer use", ignoreCase = true) ||
-            text.equals("/computer", ignoreCase = true) -> {
-                enableComputerUseMode(true)
-                return
-            }
-            text.equals("disable computer use", ignoreCase = true) ||
-            text.equals("/chat", ignoreCase = true) -> {
-                enableComputerUseMode(false)
-                return
-            }
-        }
-
-        // Check if Computer Use mode is enabled
-        if (isComputerUseMode) {
-            startComputerUseTask(text)
-            return
-        }
-
         // Add user message
         val userMessage = AIMessage(
             id = UUID.randomUUID().toString(),
@@ -364,21 +219,24 @@ class AIHelperActivity : AppCompatActivity() {
 
                 val result = service.generateAssistanceSuggestion(
                     userRequest = text,
-                    screenshot = currentScreenshot,
                     context = "The user is on their Android device"
                 )
 
                 result.onSuccess { response ->
-                    val assistantMessage = AIMessage(
-                        id = UUID.randomUUID().toString(),
-                        content = response,
-                        role = MessageRole.ASSISTANT
-                    )
-                    addMessage(assistantMessage)
-
-                    // Check if response contains actionable suggestions
-                    if (containsActionableSuggestion(response)) {
-                        showSuggestionDialog(response)
+                    when {
+                        response.hasText -> {
+                            // Regular text response
+                            val assistantMessage = AIMessage(
+                                id = UUID.randomUUID().toString(),
+                                content = response.text!!,
+                                role = MessageRole.ASSISTANT
+                            )
+                            addMessage(assistantMessage)
+                        }
+                        response.hasFunctionCall -> {
+                            // AI wants to perform an action - show approval dialog
+                            showActionApprovalDialog(response.functionCall!!)
+                        }
                     }
                 }.onFailure { error ->
                     Toast.makeText(
@@ -416,7 +274,7 @@ class AIHelperActivity : AppCompatActivity() {
         }
 
         try {
-            voiceRecognitionLauncher.launch(intent)
+            startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE)
         } catch (e: Exception) {
             Toast.makeText(this, "Voice recognition not available", Toast.LENGTH_SHORT).show()
         }
@@ -434,248 +292,84 @@ class AIHelperActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Checks if the AI response contains actionable suggestions that require user confirmation.
-     * This includes keywords like "suggest", "recommend", "should", "can", "try", etc.
-     */
-    private fun containsActionableSuggestion(response: String): Boolean {
-        val actionKeywords = listOf(
-            "suggest", "recommend", "should", "could", "try",
-            "open", "go to", "navigate", "tap", "click",
-            "enable", "disable", "turn on", "turn off",
-            "install", "uninstall", "download", "delete",
-            "send", "call", "message", "email",
-            "settings", "permission", "allow", "grant"
-        )
-
-        val lowerResponse = response.lowercase()
-        return actionKeywords.any { keyword -> lowerResponse.contains(keyword) }
-    }
-
-    /**
-     * Shows confirmation dialog for AI-suggested actions.
-     * Users must explicitly approve actions before they are performed.
-     */
     private fun showSuggestionDialog(suggestion: String) {
         val dialog = ch.heuscher.airescuering.ui.AISuggestionDialog(
             context = this,
             suggestion = suggestion,
             onApprove = {
-                Toast.makeText(this, "Action approved - executing...", Toast.LENGTH_SHORT).show()
-                executeApprovedAction(suggestion)
+                Toast.makeText(this, "Suggestion approved", Toast.LENGTH_SHORT).show()
+                // TODO: Execute the approved action
             },
             onRefine = {
                 Toast.makeText(this, "Let's refine the suggestion", Toast.LENGTH_SHORT).show()
-                messageInput.setText("I'd like to refine that suggestion: ")
-                messageInput.setSelection(messageInput.text.length)
+                messageInput.setText("I'd like to refine that suggestion...")
                 messageInput.requestFocus()
-            },
-            onCancel = {
-                Toast.makeText(this, "Action cancelled", Toast.LENGTH_SHORT).show()
             }
         )
         dialog.show()
     }
 
-    // ===== Computer Use Methods =====
+    private fun showActionApprovalDialog(functionCall: ch.heuscher.airescuering.data.api.FunctionCall) {
+        // Format the function call details for display
+        val actionName = functionCall.name
+        val actionArgs = functionCall.args?.entries?.joinToString("\n") { (key, value) ->
+            "  $key: $value"
+        } ?: "No parameters"
 
-    private fun initScreenCaptureManager() {
-        screenCaptureManager = ScreenCaptureManager(this)
-    }
-
-    fun enableComputerUseMode(enable: Boolean) {
-        // Check prerequisites
-        if (enable) {
-            if (!AIAssistantAccessibilityService.isEnabled()) {
-                showAccessibilityServiceDialog()
-                return
-            }
-
-            // Request screen capture permission
-            val captureManager = screenCaptureManager
-            if (captureManager != null) {
-                val intent = captureManager.createScreenCaptureIntent()
-                screenCaptureLauncher.launch(intent)
-            }
-        } else {
-            isComputerUseMode = false
-            addMessage(AIMessage(
-                id = UUID.randomUUID().toString(),
-                content = "Computer Use mode disabled. Switched back to chat mode.",
-                role = MessageRole.SYSTEM
-            ))
+        val message = buildString {
+            append("🤖 AI wants to perform an action:\n\n")
+            append("Action: $actionName\n\n")
+            append("Parameters:\n$actionArgs\n\n")
+            append("Do you want to approve this action?")
         }
-    }
 
-    private fun showAccessibilityServiceDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Enable AI Assistant Service")
-            .setMessage("To use Computer Use mode, you need to enable the AI Assistant accessibility service.\n\nThis allows the AI to see your screen and perform actions on your behalf.\n\nGo to Settings > Accessibility > AI Assistant and turn it on.")
-            .setPositiveButton("Open Settings") { _, _ ->
-                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                startActivity(intent)
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun onScreenCapturePermissionGranted(resultCode: Int, data: Intent) {
-        screenCaptureManager?.initializeMediaProjection(resultCode, data)
-        isComputerUseMode = true
-
-        addMessage(AIMessage(
+        // Add the AI's request as a message
+        val requestMessage = AIMessage(
             id = UUID.randomUUID().toString(),
-            content = "🤖 Computer Use mode enabled!\n\nI can now see your screen and control your device. Tell me what you'd like me to do, and I'll handle it for you.\n\nExamples:\n• \"Open Settings and turn on Bluetooth\"\n• \"Find and open the Gmail app\"\n• \"Scroll down and click the first link\"",
-            role = MessageRole.SYSTEM
-        ))
-    }
-
-    private fun startComputerUseTask(userGoal: String) {
-        val service = geminiService
-        val captureManager = screenCaptureManager
-
-        if (service == null) {
-            Toast.makeText(this, "AI service not initialized", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (captureManager == null) {
-            Toast.makeText(this, "Screen capture not initialized", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Add user message
-        addMessage(AIMessage(
-            id = UUID.randomUUID().toString(),
-            content = userGoal,
-            role = MessageRole.USER
-        ))
-
-        // Disable input during automation
-        sendButton.isEnabled = false
-        voiceButton.isEnabled = false
-        messageInput.isEnabled = false
-        loadingIndicator.visibility = View.VISIBLE
-
-        // Create agent and start task
-        computerUseAgent = ComputerUseAgent(this, service, captureManager)
-
-        lifecycleScope.launch {
-            computerUseAgent?.startAgentLoop(
-                userGoal = userGoal,
-                callback = object : ComputerUseAgent.AgentCallback {
-                    override fun onThinking(message: String) {
-                        runOnUiThread {
-                            addMessage(AIMessage(
-                                id = UUID.randomUUID().toString(),
-                                content = "💭 $message",
-                                role = MessageRole.SYSTEM
-                            ))
-                        }
-                    }
-
-                    override fun onActionExecuted(action: String, success: Boolean) {
-                        runOnUiThread {
-                            val icon = if (success) "✅" else "❌"
-                            addMessage(AIMessage(
-                                id = UUID.randomUUID().toString(),
-                                content = "$icon $action",
-                                role = MessageRole.SYSTEM
-                            ))
-                        }
-                    }
-
-                    override fun onCompleted(finalMessage: String) {
-                        runOnUiThread {
-                            addMessage(AIMessage(
-                                id = UUID.randomUUID().toString(),
-                                content = "✨ Task completed!\n\n$finalMessage",
-                                role = MessageRole.ASSISTANT
-                            ))
-
-                            // Re-enable input
-                            sendButton.isEnabled = true
-                            voiceButton.isEnabled = true
-                            messageInput.isEnabled = true
-                            loadingIndicator.visibility = View.GONE
-                        }
-                    }
-
-                    override fun onError(error: String) {
-                        runOnUiThread {
-                            addMessage(AIMessage(
-                                id = UUID.randomUUID().toString(),
-                                content = "⚠️ Error: $error",
-                                role = MessageRole.SYSTEM
-                            ))
-
-                            // Re-enable input
-                            sendButton.isEnabled = true
-                            voiceButton.isEnabled = true
-                            messageInput.isEnabled = true
-                            loadingIndicator.visibility = View.GONE
-
-                            Toast.makeText(
-                                this@AIHelperActivity,
-                                "Error: $error",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    }
-
-                    override fun onConfirmationRequired(
-                        message: String,
-                        onConfirm: () -> Unit,
-                        onDeny: () -> Unit
-                    ) {
-                        runOnUiThread {
-                            AlertDialog.Builder(this@AIHelperActivity)
-                                .setTitle("Confirm Action")
-                                .setMessage(message)
-                                .setPositiveButton("Allow") { _, _ ->
-                                    onConfirm()
-                                }
-                                .setNegativeButton("Deny") { _, _ ->
-                                    onDeny()
-                                }
-                                .setCancelable(false)
-                                .show()
-                        }
-                    }
-                }
-            )
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        screenCaptureManager?.release()
-    }
-
-    /**
-     * Executes the action approved by the user.
-     * TODO: Implement actual action execution based on the suggestion content.
-     */
-    private fun executeApprovedAction(suggestion: String) {
-        // Add a message to show the action is being executed
-        val executionMessage = AIMessage(
-            id = UUID.randomUUID().toString(),
-            content = "✓ Executing approved action...\n\nAction: ${suggestion.take(100)}${if (suggestion.length > 100) "..." else ""}",
-            role = MessageRole.SYSTEM
+            content = "I'd like to: $actionName",
+            role = MessageRole.ASSISTANT
         )
-        addMessage(executionMessage)
+        addMessage(requestMessage)
 
-        // TODO: Parse the suggestion and execute the corresponding action
-        // This would involve:
-        // - Parsing the suggestion to extract the action type and parameters
-        // - Using Android APIs to perform the action (e.g., opening apps, changing settings)
-        // - Reporting success/failure back to the user
+        AlertDialog.Builder(this)
+            .setTitle("Action Approval Required")
+            .setMessage(message)
+            .setPositiveButton("✓ Approve") { dialog, _ ->
+                // User approved the action
+                val approvalMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "✓ You approved: $actionName",
+                    role = MessageRole.USER
+                )
+                addMessage(approvalMessage)
 
-        Toast.makeText(
-            this,
-            "Action execution not yet implemented. This is a placeholder.",
-            Toast.LENGTH_LONG
-        ).show()
+                Toast.makeText(
+                    this,
+                    "Action approved: $actionName\n(Execution not yet implemented)",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                dialog.dismiss()
+            }
+            .setNegativeButton("✗ Deny") { dialog, _ ->
+                // User denied the action
+                val denialMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "✗ You denied: $actionName",
+                    role = MessageRole.USER
+                )
+                addMessage(denialMessage)
+
+                Toast.makeText(
+                    this,
+                    "Action denied",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                dialog.dismiss()
+            }
+            .setCancelable(false)
+            .show()
     }
 
     /**

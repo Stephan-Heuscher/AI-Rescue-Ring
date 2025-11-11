@@ -2,7 +2,6 @@ package ch.heuscher.airescuering.data.api
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 
 /**
  * Data models for Gemini API requests and responses
@@ -28,11 +27,7 @@ data class Content(
 data class Part(
     val text: String? = null,
     @SerialName("functionCall")
-    val functionCall: FunctionCall? = null,
-    @SerialName("functionResponse")
-    val functionResponse: FunctionResponse? = null,
-    @SerialName("inline_data")
-    val inlineData: InlineData? = null
+    val functionCall: FunctionCall? = null
 )
 
 @Serializable
@@ -86,7 +81,7 @@ data class GeminiError(
 )
 
 /**
- * Tool configuration for Gemini API
+ * Tool definition for Computer Use
  */
 @Serializable
 data class Tool(
@@ -94,23 +89,10 @@ data class Tool(
     val computerUse: ComputerUse? = null
 )
 
-/**
- * Computer Use tool configuration
- */
 @Serializable
 data class ComputerUse(
-    val environment: String = "ENVIRONMENT_BROWSER",
-    @SerialName("excluded_predefined_functions")
-    val excludedPredefinedFunctions: List<String>? = null
+    val environment: String = "ENVIRONMENT_BROWSER"
 )
-
-/**
- * Environment constants for Computer Use
- */
-object Environment {
-    const val BROWSER = "ENVIRONMENT_BROWSER"
-    const val DESKTOP = "ENVIRONMENT_DESKTOP"
-}
 
 /**
  * Function call from the model
@@ -118,33 +100,16 @@ object Environment {
 @Serializable
 data class FunctionCall(
     val name: String,
-    val args: Map<String, JsonElement> = emptyMap()
+    val args: Map<String, kotlinx.serialization.json.JsonElement>? = null
 )
 
 /**
- * Function response back to the model
+ * Result from generateContent that can contain either text or a function call
  */
-@Serializable
-data class FunctionResponse(
-    val name: String,
-    val response: Map<String, JsonElement> = emptyMap()
-)
-
-/**
- * Inline data for images/screenshots
- */
-@Serializable
-data class InlineData(
-    @SerialName("mimeType")
-    val mimeType: String,
-    val data: String  // Base64 encoded
-)
-
-/**
- * Safety decision from the model
- */
-@Serializable
-data class SafetyDecision(
-    val decision: String,  // "require_confirmation", "allow", "block"
-    val explanation: String? = null
-)
+data class GeminiContentResult(
+    val text: String? = null,
+    val functionCall: FunctionCall? = null
+) {
+    val hasText: Boolean get() = text != null
+    val hasFunctionCall: Boolean get() = functionCall != null
+}
