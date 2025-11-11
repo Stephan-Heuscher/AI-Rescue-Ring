@@ -11,7 +11,7 @@
         android:layout_height="64dp"
         android:layout_gravity="center"
         android:text="🛟"
-        android:textSize="52sp"
+        android:textSize="38sp"
         android:gravity="center"
         android:background="@drawable/white_circle_background"
         android:clickable="false"
