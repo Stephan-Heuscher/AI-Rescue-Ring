@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
     <application
         android:allowBackup="true"
@@ -47,6 +49,20 @@
             android:label="AI Helper"
             android:theme="@style/Theme.Material3.DayNight"
             android:launchMode="singleTop" />
+
+        <activity
+            android:name=".ScreenshotEditorActivity"
+            android:exported="false"
+            android:label="Edit Screenshot"
+            android:theme="@style/Theme.Material3.DayNight.NoActionBar"
+            android:launchMode="singleTop" />
+
+        <activity
+            android:name=".ScreenshotPermissionActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:launchMode="singleTop"
+            android:excludeFromRecents="true" />
 
         <service
             android:name=".service.overlay.OverlayService"
