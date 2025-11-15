@@ -21,22 +21,37 @@ object ScreenCaptureManager {
     private const val TAG = "ScreenCaptureManager"
     private const val JPEG_QUALITY = 75 // Balance between quality and size
     private const val MAX_DIMENSION = 1080 // Max width/height to reduce API payload
+    private const val MIN_SCREENSHOT_INTERVAL_MS = 1000L // Minimum 1 second between screenshots
+    
+    private var lastScreenshotTime = 0L
 
     /**
      * Capture the current screen as a base64-encoded JPEG
      * Returns null if capture fails or is not supported
      */
     suspend fun captureScreenAsBase64(): String? {
+        Log.d(TAG, "captureScreenAsBase64: ENTER - Starting capture process")
+        
+        // Check if we need to wait before capturing
+        val timeSinceLastCapture = System.currentTimeMillis() - lastScreenshotTime
+        if (timeSinceLastCapture < MIN_SCREENSHOT_INTERVAL_MS) {
+            val waitTime = MIN_SCREENSHOT_INTERVAL_MS - timeSinceLastCapture
+            Log.d(TAG, "captureScreenAsBase64: Waiting ${waitTime}ms before capture (rate limiting)")
+            kotlinx.coroutines.delay(waitTime)
+        }
+        
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            Log.w(TAG, "Screen capture requires Android 11 (API 30) or higher")
+            Log.w(TAG, "Screen capture requires Android 11 (API 30) or higher, current: ${Build.VERSION.SDK_INT}")
             return null
         }
+        Log.d(TAG, "captureScreenAsBase64: Android version OK (${Build.VERSION.SDK_INT})")
 
         val service = BackHomeAccessibilityService.instance
         if (service == null) {
-            Log.e(TAG, "Accessibility service not available")
+            Log.e(TAG, "captureScreenAsBase64: FAIL - Accessibility service is NULL")
             return null
         }
+        Log.d(TAG, "captureScreenAsBase64: Accessibility service available: $service")
 
         return try {
             val bitmap = captureScreenshot(service)
@@ -57,6 +72,7 @@ object ScreenCaptureManager {
             }
             bitmap.recycle()
 
+            lastScreenshotTime = System.currentTimeMillis()
             Log.d(TAG, "Screenshot captured successfully, size: ${base64.length} chars")
             base64
         } catch (e: Exception) {
@@ -95,7 +111,14 @@ object ScreenCaptureManager {
                     }
 
                     override fun onFailure(errorCode: Int) {
-                        Log.e(TAG, "Screenshot failed with error code: $errorCode")
+                        val errorMessage = when (errorCode) {
+                            1 -> "ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR (1): Internal error"
+                            2 -> "ERROR_TAKE_SCREENSHOT_INVALID_DISPLAY (2): Invalid display"
+                            3 -> "ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT (3): Too soon after last screenshot"
+                            4 -> "ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR (4): Secure content or dialog present"
+                            else -> "Unknown error code: $errorCode"
+                        }
+                        Log.e(TAG, "Screenshot failed: $errorMessage")
                         continuation.resume(null)
                     }
                 }

@@ -59,6 +59,7 @@ class AIHelperActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ai_helper)
 
+        Log.d(TAG, "=== onCreate: START ===")
         initViews()
         setupRecyclerView()
         setupListeners()
@@ -66,10 +67,12 @@ class AIHelperActivity : AppCompatActivity() {
 
         // Check if screenshot was provided via intent
         val providedScreenshot = intent.getStringExtra("screenshot")
+        Log.d(TAG, "onCreate: Checking for screenshot in intent...")
         if (providedScreenshot != null) {
-            Log.d(TAG, "onCreate: Screenshot provided via intent")
+            Log.d(TAG, "onCreate: ✓ Screenshot provided via intent (${providedScreenshot.length} chars)")
             capturedScreenshot = providedScreenshot
         } else {
+            Log.w(TAG, "onCreate: ✗ No screenshot in intent, will attempt to capture")
             // Capture screenshot automatically when activity opens
             captureScreenInBackground()
         }

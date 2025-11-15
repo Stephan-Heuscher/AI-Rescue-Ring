@@ -300,26 +300,29 @@ class OverlayService : Service() {
     }
 
     private fun handleTap() {
-        Log.d(TAG, "handleTap: Tap gesture detected on ring")
+        Log.d(TAG, "=== handleTap: START - Tap gesture detected on ring ===")
 
         // Capture screenshot in background before launching activity
         serviceScope.launch {
             try {
-                Log.d(TAG, "handleTap: Capturing screenshot before launching AI Helper")
+                Log.d(TAG, "handleTap: About to capture screenshot...")
                 val screenshot = ch.heuscher.airescuering.util.ScreenCaptureManager.captureScreenAsBase64()
+                Log.d(TAG, "handleTap: Screenshot capture completed. Result: ${if (screenshot != null) "SUCCESS (${screenshot.length} chars)" else "NULL"}")
                 
                 // Launch AI Helper Activity with screenshot
+                Log.d(TAG, "handleTap: Creating intent for AIHelperActivity")
                 val intent = Intent(this@OverlayService, AIHelperActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                     if (screenshot != null) {
                         putExtra("screenshot", screenshot)
-                        Log.d(TAG, "handleTap: Passing screenshot to AIHelperActivity")
+                        Log.d(TAG, "handleTap: ✓ Screenshot added to intent (${screenshot.length} chars)")
                     } else {
-                        Log.w(TAG, "handleTap: Screenshot capture failed, launching without screenshot")
+                        Log.w(TAG, "handleTap: ✗ Screenshot is NULL, launching without screenshot")
                     }
                 }
+                Log.d(TAG, "handleTap: Starting AIHelperActivity...")
                 startActivity(intent)
-                Log.d(TAG, "handleTap: AIHelperActivity launched")
+                Log.d(TAG, "=== handleTap: END - AIHelperActivity started ===")
             } catch (e: Exception) {
                 Log.e(TAG, "handleTap: Error during screenshot capture", e)
                 // Launch without screenshot if capture fails
