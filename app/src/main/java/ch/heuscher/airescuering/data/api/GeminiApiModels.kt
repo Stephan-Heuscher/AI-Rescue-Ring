@@ -24,7 +24,16 @@ data class Content(
 
 @Serializable
 data class Part(
-    val text: String? = null
+    val text: String? = null,
+    @SerialName("inlineData")
+    val inlineData: InlineData? = null
+)
+
+@Serializable
+data class InlineData(
+    @SerialName("mimeType")
+    val mimeType: String,
+    val data: String // base64 encoded
 )
 
 @Serializable

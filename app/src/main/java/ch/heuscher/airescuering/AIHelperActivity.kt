@@ -24,6 +24,7 @@ import ch.heuscher.airescuering.data.api.GeminiApiService
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.model.AIMessage
 import ch.heuscher.airescuering.domain.model.MessageRole
+import ch.heuscher.airescuering.util.ScreenCaptureManager
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -46,8 +47,10 @@ class AIHelperActivity : AppCompatActivity() {
     private lateinit var adapter: ChatAdapter
 
     private var geminiService: GeminiApiService? = null
+    private var capturedScreenshot: String? = null // Base64 screenshot captured on launch
 
     companion object {
+        private const val TAG = "AIHelperActivity"
         private const val VOICE_RECOGNITION_REQUEST_CODE = 1001
     }
 
@@ -60,10 +63,13 @@ class AIHelperActivity : AppCompatActivity() {
         setupListeners()
         initGeminiService()
 
+        // Capture screenshot automatically when activity opens
+        captureScreenInBackground()
+
         // Add welcome message
         addMessage(AIMessage(
             id = UUID.randomUUID().toString(),
-            content = "Hello! I'm your AI assistant. You can type your questions below or use the microphone button 🎤 for voice input.",
+            content = "Hello! I'm your AI assistant. I can see your screen and help you with whatever you need. You can type your questions below or use the microphone button 🎤 for voice input.",
             role = MessageRole.ASSISTANT
         ))
     }
@@ -217,10 +223,19 @@ class AIHelperActivity : AppCompatActivity() {
                         role to message.content
                     }
 
+                // Use captured screenshot for the first user message, then clear it
+                val screenshot = capturedScreenshot
+                capturedScreenshot = null
+
                 val result = service.generateAssistanceSuggestion(
                     userRequest = text,
-                    context = "The user is on their Android device"
+                    context = "The user is on their Android device",
+                    screenshotBase64 = screenshot
                 )
+
+                if (screenshot != null) {
+                    Log.d(TAG, "Sent message with screenshot to Gemini")
+                }
 
                 result.onSuccess { response ->
                     val assistantMessage = AIMessage(
@@ -285,6 +300,38 @@ class AIHelperActivity : AppCompatActivity() {
             results?.firstOrNull()?.let { text ->
                 messageInput.setText(text)
                 sendMessage(text)
+            }
+        }
+    }
+
+    private fun captureScreenInBackground() {
+        lifecycleScope.launch {
+            try {
+                Log.d(TAG, "Capturing screenshot in background...")
+                loadingIndicator.visibility = View.VISIBLE
+
+                capturedScreenshot = ScreenCaptureManager.captureScreenAsBase64()
+
+                if (capturedScreenshot != null) {
+                    Log.d(TAG, "Screenshot captured successfully")
+                    // Add a subtle message to indicate screenshot was captured
+                    addMessage(AIMessage(
+                        id = UUID.randomUUID().toString(),
+                        content = "📸 I can see your screen. How can I help you?",
+                        role = MessageRole.ASSISTANT
+                    ))
+                } else {
+                    Log.w(TAG, "Screenshot capture failed or not supported")
+                    addMessage(AIMessage(
+                        id = UUID.randomUUID().toString(),
+                        content = "Note: I couldn't capture your screen. You may need to enable the Accessibility Service. I can still help based on your description.",
+                        role = MessageRole.ASSISTANT
+                    ))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error capturing screenshot", e)
+            } finally {
+                loadingIndicator.visibility = View.GONE
             }
         }
     }
