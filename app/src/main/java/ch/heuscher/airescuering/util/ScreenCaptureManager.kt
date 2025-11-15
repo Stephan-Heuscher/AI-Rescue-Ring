@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.Base64
 import android.util.Log
-import androidx.annotation.RequireApi
+import androidx.annotation.RequiresApi
 import ch.heuscher.airescuering.BackHomeAccessibilityService
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.ByteArrayOutputStream
@@ -65,11 +65,11 @@ object ScreenCaptureManager {
         }
     }
 
-    @RequireApi(Build.VERSION_CODES.R)
+    @RequiresApi(Build.VERSION_CODES.R)
     private suspend fun captureScreenshot(service: AccessibilityService): Bitmap? =
         suspendCancellableCoroutine { continuation ->
             service.takeScreenshot(
-                AccessibilityService.TAKE_SCREENSHOT_FULLSCREEN,
+                1, // TAKE_SCREENSHOT_FULLSCREEN
                 { it.run() },
                 object : AccessibilityService.TakeScreenshotCallback {
                     override fun onSuccess(screenshot: AccessibilityService.ScreenshotResult) {
