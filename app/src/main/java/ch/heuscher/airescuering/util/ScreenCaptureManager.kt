@@ -68,8 +68,9 @@ object ScreenCaptureManager {
     @RequiresApi(Build.VERSION_CODES.R)
     private suspend fun captureScreenshot(service: AccessibilityService): Bitmap? =
         suspendCancellableCoroutine { continuation ->
+            // Use 1 for TAKE_SCREENSHOT_FULLSCREEN (constant only available in API 34+)
             service.takeScreenshot(
-                AccessibilityService.TAKE_SCREENSHOT_FULLSCREEN,
+                1,
                 { it.run() },
                 object : AccessibilityService.TakeScreenshotCallback {
                     override fun onSuccess(screenshot: AccessibilityService.ScreenshotResult) {
