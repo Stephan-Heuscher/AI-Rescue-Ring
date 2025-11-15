@@ -315,7 +315,7 @@ class OverlayService : Service() {
                 
                 // Wait for system to settle after hiding overlay
                 Log.d(TAG, "handleTap: Waiting for system to settle...")
-                kotlinx.coroutines.delay(500)
+                kotlinx.coroutines.delay(1000)
                 
                 Log.d(TAG, "handleTap: Starting screenshot capture...")
                 val screenshot = ch.heuscher.airescuering.util.ScreenCaptureManager.captureScreenAsBase64()

@@ -36,7 +36,7 @@ object ScreenCaptureManager {
         // Try up to 3 times with delays between attempts
         repeat(3) { attempt ->
             if (attempt > 0) {
-                val delayMs = 400L * attempt // 400ms, 800ms
+                val delayMs = 500L * attempt // 500ms, 1000ms
                 Log.d(TAG, "captureScreenAsBase64: Retry attempt ${attempt + 1} after ${delayMs}ms delay")
                 kotlinx.coroutines.delay(delayMs)
             }
