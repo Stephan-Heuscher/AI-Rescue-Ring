@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import ch.heuscher.airescuering.data.api.*
 import ch.heuscher.airescuering.service.accessibility.AIAssistantAccessibilityService
-import ch.heuscher.airescuering.service.screencapture.ScreenCaptureManager
+import ch.heuscher.airescuering.service.screencapture.MediaProjectionScreenCapture
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
 
@@ -19,7 +19,7 @@ import kotlinx.serialization.json.*
 class ComputerUseAgent(
     private val context: Context,
     private val geminiService: GeminiApiService,
-    private val screenCaptureManager: ScreenCaptureManager
+    private val screenCaptureManager: MediaProjectionScreenCapture
 ) {
     companion object {
         private const val TAG = "ComputerUseAgent"

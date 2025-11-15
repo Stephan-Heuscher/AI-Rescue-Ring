@@ -14,7 +14,12 @@ import kotlin.coroutines.resume
 
 /**
  * Manager for capturing screenshots using the Accessibility Service
- * This provides a simple, permission-free way to capture the screen for AI assistance
+ *
+ * This provides a simple, permission-free way to capture the screen for AI assistance.
+ * Used by the rescue ring to quickly capture screenshots without user prompts.
+ *
+ * Note: For Computer Use features requiring MediaProjection,
+ * see service.screencapture.MediaProjectionScreenCapture
  */
 object ScreenCaptureManager {
 

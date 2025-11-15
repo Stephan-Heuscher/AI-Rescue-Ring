@@ -25,11 +25,13 @@ import kotlin.coroutines.resume
 
 /**
  * Manages screen capture using MediaProjection API for Computer Use
+ * Note: This requires explicit user permission and is used for advanced Computer Use features.
+ * For simple screenshots via AccessibilityService, see util.ScreenCaptureManager
  */
-class ScreenCaptureManager(private val context: Context) {
+class MediaProjectionScreenCapture(private val context: Context) {
 
     companion object {
-        private const val TAG = "ScreenCaptureManager"
+        private const val TAG = "MediaProjectionScreenCapture"
         const val REQUEST_MEDIA_PROJECTION = 1002
     }
 
