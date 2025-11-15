@@ -28,15 +28,45 @@ object ScreenCaptureManager {
     /**
      * Capture the current screen as a base64-encoded JPEG
      * Returns null if capture fails or is not supported
+     * Retries up to 3 times with increasing delays if capture fails
      */
     suspend fun captureScreenAsBase64(): String? {
-        Log.d(TAG, "captureScreenAsBase64: ENTER - Starting capture process")
+        Log.d(TAG, "captureScreenAsBase64: ENTER - Starting capture process with retries")
+        
+        // Try up to 3 times with delays between attempts
+        repeat(3) { attempt ->
+            if (attempt > 0) {
+                val delayMs = 400L * attempt // 400ms, 800ms
+                Log.d(TAG, "captureScreenAsBase64: Retry attempt ${attempt + 1} after ${delayMs}ms delay")
+                kotlinx.coroutines.delay(delayMs)
+            }
+            
+            val result = captureScreenAsBase64Internal()
+            if (result != null) {
+                Log.d(TAG, "captureScreenAsBase64: SUCCESS on attempt ${attempt + 1}")
+                return result
+            }
+            
+            if (attempt < 2) {
+                Log.w(TAG, "captureScreenAsBase64: Attempt ${attempt + 1} failed, will retry...")
+            }
+        }
+        
+        Log.e(TAG, "captureScreenAsBase64: All 3 attempts failed")
+        return null
+    }
+    
+    /**
+     * Internal method that performs a single screenshot capture attempt
+     */
+    private suspend fun captureScreenAsBase64Internal(): String? {
+        Log.d(TAG, "captureScreenAsBase64Internal: Starting single capture attempt")
         
         // Check if we need to wait before capturing
         val timeSinceLastCapture = System.currentTimeMillis() - lastScreenshotTime
         if (timeSinceLastCapture < MIN_SCREENSHOT_INTERVAL_MS) {
             val waitTime = MIN_SCREENSHOT_INTERVAL_MS - timeSinceLastCapture
-            Log.d(TAG, "captureScreenAsBase64: Waiting ${waitTime}ms before capture (rate limiting)")
+            Log.d(TAG, "captureScreenAsBase64Internal: Waiting ${waitTime}ms before capture (rate limiting)")
             kotlinx.coroutines.delay(waitTime)
         }
         
@@ -44,14 +74,14 @@ object ScreenCaptureManager {
             Log.w(TAG, "Screen capture requires Android 11 (API 30) or higher, current: ${Build.VERSION.SDK_INT}")
             return null
         }
-        Log.d(TAG, "captureScreenAsBase64: Android version OK (${Build.VERSION.SDK_INT})")
+        Log.d(TAG, "captureScreenAsBase64Internal: Android version OK (${Build.VERSION.SDK_INT})")
 
         val service = BackHomeAccessibilityService.instance
         if (service == null) {
-            Log.e(TAG, "captureScreenAsBase64: FAIL - Accessibility service is NULL")
+            Log.e(TAG, "captureScreenAsBase64Internal: FAIL - Accessibility service is NULL")
             return null
         }
-        Log.d(TAG, "captureScreenAsBase64: Accessibility service available: $service")
+        Log.d(TAG, "captureScreenAsBase64Internal: Accessibility service available: $service")
 
         return try {
             val bitmap = captureScreenshot(service)
