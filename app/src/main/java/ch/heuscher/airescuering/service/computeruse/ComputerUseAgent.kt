@@ -1,25 +1,26 @@
 package ch.heuscher.airescuering.service.computeruse
 
 import android.content.Context
+import android.util.DisplayMetrics
 import android.util.Log
+import android.view.WindowManager
 import ch.heuscher.airescuering.data.api.*
 import ch.heuscher.airescuering.service.accessibility.AIAssistantAccessibilityService
-import ch.heuscher.airescuering.service.screencapture.MediaProjectionScreenCapture
+import ch.heuscher.airescuering.util.ScreenCaptureManager
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
 
 /**
  * Agent that manages the Computer Use agent loop:
- * 1. Capture screen
+ * 1. Capture screen via AccessibilityService
  * 2. Send to Gemini Computer Use model
  * 3. Parse function calls
- * 4. Execute UI actions
+ * 4. Execute UI actions via AccessibilityService
  * 5. Capture new screen and repeat
  */
 class ComputerUseAgent(
     private val context: Context,
-    private val geminiService: GeminiApiService,
-    private val screenCaptureManager: MediaProjectionScreenCapture
+    private val geminiService: GeminiApiService
 ) {
     companion object {
         private const val TAG = "ComputerUseAgent"
@@ -29,6 +30,7 @@ class ComputerUseAgent(
 
     private val uiActionExecutor = UIActionExecutor(context)
     private val conversationHistory = mutableListOf<Pair<String, String>>() // role to text
+    private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
     /**
      * Callback for receiving updates during agent execution
@@ -60,16 +62,16 @@ class ComputerUseAgent(
             // Initial setup
             conversationHistory.clear()
 
-            // Capture initial screenshot
-            val initialScreenshot = screenCaptureManager.captureScreen()
+            // Get screen dimensions
+            val (screenWidth, screenHeight) = getScreenDimensions()
+            Log.d(TAG, "Screen dimensions: ${screenWidth}x${screenHeight}")
+
+            // Capture initial screenshot using AccessibilityService
+            val initialScreenshot = ScreenCaptureManager.captureScreenAsBase64()
             if (initialScreenshot == null) {
-                callback.onError("Failed to capture screen. Please grant screen capture permission.")
+                callback.onError("Failed to capture screen. AccessibilityService may not be enabled.")
                 return
             }
-
-            // Create initial user message with screenshot
-            val (screenWidth, screenHeight) = screenCaptureManager.getScreenDimensions()
-            Log.d(TAG, "Screen dimensions: ${screenWidth}x${screenHeight}")
 
             val systemPrompt = buildSystemPrompt()
 
@@ -205,5 +207,15 @@ COORDINATE SYSTEM:
 
 When providing final answers or when the task is complete, output ONLY text with no function calls.
         """.trimIndent()
+    }
+
+    /**
+     * Get the current screen dimensions
+     */
+    private fun getScreenDimensions(): Pair<Int, Int> {
+        val displayMetrics = DisplayMetrics()
+        @Suppress("DEPRECATION")
+        windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+        return Pair(displayMetrics.widthPixels, displayMetrics.heightPixels)
     }
 }
