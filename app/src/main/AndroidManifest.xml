@@ -50,20 +50,6 @@
             android:theme="@style/Theme.AIRescueRing.Transparent"
             android:launchMode="singleTop" />
 
-        <activity
-            android:name=".ScreenshotEditorActivity"
-            android:exported="false"
-            android:label="Edit Screenshot"
-            android:theme="@style/Theme.Material3.DayNight.NoActionBar"
-            android:launchMode="singleTop" />
-
-        <activity
-            android:name=".ScreenshotPermissionActivity"
-            android:exported="false"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:launchMode="singleTop"
-            android:excludeFromRecents="true" />
-
         <service
             android:name=".service.overlay.OverlayService"
             android:enabled="true"

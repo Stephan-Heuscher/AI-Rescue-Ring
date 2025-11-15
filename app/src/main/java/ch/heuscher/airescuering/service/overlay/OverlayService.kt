@@ -1,13 +1,10 @@
 package ch.heuscher.airescuering.service.overlay
 
-import android.app.Activity
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.os.Build
 import android.os.Handler
@@ -18,14 +15,11 @@ import android.view.View
 import ch.heuscher.airescuering.AIHelperActivity
 import ch.heuscher.airescuering.BackHomeAccessibilityService
 import ch.heuscher.airescuering.MainActivity
-import ch.heuscher.airescuering.ScreenshotEditorActivity
-import ch.heuscher.airescuering.ScreenshotPermissionActivity
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.model.DotPosition
 import ch.heuscher.airescuering.domain.model.Gesture
 import ch.heuscher.airescuering.domain.model.OverlayMode
 import ch.heuscher.airescuering.domain.repository.SettingsRepository
-import ch.heuscher.airescuering.service.screenshot.ScreenshotCaptureManager
 import ch.heuscher.airescuering.util.AppConstants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,8 +28,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
 
 /**
  * Refactored OverlayService with clear separation of concerns.
@@ -60,19 +52,12 @@ class OverlayService : Service() {
     private lateinit var positionAnimator: PositionAnimator
     private lateinit var orientationHandler: OrientationHandler
 
-    // New components for screenshot and chat
-    private lateinit var screenshotCaptureManager: ScreenshotCaptureManager
-    private lateinit var chatOverlayManager: ChatOverlayManager
-
     // Service scope for coroutines
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     // State tracking
     private var isUserDragging = false
     private var isOrientationChanging = false
-    private var isChatOpen = false
-    private var savedRingPosition: DotPosition? = null
-    private var currentScreenshotPath: String? = null
 
     // Handler for delayed updates
     private val updateHandler = Handler(Looper.getMainLooper())
@@ -108,25 +93,6 @@ class OverlayService : Service() {
         }
     }
 
-    // Broadcast receiver for screenshot permission result
-    private val screenshotPermissionReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == ScreenshotPermissionActivity.ACTION_SCREENSHOT_PERMISSION_RESULT) {
-                val resultCode = intent.getIntExtra(ScreenshotPermissionActivity.EXTRA_RESULT_CODE, Activity.RESULT_CANCELED)
-                val data = intent.getParcelableExtra<Intent>(ScreenshotPermissionActivity.EXTRA_RESULT_DATA)
-
-                if (resultCode == Activity.RESULT_OK && data != null) {
-                    Log.d(TAG, "Screenshot permission granted, starting projection")
-                    screenshotCaptureManager.startProjection(resultCode, data)
-                    captureAndShowScreenshot()
-                } else {
-                    Log.d(TAG, "Screenshot permission denied, showing chat without screenshot")
-                    showChatOverlay(null)
-                }
-            }
-        }
-    }
-
     override fun onCreate() {
         super.onCreate()
 
@@ -154,13 +120,6 @@ class OverlayService : Service() {
             onPositionUpdate = { position -> viewManager.updatePosition(position) },
             onAnimationComplete = { position -> onAnimationComplete(position) }
         )
-
-        // Initialize screenshot and chat managers
-        screenshotCaptureManager = ScreenshotCaptureManager(this)
-        chatOverlayManager = ChatOverlayManager(this)
-
-        // Set up chat overlay callbacks
-        setupChatCallbacks()
 
         // Create overlay view
         viewManager.createOverlayView()
@@ -193,11 +152,6 @@ class OverlayService : Service() {
         unregisterReceiver(settingsReceiver)
         unregisterReceiver(keyboardReceiver)
         unregisterReceiver(configurationReceiver)
-        unregisterReceiver(screenshotPermissionReceiver)
-
-        // Clean up chat and screenshot managers
-        chatOverlayManager.hideChatOverlay()
-        screenshotCaptureManager.stopProjection()
 
         viewManager.removeOverlayView()
     }
@@ -228,13 +182,11 @@ class OverlayService : Service() {
         val settingsFilter = IntentFilter(AppConstants.ACTION_UPDATE_SETTINGS)
         val keyboardFilter = IntentFilter(AppConstants.ACTION_UPDATE_KEYBOARD)
         val configFilter = IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED)
-        val screenshotPermissionFilter = IntentFilter(ScreenshotPermissionActivity.ACTION_SCREENSHOT_PERMISSION_RESULT)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(settingsReceiver, settingsFilter, Context.RECEIVER_NOT_EXPORTED)
             registerReceiver(keyboardReceiver, keyboardFilter, Context.RECEIVER_NOT_EXPORTED)
             registerReceiver(configurationReceiver, configFilter, Context.RECEIVER_NOT_EXPORTED)
-            registerReceiver(screenshotPermissionReceiver, screenshotPermissionFilter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             @Suppress("DEPRECATION")
             registerReceiver(settingsReceiver, settingsFilter)
@@ -242,8 +194,6 @@ class OverlayService : Service() {
             registerReceiver(keyboardReceiver, keyboardFilter)
             @Suppress("DEPRECATION")
             registerReceiver(configurationReceiver, configFilter)
-            @Suppress("DEPRECATION")
-            registerReceiver(screenshotPermissionReceiver, screenshotPermissionFilter)
         }
     }
 
@@ -352,14 +302,12 @@ class OverlayService : Service() {
     private fun handleTap() {
         Log.d(TAG, "handleTap: Tap gesture detected on ring")
 
-        // If chat is already open, do nothing
-        if (isChatOpen) {
-            Log.d(TAG, "handleTap: Chat already open, ignoring tap")
-            return
+        // Launch AI Helper Activity directly
+        val intent = Intent(this, AIHelperActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-
-        // Start screenshot workflow
-        startScreenshotWorkflow()
+        startActivity(intent)
+        Log.d(TAG, "handleTap: AIHelperActivity launched")
     }
 
     private fun handleQuadrupleTap() {
@@ -367,11 +315,6 @@ class OverlayService : Service() {
 
         serviceScope.launch {
             try {
-                // Close chat if open
-                if (isChatOpen) {
-                    closeChatOverlay()
-                }
-
                 // Launch MainActivity
                 val intent = Intent(this@OverlayService, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -596,166 +539,5 @@ class OverlayService : Service() {
             )
             settingsRepository.setPosition(positionWithScreen)
         }
-    }
-
-    // ========== New methods for screenshot and chat functionality ==========
-
-    private fun setupChatCallbacks() {
-        chatOverlayManager.onCloseListener = {
-            closeChatOverlay()
-        }
-
-        chatOverlayManager.onSendMessageListener = { message ->
-            // Handle send message
-            handleChatMessage(message)
-        }
-
-        chatOverlayManager.onVoiceInputListener = {
-            // Handle voice input
-            // This can be implemented later
-            Log.d(TAG, "Voice input requested (not yet implemented)")
-        }
-    }
-
-    private fun startScreenshotWorkflow() {
-        Log.d(TAG, "startScreenshotWorkflow: Starting screenshot workflow")
-
-        // Check if we already have media projection permission
-        if (screenshotCaptureManager.isProjectionActive()) {
-            Log.d(TAG, "startScreenshotWorkflow: Projection already active, capturing screenshot")
-            captureAndShowScreenshot()
-        } else {
-            Log.d(TAG, "startScreenshotWorkflow: Requesting screenshot permission")
-            // Request screenshot permission
-            val intent = ScreenshotPermissionActivity.createIntent(this)
-            startActivity(intent)
-        }
-    }
-
-    private fun captureAndShowScreenshot() {
-        Log.d(TAG, "captureAndShowScreenshot: Capturing screenshot")
-
-        screenshotCaptureManager.captureScreenshot { bitmap ->
-            if (bitmap != null) {
-                Log.d(TAG, "captureAndShowScreenshot: Screenshot captured successfully")
-
-                // Save screenshot to temporary file
-                val file = File(cacheDir, "screenshot_${System.currentTimeMillis()}.png")
-                try {
-                    FileOutputStream(file).use { out ->
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-                    }
-                    currentScreenshotPath = file.absolutePath
-
-                    // Launch screenshot editor
-                    val intent = ScreenshotEditorActivity.createIntent(this, file.absolutePath)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
-                    startActivity(intent)
-
-                    // Wait for editor result via broadcast or activity result
-                    // For now, show chat with screenshot after a delay
-                    updateHandler.postDelayed({
-                        showChatOverlay(file.absolutePath)
-                    }, 2000)
-
-                } catch (e: Exception) {
-                    Log.e(TAG, "captureAndShowScreenshot: Error saving screenshot", e)
-                    showChatOverlay(null)
-                }
-            } else {
-                Log.e(TAG, "captureAndShowScreenshot: Screenshot capture failed")
-                showChatOverlay(null)
-            }
-        }
-    }
-
-    private fun showChatOverlay(screenshotPath: String?) {
-        Log.d(TAG, "showChatOverlay: Showing chat overlay with screenshot=$screenshotPath")
-
-        if (isChatOpen) {
-            Log.d(TAG, "showChatOverlay: Chat already open")
-            return
-        }
-
-        // Save current ring position
-        savedRingPosition = viewManager.getCurrentPosition()
-        Log.d(TAG, "showChatOverlay: Saved ring position: $savedRingPosition")
-
-        // Calculate center-top position for the ring
-        val screenSize = orientationHandler.getUsableScreenSize()
-        val buttonSize = (AppConstants.DOT_SIZE_DP * resources.displayMetrics.density).toInt()
-        val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * resources.displayMetrics.density).toInt()
-        val offset = (layoutSize - buttonSize) / 2
-
-        // Center horizontally, top position
-        val centerX = (screenSize.x - buttonSize) / 2 - offset
-        val topY = 20 // 20px from top
-
-        val centerTopPosition = DotPosition(centerX, topY)
-        Log.d(TAG, "showChatOverlay: Moving ring to center-top: $centerTopPosition")
-
-        // Animate ring to center-top
-        animateToPosition(centerTopPosition, 300L)
-
-        // Wait for animation, then show chat
-        updateHandler.postDelayed({
-            // Calculate position below the ring
-            val belowY = topY + layoutSize
-
-            // Show chat overlay
-            chatOverlayManager.showChatOverlay(belowY)
-
-            // Load screenshot if available
-            if (screenshotPath != null) {
-                val bitmap = BitmapFactory.decodeFile(screenshotPath)
-                chatOverlayManager.setScreenshotPreview(bitmap)
-            }
-
-            isChatOpen = true
-            Log.d(TAG, "showChatOverlay: Chat overlay shown")
-        }, 350) // Wait slightly longer than animation
-    }
-
-    private fun closeChatOverlay() {
-        Log.d(TAG, "closeChatOverlay: Closing chat overlay")
-
-        if (!isChatOpen) {
-            Log.d(TAG, "closeChatOverlay: Chat not open")
-            return
-        }
-
-        // Hide chat overlay
-        chatOverlayManager.hideChatOverlay()
-
-        // Restore ring position
-        savedRingPosition?.let { position ->
-            Log.d(TAG, "closeChatOverlay: Restoring ring position: $position")
-            animateToPosition(position, 300L)
-        }
-
-        // Clean up screenshot
-        currentScreenshotPath?.let { path ->
-            File(path).delete()
-        }
-        currentScreenshotPath = null
-
-        isChatOpen = false
-        Log.d(TAG, "closeChatOverlay: Chat overlay closed")
-    }
-
-    private fun handleChatMessage(message: String) {
-        Log.d(TAG, "handleChatMessage: Message received: $message")
-
-        // Show loading
-        chatOverlayManager.setLoading(true)
-
-        // TODO: Integrate with Gemini API
-        // For now, just show a placeholder response
-        updateHandler.postDelayed({
-            chatOverlayManager.setLoading(false)
-            // Add response to chat
-            Log.d(TAG, "handleChatMessage: Response sent (placeholder)")
-        }, 1000)
     }
 }
