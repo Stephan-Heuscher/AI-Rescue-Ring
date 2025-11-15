@@ -69,7 +69,7 @@ object ScreenCaptureManager {
     private suspend fun captureScreenshot(service: AccessibilityService): Bitmap? =
         suspendCancellableCoroutine { continuation ->
             service.takeScreenshot(
-                1, // TAKE_SCREENSHOT_FULLSCREEN
+                AccessibilityService.TAKE_SCREENSHOT_FULLSCREEN,
                 { it.run() },
                 object : AccessibilityService.TakeScreenshotCallback {
                     override fun onSuccess(screenshot: AccessibilityService.ScreenshotResult) {

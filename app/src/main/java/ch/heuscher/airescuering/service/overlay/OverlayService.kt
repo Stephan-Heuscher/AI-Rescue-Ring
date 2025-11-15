@@ -302,12 +302,33 @@ class OverlayService : Service() {
     private fun handleTap() {
         Log.d(TAG, "handleTap: Tap gesture detected on ring")
 
-        // Launch AI Helper Activity directly
-        val intent = Intent(this, AIHelperActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        // Capture screenshot in background before launching activity
+        serviceScope.launch {
+            try {
+                Log.d(TAG, "handleTap: Capturing screenshot before launching AI Helper")
+                val screenshot = ch.heuscher.airescuering.util.ScreenCaptureManager.captureScreenAsBase64()
+                
+                // Launch AI Helper Activity with screenshot
+                val intent = Intent(this@OverlayService, AIHelperActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    if (screenshot != null) {
+                        putExtra("screenshot", screenshot)
+                        Log.d(TAG, "handleTap: Passing screenshot to AIHelperActivity")
+                    } else {
+                        Log.w(TAG, "handleTap: Screenshot capture failed, launching without screenshot")
+                    }
+                }
+                startActivity(intent)
+                Log.d(TAG, "handleTap: AIHelperActivity launched")
+            } catch (e: Exception) {
+                Log.e(TAG, "handleTap: Error during screenshot capture", e)
+                // Launch without screenshot if capture fails
+                val intent = Intent(this@OverlayService, AIHelperActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                startActivity(intent)
+            }
         }
-        startActivity(intent)
-        Log.d(TAG, "handleTap: AIHelperActivity launched")
     }
 
     private fun handleQuadrupleTap() {

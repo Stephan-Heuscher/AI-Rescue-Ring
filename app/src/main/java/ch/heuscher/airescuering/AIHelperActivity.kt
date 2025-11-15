@@ -64,13 +64,25 @@ class AIHelperActivity : AppCompatActivity() {
         setupListeners()
         initGeminiService()
 
-        // Capture screenshot automatically when activity opens
-        captureScreenInBackground()
+        // Check if screenshot was provided via intent
+        val providedScreenshot = intent.getStringExtra("screenshot")
+        if (providedScreenshot != null) {
+            Log.d(TAG, "onCreate: Screenshot provided via intent")
+            capturedScreenshot = providedScreenshot
+        } else {
+            // Capture screenshot automatically when activity opens
+            captureScreenInBackground()
+        }
 
         // Add welcome message
+        val welcomeMessage = if (capturedScreenshot != null) {
+            "Hello! I'm your AI assistant. 📸 I can see your screen and help you with whatever you need. You can type your questions below or use the microphone button 🎤 for voice input."
+        } else {
+            "Hello! I'm your AI assistant. I can help you with whatever you need. You can type your questions below or use the microphone button 🎤 for voice input."
+        }
         addMessage(AIMessage(
             id = UUID.randomUUID().toString(),
-            content = "Hello! I'm your AI assistant. I can see your screen and help you with whatever you need. You can type your questions below or use the microphone button 🎤 for voice input.",
+            content = welcomeMessage,
             role = MessageRole.ASSISTANT
         ))
     }
@@ -311,29 +323,33 @@ class AIHelperActivity : AppCompatActivity() {
     private fun captureScreenInBackground() {
         lifecycleScope.launch {
             try {
-                Log.d(TAG, "Capturing screenshot in background...")
+                Log.d(TAG, "captureScreenInBackground: Attempting to capture screenshot...")
                 loadingIndicator.visibility = View.VISIBLE
 
                 capturedScreenshot = ScreenCaptureManager.captureScreenAsBase64()
 
                 if (capturedScreenshot != null) {
-                    Log.d(TAG, "Screenshot captured successfully")
-                    // Add a subtle message to indicate screenshot was captured
+                    Log.d(TAG, "captureScreenInBackground: Screenshot captured successfully")
                     addMessage(AIMessage(
                         id = UUID.randomUUID().toString(),
                         content = "📸 I can see your screen. How can I help you?",
                         role = MessageRole.ASSISTANT
                     ))
                 } else {
-                    Log.w(TAG, "Screenshot capture failed or not supported")
+                    Log.w(TAG, "captureScreenInBackground: Screenshot capture failed")
                     addMessage(AIMessage(
                         id = UUID.randomUUID().toString(),
-                        content = "Note: I couldn't capture your screen. You may need to enable the Accessibility Service. I can still help based on your description.",
+                        content = "Note: I couldn't capture your screen (this is normal when the AI Helper is open). I can still help based on your description!",
                         role = MessageRole.ASSISTANT
                     ))
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error capturing screenshot", e)
+                Log.e(TAG, "captureScreenInBackground: Error capturing screenshot", e)
+                addMessage(AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "Note: I couldn't capture your screen. You may need to enable the Accessibility Service. I can still help based on your description!",
+                    role = MessageRole.ASSISTANT
+                ))
             } finally {
                 loadingIndicator.visibility = View.GONE
             }
