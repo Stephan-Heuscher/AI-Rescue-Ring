@@ -306,6 +306,9 @@ class OverlayService : Service() {
         serviceScope.launch {
             try {
                 Log.d(TAG, "handleTap: About to capture screenshot...")
+                // Add small delay to let any animations/transitions settle
+                kotlinx.coroutines.delay(300)
+                Log.d(TAG, "handleTap: Starting screenshot capture...")
                 val screenshot = ch.heuscher.airescuering.util.ScreenCaptureManager.captureScreenAsBase64()
                 Log.d(TAG, "handleTap: Screenshot capture completed. Result: ${if (screenshot != null) "SUCCESS (${screenshot.length} chars)" else "NULL"}")
                 

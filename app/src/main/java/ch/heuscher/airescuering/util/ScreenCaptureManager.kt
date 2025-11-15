@@ -115,7 +115,7 @@ object ScreenCaptureManager {
                             1 -> "ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR (1): Internal error"
                             2 -> "ERROR_TAKE_SCREENSHOT_INVALID_DISPLAY (2): Invalid display"
                             3 -> "ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT (3): Too soon after last screenshot"
-                            4 -> "ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR (4): Secure content or dialog present"
+                            4 -> "ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR (4): System busy or transitioning (common during activity launch)"
                             else -> "Unknown error code: $errorCode"
                         }
                         Log.e(TAG, "Screenshot failed: $errorMessage")
