@@ -302,15 +302,29 @@ class OverlayService : Service() {
     private fun handleTap() {
         Log.d(TAG, "=== handleTap: START - Tap gesture detected on ring ===")
 
-        // Capture screenshot in background before launching activity
+        // Hide overlay first, then capture screenshot
         serviceScope.launch {
             try {
-                Log.d(TAG, "handleTap: About to capture screenshot...")
-                // Add small delay to let any animations/transitions settle
-                kotlinx.coroutines.delay(300)
+                Log.d(TAG, "handleTap: Hiding overlay...")
+                // Hide overlay on main thread
+                withContext(Dispatchers.Main) {
+                    viewManager.removeOverlayView()
+                    Log.d(TAG, "handleTap: Overlay removed")
+                }
+                
+                // Wait for system to settle after hiding overlay
+                Log.d(TAG, "handleTap: Waiting for system to settle...")
+                kotlinx.coroutines.delay(500)
+                
                 Log.d(TAG, "handleTap: Starting screenshot capture...")
                 val screenshot = ch.heuscher.airescuering.util.ScreenCaptureManager.captureScreenAsBase64()
                 Log.d(TAG, "handleTap: Screenshot capture completed. Result: ${if (screenshot != null) "SUCCESS (${screenshot.length} chars)" else "NULL"}")
+                
+                // Recreate overlay before launching activity
+                withContext(Dispatchers.Main) {
+                    viewManager.createOverlayView()
+                    Log.d(TAG, "handleTap: Overlay recreated")
+                }
                 
                 // Launch AI Helper Activity with screenshot
                 Log.d(TAG, "handleTap: Creating intent for AIHelperActivity")
@@ -328,6 +342,10 @@ class OverlayService : Service() {
                 Log.d(TAG, "=== handleTap: END - AIHelperActivity started ===")
             } catch (e: Exception) {
                 Log.e(TAG, "handleTap: Error during screenshot capture", e)
+                // Recreate overlay if error occurs
+                withContext(Dispatchers.Main) {
+                    viewManager.createOverlayView()
+                }
                 // Launch without screenshot if capture fails
                 val intent = Intent(this@OverlayService, AIHelperActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
