@@ -72,9 +72,15 @@ class AIHelperActivity : AppCompatActivity() {
             Log.d(TAG, "onCreate: ✓ Screenshot provided via intent (${providedScreenshot.length} chars)")
             capturedScreenshot = providedScreenshot
         } else {
-            Log.w(TAG, "onCreate: ✗ No screenshot in intent, will attempt to capture")
-            // Capture screenshot automatically when activity opens
-            captureScreenInBackground()
+            Log.w(TAG, "onCreate: ✗ No screenshot in intent, will attempt to capture after activity is ready")
+            // Capture screenshot after activity is fully rendered to avoid "system busy" error
+            messagesRecyclerView.post {
+                lifecycleScope.launch {
+                    // Additional delay to ensure activity is fully stable
+                    kotlinx.coroutines.delay(500)
+                    captureScreenInBackground()
+                }
+            }
         }
 
         // Add welcome message
