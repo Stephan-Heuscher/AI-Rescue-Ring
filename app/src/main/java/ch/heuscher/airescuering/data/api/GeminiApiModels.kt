@@ -27,7 +27,16 @@ data class Content(
 data class Part(
     val text: String? = null,
     @SerialName("functionCall")
-    val functionCall: FunctionCall? = null
+    val functionCall: FunctionCall? = null,
+    @SerialName("inlineData")
+    val inlineData: InlineData? = null
+)
+
+@Serializable
+data class InlineData(
+    @SerialName("mimeType")
+    val mimeType: String,
+    val data: String // base64 encoded
 )
 
 @Serializable
