@@ -318,26 +318,16 @@ class OverlayService : Service() {
                 Log.d(TAG, "handleTap: Waiting 2 seconds for system to settle...")
                 kotlinx.coroutines.delay(2000)
                 
-                Log.d(TAG, "handleTap: Starting screenshot capture...")
-                val screenshot = ch.heuscher.airescuering.util.ScreenCaptureManager.captureScreenAsBase64()
-                Log.d(TAG, "handleTap: Screenshot capture completed. Result: ${if (screenshot != null) "SUCCESS (${screenshot.length} chars)" else "NULL"}")
-                
                 // Recreate overlay before launching activity
                 withContext(Dispatchers.Main) {
                     viewManager.createOverlayView()
                     Log.d(TAG, "handleTap: Overlay recreated")
                 }
                 
-                // Launch AI Helper Activity with screenshot
+                // Launch AI Helper Activity (it will capture screenshot itself)
                 Log.d(TAG, "handleTap: Creating intent for AIHelperActivity")
                 val intent = Intent(this@OverlayService, AIHelperActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    if (screenshot != null) {
-                        putExtra("screenshot", screenshot)
-                        Log.d(TAG, "handleTap: ✓ Screenshot added to intent (${screenshot.length} chars)")
-                    } else {
-                        Log.w(TAG, "handleTap: ✗ Screenshot is NULL, launching without screenshot")
-                    }
                 }
                 Log.d(TAG, "handleTap: Starting AIHelperActivity...")
                 startActivity(intent)

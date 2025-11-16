@@ -1,4 +1,4 @@
-package ch.heuscher.airescuering.data.api
+﻿package ch.heuscher.airescuering.data.api
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,8 +13,7 @@ data class GeminiRequest(
     @SerialName("generationConfig")
     val generationConfig: GenerationConfig? = null,
     @SerialName("systemInstruction")
-    val systemInstruction: Content? = null,
-    val tools: List<Tool>? = null
+    val systemInstruction: Content? = null
 )
 
 @Serializable
@@ -26,17 +25,15 @@ data class Content(
 @Serializable
 data class Part(
     val text: String? = null,
-    @SerialName("functionCall")
-    val functionCall: FunctionCall? = null,
-    @SerialName("inlineData")
+    @SerialName("inline_data")
     val inlineData: InlineData? = null
 )
 
 @Serializable
 data class InlineData(
-    @SerialName("mimeType")
+    @SerialName("mime_type")
     val mimeType: String,
-    val data: String // base64 encoded
+    val data: String  // Base64-encoded image data
 )
 
 @Serializable
@@ -88,37 +85,3 @@ data class GeminiError(
     val message: String,
     val status: String
 )
-
-/**
- * Tool definition for Computer Use
- */
-@Serializable
-data class Tool(
-    @SerialName("computer_use")
-    val computerUse: ComputerUse? = null
-)
-
-@Serializable
-data class ComputerUse(
-    val environment: String = "ENVIRONMENT_BROWSER"
-)
-
-/**
- * Function call from the model
- */
-@Serializable
-data class FunctionCall(
-    val name: String,
-    val args: Map<String, kotlinx.serialization.json.JsonElement>? = null
-)
-
-/**
- * Result from generateContent that can contain either text or a function call
- */
-data class GeminiContentResult(
-    val text: String? = null,
-    val functionCall: FunctionCall? = null
-) {
-    val hasText: Boolean get() = text != null
-    val hasFunctionCall: Boolean get() = functionCall != null
-}

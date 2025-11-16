@@ -1,8 +1,10 @@
-package ch.heuscher.airescuering
+﻿package ch.heuscher.airescuering
 
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Bitmap
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.text.InputType
@@ -25,7 +27,6 @@ import ch.heuscher.airescuering.data.api.GeminiApiService
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.model.AIMessage
 import ch.heuscher.airescuering.domain.model.MessageRole
-import ch.heuscher.airescuering.util.ScreenCaptureManager
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -48,7 +49,7 @@ class AIHelperActivity : AppCompatActivity() {
     private lateinit var adapter: ChatAdapter
 
     private var geminiService: GeminiApiService? = null
-    private var capturedScreenshot: String? = null // Base64 screenshot captured on launch
+    private var currentScreenshot: Bitmap? = null
 
     companion object {
         private const val TAG = "AIHelperActivity"
@@ -59,41 +60,63 @@ class AIHelperActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ai_helper)
 
-        Log.d(TAG, "=== onCreate: START ===")
         initViews()
         setupRecyclerView()
         setupListeners()
         initGeminiService()
 
-        // Check if screenshot was provided via intent
-        val providedScreenshot = intent.getStringExtra("screenshot")
-        Log.d(TAG, "onCreate: Checking for screenshot in intent...")
-        if (providedScreenshot != null) {
-            Log.d(TAG, "onCreate: ✓ Screenshot provided via intent (${providedScreenshot.length} chars)")
-            capturedScreenshot = providedScreenshot
-        } else {
-            Log.w(TAG, "onCreate: ✗ No screenshot in intent, will attempt to capture after activity is ready")
-            // Capture screenshot after activity is fully rendered to avoid "system busy" error
-            messagesRecyclerView.post {
-                lifecycleScope.launch {
-                    // Additional delay to ensure activity is fully stable
-                    kotlinx.coroutines.delay(500)
-                    captureScreenInBackground()
-                }
-            }
-        }
+        // Capture screenshot of the screen before opening chat
+        captureScreenshot()
 
         // Add welcome message
-        val welcomeMessage = if (capturedScreenshot != null) {
-            "Hello! I'm your AI assistant. 📸 I can see your screen and help you with whatever you need. You can type your questions below or use the microphone button 🎤 for voice input."
-        } else {
-            "Hello! I'm your AI assistant. I can help you with whatever you need. You can type your questions below or use the microphone button 🎤 for voice input."
-        }
         addMessage(AIMessage(
             id = UUID.randomUUID().toString(),
-            content = welcomeMessage,
+            content = "Hello! I'm your AI assistant. I can see what's on your screen and help you with it. What would you like to do?",
             role = MessageRole.ASSISTANT
         ))
+    }
+
+    /**
+     * Capture a screenshot of the screen using accessibility service
+     */
+    private fun captureScreenshot() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Log.d(TAG, "Requesting screenshot capture...")
+            BackHomeAccessibilityService.captureScreen { bitmap ->
+                if (bitmap != null) {
+                    currentScreenshot = bitmap
+                    Log.d(TAG, "Screenshot captured: ${bitmap.width}x${bitmap.height}")
+
+                    // Add message indicating screenshot was captured
+                    runOnUiThread {
+                        val screenshotMessage = AIMessage(
+                            id = UUID.randomUUID().toString(),
+                            content = "­ƒô© I've captured a screenshot of what was on your screen (${bitmap.width}x${bitmap.height}). I can analyze it to help you.",
+                            role = MessageRole.ASSISTANT
+                        )
+                        addMessage(screenshotMessage)
+                    }
+                } else {
+                    Log.w(TAG, "Screenshot capture failed or returned null")
+                    runOnUiThread {
+                        val failureMessage = AIMessage(
+                            id = UUID.randomUUID().toString(),
+                            content = "ÔÜá´©Å Couldn't capture a screenshot. Make sure accessibility service is enabled. I can still help with text-based questions!",
+                            role = MessageRole.ASSISTANT
+                        )
+                        addMessage(failureMessage)
+                    }
+                }
+            }
+        } else {
+            Log.w(TAG, "Screenshot capture requires Android R (API 30+)")
+            val notSupportedMessage = AIMessage(
+                id = UUID.randomUUID().toString(),
+                content = "ÔÜá´©Å Screenshot capture requires Android 11+. I can still help with text-based questions!",
+                role = MessageRole.ASSISTANT
+            )
+            addMessage(notSupportedMessage)
+        }
     }
 
     private fun initViews() {
@@ -138,7 +161,7 @@ class AIHelperActivity : AppCompatActivity() {
                 // Show prominent warning in chat with option to enter API key
                 val warningMessage = AIMessage(
                     id = UUID.randomUUID().toString(),
-                    content = "⚠️ API Key Not Configured\n\nTo use the AI assistant, you need to set up a Gemini API key.\n\nTap the button below to enter your API key now, or you can set it later in the app settings.",
+                    content = "ÔÜá´©Å API Key Not Configured\n\nTo use the AI assistant, you need to set up a Gemini API key.\n\nTap the button below to enter your API key now, or you can set it later in the app settings.",
                     role = MessageRole.ASSISTANT
                 )
                 addMessage(warningMessage)
@@ -175,7 +198,7 @@ class AIHelperActivity : AppCompatActivity() {
                         // Add success message
                         val successMessage = AIMessage(
                             id = UUID.randomUUID().toString(),
-                            content = "✅ API Key Configured!\n\nYour API key has been saved. You can now chat with the AI assistant!",
+                            content = "Ô£à API Key Configured!\n\nYour API key has been saved. You can now chat with the AI assistant!",
                             role = MessageRole.ASSISTANT
                         )
                         addMessage(successMessage)
@@ -245,35 +268,24 @@ class AIHelperActivity : AppCompatActivity() {
                         role to message.content
                     }
 
-                // Use captured screenshot for the first user message, then clear it
-                val screenshot = capturedScreenshot
-                capturedScreenshot = null
-
                 val result = service.generateAssistanceSuggestion(
                     userRequest = text,
-                    context = "The user is on their Android device",
-                    screenshotBase64 = screenshot
+                    screenshot = currentScreenshot,
+                    context = "The user is on their Android device"
                 )
 
-                if (screenshot != null) {
-                    Log.d(TAG, "Sent message with screenshot to Gemini")
-                }
-
                 result.onSuccess { response ->
-                    when {
-                        response.hasText -> {
-                            // Regular text response
-                            val assistantMessage = AIMessage(
-                                id = UUID.randomUUID().toString(),
-                                content = response.text!!,
-                                role = MessageRole.ASSISTANT
-                            )
-                            addMessage(assistantMessage)
-                        }
-                        response.hasFunctionCall -> {
-                            // AI wants to perform an action - show approval dialog
-                            showActionApprovalDialog(response.functionCall!!)
-                        }
+                    val assistantMessage = AIMessage(
+                        id = UUID.randomUUID().toString(),
+                        content = response,
+                        role = MessageRole.ASSISTANT
+                    )
+                    addMessage(assistantMessage)
+
+                    // Check if we should show suggestion dialog
+                    if (response.contains("suggest", ignoreCase = true) ||
+                        response.contains("recommend", ignoreCase = true)) {
+                        showSuggestionDialog(response)
                     }
                 }.onFailure { error ->
                     Toast.makeText(
@@ -329,42 +341,6 @@ class AIHelperActivity : AppCompatActivity() {
         }
     }
 
-    private fun captureScreenInBackground() {
-        lifecycleScope.launch {
-            try {
-                Log.d(TAG, "captureScreenInBackground: Attempting to capture screenshot...")
-                loadingIndicator.visibility = View.VISIBLE
-
-                capturedScreenshot = ScreenCaptureManager.captureScreenAsBase64()
-
-                if (capturedScreenshot != null) {
-                    Log.d(TAG, "captureScreenInBackground: Screenshot captured successfully")
-                    addMessage(AIMessage(
-                        id = UUID.randomUUID().toString(),
-                        content = "📸 I can see your screen. How can I help you?",
-                        role = MessageRole.ASSISTANT
-                    ))
-                } else {
-                    Log.w(TAG, "captureScreenInBackground: Screenshot capture failed")
-                    addMessage(AIMessage(
-                        id = UUID.randomUUID().toString(),
-                        content = "Note: I couldn't capture your screen (this is normal when the AI Helper is open). I can still help based on your description!",
-                        role = MessageRole.ASSISTANT
-                    ))
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "captureScreenInBackground: Error capturing screenshot", e)
-                addMessage(AIMessage(
-                    id = UUID.randomUUID().toString(),
-                    content = "Note: I couldn't capture your screen. You may need to enable the Accessibility Service. I can still help based on your description!",
-                    role = MessageRole.ASSISTANT
-                ))
-            } finally {
-                loadingIndicator.visibility = View.GONE
-            }
-        }
-    }
-
     private fun showSuggestionDialog(suggestion: String) {
         val dialog = ch.heuscher.airescuering.ui.AISuggestionDialog(
             context = this,
@@ -380,69 +356,6 @@ class AIHelperActivity : AppCompatActivity() {
             }
         )
         dialog.show()
-    }
-
-    private fun showActionApprovalDialog(functionCall: ch.heuscher.airescuering.data.api.FunctionCall) {
-        // Format the function call details for display
-        val actionName = functionCall.name
-        val actionArgs = functionCall.args?.entries?.joinToString("\n") { (key, value) ->
-            "  $key: $value"
-        } ?: "No parameters"
-
-        val message = buildString {
-            append("🤖 AI wants to perform an action:\n\n")
-            append("Action: $actionName\n\n")
-            append("Parameters:\n$actionArgs\n\n")
-            append("Do you want to approve this action?")
-        }
-
-        // Add the AI's request as a message
-        val requestMessage = AIMessage(
-            id = UUID.randomUUID().toString(),
-            content = "I'd like to: $actionName",
-            role = MessageRole.ASSISTANT
-        )
-        addMessage(requestMessage)
-
-        AlertDialog.Builder(this)
-            .setTitle("Action Approval Required")
-            .setMessage(message)
-            .setPositiveButton("✓ Approve") { dialog, _ ->
-                // User approved the action
-                val approvalMessage = AIMessage(
-                    id = UUID.randomUUID().toString(),
-                    content = "✓ You approved: $actionName",
-                    role = MessageRole.USER
-                )
-                addMessage(approvalMessage)
-
-                Toast.makeText(
-                    this,
-                    "Action approved: $actionName\n(Execution not yet implemented)",
-                    Toast.LENGTH_LONG
-                ).show()
-
-                dialog.dismiss()
-            }
-            .setNegativeButton("✗ Deny") { dialog, _ ->
-                // User denied the action
-                val denialMessage = AIMessage(
-                    id = UUID.randomUUID().toString(),
-                    content = "✗ You denied: $actionName",
-                    role = MessageRole.USER
-                )
-                addMessage(denialMessage)
-
-                Toast.makeText(
-                    this,
-                    "Action denied",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                dialog.dismiss()
-            }
-            .setCancelable(false)
-            .show()
     }
 
     /**

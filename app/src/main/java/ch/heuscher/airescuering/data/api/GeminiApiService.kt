@@ -1,5 +1,7 @@
-package ch.heuscher.airescuering.data.api
+﻿package ch.heuscher.airescuering.data.api
 
+import android.graphics.Bitmap
+import android.util.Base64
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -9,6 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.logging.HttpLoggingInterceptor
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 
 /**
@@ -52,30 +55,22 @@ class GeminiApiService(
     /**
      * Generate content using the specified Gemini model.
      *
-     * @param model The model to use (e.g., "gemini-2.5-computer-use-preview-10-2025")
+     * @param model The model to use (e.g., "gemini-2.0-flash-exp")
      * @param messages List of conversation messages
      * @param systemPrompt Optional system instruction
-     * @param useComputerUse Whether to enable Computer Use tools
-     * @return Response from the API (contains text or function call)
+     * @return Response from the API or null if error
      */
     suspend fun generateContent(
         model: String,
         messages: List<Pair<String, String>>, // role to text
-        systemPrompt: String? = null,
-        useComputerUse: Boolean = false
-    ): Result<GeminiContentResult> = withContext(Dispatchers.IO) {
+        systemPrompt: String? = null
+    ): Result<String> = withContext(Dispatchers.IO) {
         try {
             val contents = messages.map { (role, text) ->
                 Content(
                     role = role,
                     parts = listOf(Part(text = text))
                 )
-            }
-
-            val tools = if (useComputerUse) {
-                listOf(Tool(computerUse = ComputerUse()))
-            } else {
-                null
             }
 
             val request = GeminiRequest(
@@ -89,8 +84,7 @@ class GeminiApiService(
                         role = "system",
                         parts = listOf(Part(text = it))
                     )
-                },
-                tools = tools
+                }
             )
 
             val url = "$BASE_URL/$model:generateContent?key=$apiKey"
@@ -129,21 +123,16 @@ class GeminiApiService(
                 }
 
                 val geminiResponse = json.decodeFromString<GeminiResponse>(responseBody)
-                val firstPart = geminiResponse.candidates.firstOrNull()
+                val text = geminiResponse.candidates.firstOrNull()
                     ?.content
                     ?.parts
                     ?.firstOrNull()
+                    ?.text
 
-                val result = when {
-                    firstPart?.text != null -> GeminiContentResult(text = firstPart.text)
-                    firstPart?.functionCall != null -> GeminiContentResult(functionCall = firstPart.functionCall)
-                    else -> null
-                }
-
-                if (result != null) {
-                    Result.success(result)
+                if (text != null) {
+                    Result.success(text)
                 } else {
-                    Result.failure(Exception("No text or function call in response"))
+                    Result.failure(Exception("No text in response"))
                 }
             }
         } catch (e: Exception) {
@@ -153,92 +142,83 @@ class GeminiApiService(
     }
 
     /**
-     * Generate suggestions for device assistance using Gemini's Computer Use model.
+     * Generate suggestions for device assistance using Gemini's computer use model.
      *
      * @param userRequest The user's request description
+     * @param screenshot Optional screenshot of the current screen
      * @param context Additional context about the device state
-     * @param screenshotBase64 Optional screenshot of the current screen (base64 encoded JPEG)
-     * @return Response with text or function call for tool use
+     * @return Suggested actions as text
      */
     suspend fun generateAssistanceSuggestion(
         userRequest: String,
-        context: String = "",
-        screenshotBase64: String? = null
-    ): Result<GeminiContentResult> {
+        screenshot: Bitmap? = null,
+        context: String = ""
+    ): Result<String> {
         val systemPrompt = """
 You are an AI assistant with computer use capabilities helping users with their Android device.
 
-When the user asks for help, you can:
-1. Provide text responses with guidance and information
-2. Suggest specific UI actions using the computer_use tool
+When provided with a screenshot and user request:
+1. Analyze the screenshot to understand what's on screen
+2. Understand what the user wants to do
+3. Provide clear, actionable steps they can take
 
-If a screenshot is provided, analyze what you see on the screen and provide context-aware assistance.
-
-When suggesting actions, describe what you want to do and why. The user will approve or deny your suggestions before they are executed.
-
-Your response should be structured as follows:
-1. A brief summary of what you understand they want to do (and what you see if there's a screenshot)
-2. Suggested steps or actions
-3. Any important notes or warnings
-
-Be helpful, clear, and explain your reasoning.
+Your response should be concise and focus on what can be done right now on their device.
+Be helpful and specific about which UI elements to interact with if visible in the screenshot.
         """.trimIndent()
 
         val userMessage = buildString {
-            append(userRequest)
+            if (screenshot != null) {
+                append("I'm looking at my Android screen. ")
+            }
+            append("User request: $userRequest")
             if (context.isNotEmpty()) {
-                append("\n\nContext: $context")
+                append("\n\nDevice context: $context")
             }
         }
 
-        // If screenshot is provided, use vision-capable model with image
-        if (screenshotBase64 != null) {
-            return generateContentWithImageAndTools(
-                model = "gemini-2.0-flash-exp",
+        return if (screenshot != null) {
+            generateContentWithImage(
+                model = "gemini-2.5-computer-use-preview-10-2025",
                 text = userMessage,
-                imageBase64 = screenshotBase64,
+                image = screenshot,
+                systemPrompt = systemPrompt
+            )
+        } else {
+            generateContent(
+                model = "gemini-2.5-computer-use-preview-10-2025",
+                messages = listOf("user" to userMessage),
                 systemPrompt = systemPrompt
             )
         }
-
-        return generateContent(
-            model = "gemini-2.5-computer-use-preview-10-2025",
-            messages = listOf("user" to userMessage),
-            systemPrompt = systemPrompt,
-            useComputerUse = true
-        )
     }
 
     /**
-     * Generate content with an image attached and computer use tools enabled.
+     * Generate content with both text and image (multimodal).
      *
      * @param model The model to use
      * @param text The text prompt
-     * @param imageBase64 Base64-encoded image data (JPEG)
+     * @param image The image (screenshot) to analyze
      * @param systemPrompt Optional system instruction
-     * @return Response from the API (contains text or function call)
+     * @return Response from the API
      */
-    private suspend fun generateContentWithImageAndTools(
+    private suspend fun generateContentWithImage(
         model: String,
         text: String,
-        imageBase64: String,
+        image: Bitmap,
         systemPrompt: String? = null
-    ): Result<GeminiContentResult> = withContext(Dispatchers.IO) {
+    ): Result<String> = withContext(Dispatchers.IO) {
         try {
-            val parts = mutableListOf<Part>()
+            // Convert bitmap to base64
+            val base64Image = bitmapToBase64(image)
 
-            // Add image first
-            parts.add(
-                Part(
-                    inlineData = InlineData(
-                        mimeType = "image/jpeg",
-                        data = imageBase64
-                    )
-                )
+            // Create parts with both text and image
+            val parts = listOf(
+                Part(text = text),
+                Part(inlineData = InlineData(
+                    mimeType = "image/jpeg",
+                    data = base64Image
+                ))
             )
-
-            // Then add text
-            parts.add(Part(text = text))
 
             val contents = listOf(
                 Content(
@@ -258,8 +238,7 @@ Be helpful, clear, and explain your reasoning.
                         role = "system",
                         parts = listOf(Part(text = it))
                     )
-                },
-                tools = listOf(Tool(computerUse = ComputerUse())) // Enable computer use tools
+                }
             )
 
             val url = "$BASE_URL/$model:generateContent?key=$apiKey"
@@ -272,7 +251,7 @@ Be helpful, clear, and explain your reasoning.
                 .build()
 
             if (debug) {
-                Log.d(TAG, "Request with image (image data truncated)")
+                Log.d(TAG, "Request with image: text=$text, imageSize=${image.width}x${image.height}")
             }
 
             client.newCall(httpRequest).execute().use { response ->
@@ -298,26 +277,32 @@ Be helpful, clear, and explain your reasoning.
                 }
 
                 val geminiResponse = json.decodeFromString<GeminiResponse>(responseBody)
-                val firstPart = geminiResponse.candidates.firstOrNull()
+                val text = geminiResponse.candidates.firstOrNull()
                     ?.content
                     ?.parts
                     ?.firstOrNull()
+                    ?.text
 
-                val result = when {
-                    firstPart?.text != null -> GeminiContentResult(text = firstPart.text)
-                    firstPart?.functionCall != null -> GeminiContentResult(functionCall = firstPart.functionCall)
-                    else -> null
-                }
-
-                if (result != null) {
-                    Result.success(result)
+                if (text != null) {
+                    Result.success(text)
                 } else {
-                    Result.failure(Exception("No text or function call in response"))
+                    Result.failure(Exception("No text in response"))
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error generating content with image", e)
             Result.failure(e)
         }
+    }
+
+    /**
+     * Convert Bitmap to Base64 encoded JPEG
+     */
+    private fun bitmapToBase64(bitmap: Bitmap): String {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        // Compress to JPEG with 85% quality to reduce size
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.NO_WRAP)
     }
 }

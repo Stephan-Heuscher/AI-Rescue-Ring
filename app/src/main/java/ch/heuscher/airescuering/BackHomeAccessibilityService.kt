@@ -1,13 +1,10 @@
-package ch.heuscher.airescuering
+﻿package ch.heuscher.airescuering
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.ColorSpace
 import android.hardware.HardwareBuffer
-import android.media.Image
-import android.media.ImageReader
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -23,7 +20,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.cancel
-import java.nio.ByteBuffer
 
 /**
  * Accessibility service for performing system navigation actions
@@ -195,7 +191,6 @@ class BackHomeAccessibilityService : AccessibilityService() {
      * Take a screenshot of the current screen
      * Requires Android R (API 30+) and canTakeScreenshot permission
      */
-    @RequiresApi(Build.VERSION_CODES.R)
     fun takeScreenshot(callback: (Bitmap?) -> Unit) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
             Log.e(TAG, "takeScreenshot: Requires Android R (API 30+)")
