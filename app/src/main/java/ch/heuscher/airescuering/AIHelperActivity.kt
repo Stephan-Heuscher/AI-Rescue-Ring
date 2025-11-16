@@ -26,7 +26,10 @@ import androidx.recyclerview.widget.RecyclerView
 import ch.heuscher.airescuering.data.api.GeminiApiService
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.model.AIMessage
+import ch.heuscher.airescuering.domain.model.ActionData
 import ch.heuscher.airescuering.domain.model.MessageRole
+import ch.heuscher.airescuering.domain.model.MessageType
+import ch.heuscher.airescuering.util.ScreenshotHelper
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
@@ -44,6 +47,7 @@ class AIHelperActivity : AppCompatActivity() {
     private lateinit var messageInput: EditText
     private lateinit var sendButton: Button
     private lateinit var voiceButton: Button
+    private lateinit var screenshotButton: Button
     private lateinit var closeButton: Button
     private lateinit var loadingIndicator: ProgressBar
 
@@ -52,6 +56,7 @@ class AIHelperActivity : AppCompatActivity() {
 
     private var geminiService: GeminiApiService? = null
     private var currentScreenshot: Bitmap? = null
+    private var currentScreenshotPath: String? = null
 
     // Two-stage flow: planning and execution
     private var currentUserRequest: String? = null
@@ -75,10 +80,10 @@ class AIHelperActivity : AppCompatActivity() {
         setupListeners()
         initGeminiService()
 
-        // Get screenshot from Intent (captured before activity launch)
+        // Check for screenshot from Intent first (captured before activity launch)
         val screenshotBase64 = intent.getStringExtra("screenshot_base64")
         Log.d(TAG, "onCreate: screenshotBase64 is ${if (screenshotBase64 == null) "NULL" else "present (${screenshotBase64.length} chars)"}")
-        
+
         if (screenshotBase64 != null) {
             // Convert base64 to bitmap and set as background
             try {
@@ -88,22 +93,28 @@ class AIHelperActivity : AppCompatActivity() {
                     currentScreenshot = bitmap
                     setScreenshotBackground(bitmap)
                     Log.d(TAG, "Screenshot set as background from intent: ${bitmap.width}x${bitmap.height}")
+
+                    // Add welcome message
+                    addMessage(AIMessage(
+                        id = UUID.randomUUID().toString(),
+                        content = "Hello! I'm your AI assistant. I can see what's on your screen and help you with it. What would you like to do?",
+                        role = MessageRole.ASSISTANT
+                    ))
                 } else {
                     Log.e(TAG, "Failed to decode bitmap from base64")
+                    // Fall back to taking screenshot
+                    takeInitialScreenshot()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to decode screenshot from Intent", e)
+                // Fall back to taking screenshot
+                takeInitialScreenshot()
             }
         } else {
-            Log.w(TAG, "No screenshot provided in Intent")
+            Log.w(TAG, "No screenshot provided in Intent, taking initial screenshot")
+            // Take screenshot first, then show welcome message
+            takeInitialScreenshot()
         }
-
-        // Add welcome message
-        addMessage(AIMessage(
-            id = UUID.randomUUID().toString(),
-            content = "Hello! I'm your AI assistant. I can see what's on your screen and help you with it. What would you like to do?",
-            role = MessageRole.ASSISTANT
-        ))
     }
 
     /**
@@ -146,6 +157,7 @@ class AIHelperActivity : AppCompatActivity() {
         messageInput = findViewById(R.id.messageInput)
         sendButton = findViewById(R.id.sendButton)
         voiceButton = findViewById(R.id.voiceButton)
+        screenshotButton = findViewById(R.id.screenshotButton)
         closeButton = findViewById(R.id.closeButton)
         loadingIndicator = findViewById(R.id.loadingIndicator)
     }
@@ -169,6 +181,10 @@ class AIHelperActivity : AppCompatActivity() {
 
         voiceButton.setOnClickListener {
             startVoiceRecognition()
+        }
+
+        screenshotButton.setOnClickListener {
+            takeScreenshot()
         }
 
         closeButton.setOnClickListener {
@@ -727,37 +743,220 @@ class AIHelperActivity : AppCompatActivity() {
         }
     }
 
-    private fun showSuggestionDialog(suggestion: String) {
-        val dialog = ch.heuscher.airescuering.ui.AISuggestionDialog(
-            context = this,
-            suggestion = suggestion,
-            onApprove = {
-                Toast.makeText(this, "Suggestion approved", Toast.LENGTH_SHORT).show()
-                // TODO: Execute the approved action
-            },
-            onRefine = {
-                Toast.makeText(this, "Let's refine the suggestion", Toast.LENGTH_SHORT).show()
-                messageInput.setText("I'd like to refine that suggestion...")
-                messageInput.requestFocus()
-            }
+    /**
+     * Take initial screenshot when activity opens
+     */
+    private fun takeInitialScreenshot() {
+        if (!ScreenshotHelper.isAvailable()) {
+            // Show error and welcome message
+            val errorMessage = AIMessage(
+                id = UUID.randomUUID().toString(),
+                content = "⚠️ Screenshot Unavailable\n\n" +
+                        "The screenshot feature requires the Accessibility Service to be enabled.\n\n" +
+                        ScreenshotHelper.getEnableInstructions(),
+                role = MessageRole.ASSISTANT,
+                messageType = MessageType.ERROR
+            )
+            addMessage(errorMessage)
+
+            // Add welcome message
+            addMessage(AIMessage(
+                id = UUID.randomUUID().toString(),
+                content = "Hello! I'm your AI assistant. You can type your questions below, use the microphone button 🎤 for voice input, or take a screenshot 📸 of what you need help with.",
+                role = MessageRole.ASSISTANT
+            ))
+            return
+        }
+
+        // Add status message
+        val statusMessage = AIMessage(
+            id = UUID.randomUUID().toString(),
+            content = "📸 Taking screenshot of your current screen...",
+            role = MessageRole.SYSTEM,
+            messageType = MessageType.SCREENSHOT
         )
-        dialog.show()
+        addMessage(statusMessage)
+
+        // Disable buttons while taking screenshot
+        screenshotButton.isEnabled = false
+        sendButton.isEnabled = false
+        voiceButton.isEnabled = false
+
+        ScreenshotHelper.takeScreenshot(
+            context = this,
+            onSuccess = { filePath ->
+                currentScreenshotPath = filePath
+
+                // Also try to load the bitmap for the execution flow
+                try {
+                    val bitmap = android.graphics.BitmapFactory.decodeFile(filePath)
+                    if (bitmap != null) {
+                        currentScreenshot = bitmap
+                        setScreenshotBackground(bitmap)
+                        Log.d(TAG, "Screenshot bitmap loaded for execution: ${bitmap.width}x${bitmap.height}")
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Could not load bitmap from file for execution", e)
+                }
+
+                val successMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "✅ Screenshot captured!\n\nI've captured a screenshot of what you were viewing before opening this chat.\n\nSaved to: $filePath\n\nYou can now ask me questions about what you see in the screenshot, or take another screenshot 📸 anytime.",
+                    role = MessageRole.ASSISTANT,
+                    messageType = MessageType.SCREENSHOT
+                )
+                addMessage(successMessage)
+
+                // Add welcome message
+                addMessage(AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "What would you like help with?",
+                    role = MessageRole.ASSISTANT
+                ))
+
+                // Re-enable buttons
+                screenshotButton.isEnabled = true
+                sendButton.isEnabled = true
+                voiceButton.isEnabled = true
+            },
+            onFailure = { error ->
+                val errorMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "❌ Screenshot Failed\n\n$error\n\nPlease make sure the Accessibility Service is properly enabled. You can try taking a screenshot again using the 📸 button.",
+                    role = MessageRole.ASSISTANT,
+                    messageType = MessageType.ERROR
+                )
+                addMessage(errorMessage)
+
+                // Add welcome message anyway
+                addMessage(AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "Hello! I'm your AI assistant. You can type your questions below, use the microphone button 🎤 for voice input, or take a screenshot 📸 of what you need help with.",
+                    role = MessageRole.ASSISTANT
+                ))
+
+                // Re-enable buttons
+                screenshotButton.isEnabled = true
+                sendButton.isEnabled = true
+                voiceButton.isEnabled = true
+            },
+            showToast = false  // We handle messages in chat
+        )
+    }
+
+    /**
+     * Take a screenshot and add it to the chat
+     */
+    private fun takeScreenshot() {
+        if (!ScreenshotHelper.isAvailable()) {
+            val errorMessage = AIMessage(
+                id = UUID.randomUUID().toString(),
+                content = "⚠️ Screenshot Unavailable\n\n" +
+                        "The screenshot feature requires the Accessibility Service to be enabled.\n\n" +
+                        ScreenshotHelper.getEnableInstructions(),
+                role = MessageRole.ASSISTANT,
+                messageType = MessageType.ERROR
+            )
+            addMessage(errorMessage)
+            return
+        }
+
+        // Add status message
+        val statusMessage = AIMessage(
+            id = UUID.randomUUID().toString(),
+            content = "📸 Taking screenshot...",
+            role = MessageRole.SYSTEM,
+            messageType = MessageType.SCREENSHOT
+        )
+        addMessage(statusMessage)
+
+        // Disable buttons while taking screenshot
+        screenshotButton.isEnabled = false
+        sendButton.isEnabled = false
+        voiceButton.isEnabled = false
+
+        ScreenshotHelper.takeScreenshot(
+            context = this,
+            onSuccess = { filePath ->
+                currentScreenshotPath = filePath
+
+                // Also try to load the bitmap for the execution flow
+                try {
+                    val bitmap = android.graphics.BitmapFactory.decodeFile(filePath)
+                    if (bitmap != null) {
+                        currentScreenshot = bitmap
+                        Log.d(TAG, "Screenshot bitmap loaded for execution: ${bitmap.width}x${bitmap.height}")
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Could not load bitmap from file for execution", e)
+                }
+
+                val successMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "✅ Screenshot captured successfully!\n\nSaved to: $filePath\n\nYou can now ask me questions about this screenshot.",
+                    role = MessageRole.ASSISTANT,
+                    messageType = MessageType.SCREENSHOT
+                )
+                addMessage(successMessage)
+
+                // Re-enable buttons
+                screenshotButton.isEnabled = true
+                sendButton.isEnabled = true
+                voiceButton.isEnabled = true
+            },
+            onFailure = { error ->
+                val errorMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "❌ Screenshot Failed\n\n$error\n\nPlease make sure the Accessibility Service is properly enabled and try again.",
+                    role = MessageRole.ASSISTANT,
+                    messageType = MessageType.ERROR
+                )
+                addMessage(errorMessage)
+
+                // Re-enable buttons
+                screenshotButton.isEnabled = true
+                sendButton.isEnabled = true
+                voiceButton.isEnabled = true
+            },
+            showToast = false  // We handle messages in chat
+        )
+    }
+
+    private fun showSuggestionInChat(suggestion: String) {
+        // Instead of showing a dialog, add the suggestion as a message with action buttons
+        val actionId = UUID.randomUUID().toString()
+        val suggestionMessage = AIMessage(
+            id = UUID.randomUUID().toString(),
+            content = suggestion,
+            role = MessageRole.ASSISTANT,
+            messageType = MessageType.ACTION_REQUIRED,
+            actionData = ActionData(
+                actionId = actionId,
+                actionText = "Do you want to proceed with this suggestion?",
+                showApproveButton = true,
+                showRefineButton = true
+            )
+        )
+        addMessage(suggestionMessage)
     }
 
     /**
      * Adapter for chat messages
      */
-    private class ChatAdapter(
+    private inner class ChatAdapter(
         private val messages: List<AIMessage>
     ) : RecyclerView.Adapter<ChatAdapter.MessageViewHolder>() {
 
         private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
-        class MessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        inner class MessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val messageCard: CardView = view.findViewById(R.id.messageCard)
             val roleText: TextView = view.findViewById(R.id.messageRole)
             val messageText: TextView = view.findViewById(R.id.messageText)
             val timeText: TextView = view.findViewById(R.id.messageTime)
+            val actionButtonsContainer: LinearLayout = view.findViewById(R.id.actionButtonsContainer)
+            val approveButton: Button = view.findViewById(R.id.approveButton)
+            val refineButton: Button = view.findViewById(R.id.refineButton)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
@@ -778,7 +977,31 @@ class AIHelperActivity : AppCompatActivity() {
             holder.messageText.text = message.content
             holder.timeText.text = timeFormat.format(Date(message.timestamp))
 
-            // Style based on role
+            // Handle action buttons
+            if (message.messageType == MessageType.ACTION_REQUIRED && message.actionData != null) {
+                holder.actionButtonsContainer.visibility = View.VISIBLE
+
+                // Configure buttons based on actionData
+                holder.approveButton.visibility = if (message.actionData.showApproveButton) View.VISIBLE else View.GONE
+                holder.refineButton.visibility = if (message.actionData.showRefineButton) View.VISIBLE else View.GONE
+
+                holder.approveButton.setOnClickListener {
+                    Toast.makeText(this@AIHelperActivity, "Suggestion approved", Toast.LENGTH_SHORT).show()
+                    // Hide buttons after approval
+                    holder.actionButtonsContainer.visibility = View.GONE
+                    // TODO: Execute the approved action
+                }
+
+                holder.refineButton.setOnClickListener {
+                    messageInput.setText("I'd like to refine that suggestion...")
+                    messageInput.requestFocus()
+                    Toast.makeText(this@AIHelperActivity, "Let's refine the suggestion", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                holder.actionButtonsContainer.visibility = View.GONE
+            }
+
+            // Style based on role and message type
             when (message.role) {
                 MessageRole.USER -> {
                     val params = holder.messageCard.layoutParams
@@ -796,12 +1019,31 @@ class AIHelperActivity : AppCompatActivity() {
                         params.gravity = android.view.Gravity.START
                         holder.messageCard.layoutParams = params
                     }
-                    holder.messageCard.setCardBackgroundColor(0xFFEEEEEE.toInt())
+
+                    // Different colors for different message types
+                    when (message.messageType) {
+                        MessageType.ERROR -> {
+                            holder.messageCard.setCardBackgroundColor(0xFFFFCDD2.toInt()) // Light red
+                        }
+                        MessageType.ACTION_REQUIRED -> {
+                            holder.messageCard.setCardBackgroundColor(0xFFE1F5FE.toInt()) // Light blue
+                        }
+                        else -> {
+                            holder.messageCard.setCardBackgroundColor(0xFFEEEEEE.toInt())
+                        }
+                    }
                     holder.roleText.setTextColor(0xFF000000.toInt())
                     holder.messageText.setTextColor(0xFF000000.toInt())
                 }
                 MessageRole.SYSTEM -> {
-                    holder.messageCard.setCardBackgroundColor(0xFFFFF9C4.toInt())
+                    val params = holder.messageCard.layoutParams
+                    if (params is LinearLayout.LayoutParams) {
+                        params.gravity = android.view.Gravity.START
+                        holder.messageCard.layoutParams = params
+                    }
+                    holder.messageCard.setCardBackgroundColor(0xFFFFF9C4.toInt()) // Light yellow
+                    holder.roleText.setTextColor(0xFF000000.toInt())
+                    holder.messageText.setTextColor(0xFF000000.toInt())
                 }
             }
         }

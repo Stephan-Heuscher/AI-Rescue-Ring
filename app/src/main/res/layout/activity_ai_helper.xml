@@ -117,14 +117,21 @@
             android:lineSpacingExtra="2dp" />
 
         <Button
+            android:id="@+id/screenshotButton"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:text="📸"
+            android:textSize="20sp"
+            android:layout_marginStart="8dp"
+            style="?android:attr/borderlessButtonStyle" />
+
+        <Button
             android:id="@+id/voiceButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:text="🎤"
-            android:textSize="24sp"
-            android:layout_marginStart="6dp"
-            android:background="#4CAF50"
-            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:layout_marginStart="4dp"
             style="?android:attr/borderlessButtonStyle" />
 
         <Button
