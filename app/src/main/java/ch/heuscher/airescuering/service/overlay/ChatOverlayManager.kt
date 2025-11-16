@@ -125,10 +125,16 @@ class ChatOverlayManager(
         chatContainer?.visibility = View.VISIBLE
         rescueRingContainer?.visibility = View.GONE
 
-        // Make overlay focusable when chat is shown
-        layoutParams?.flags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
-                             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        overlayView?.let { windowManager.updateViewLayout(it, layoutParams) }
+        // Expand window to full screen for chat
+        layoutParams?.let { params ->
+            params.width = WindowManager.LayoutParams.MATCH_PARENT
+            params.height = WindowManager.LayoutParams.MATCH_PARENT
+            params.x = 0
+            params.y = 0
+            params.flags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
+                          WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            overlayView?.let { windowManager.updateViewLayout(it, params) }
+        }
 
         // Scroll to last message
         messagesRecyclerView?.scrollToPosition(messages.size - 1)
@@ -142,12 +148,22 @@ class ChatOverlayManager(
         chatContainer?.visibility = View.GONE
         rescueRingContainer?.visibility = View.VISIBLE
 
-        // Make overlay non-focusable when only ring is shown
-        layoutParams?.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                             WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                             WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
-                             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-        overlayView?.let { windowManager.updateViewLayout(it, layoutParams) }
+        // Collapse window back to 48dp rescue ring size
+        layoutParams?.let { params ->
+            val ringSize = (48 * context.resources.displayMetrics.density).toInt()
+            val displayMetrics = context.resources.displayMetrics
+            val screenWidth = displayMetrics.widthPixels
+            
+            params.width = ringSize
+            params.height = ringSize
+            params.x = (screenWidth - ringSize) / 2  // Center horizontally
+            params.y = 100  // Top margin
+            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                          WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                          WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
+                          WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            overlayView?.let { windowManager.updateViewLayout(it, params) }
+        }
     }
 
     /**
@@ -175,6 +191,17 @@ class ChatOverlayManager(
         overlayView?.findViewById<View>(R.id.floating_dot)?.setOnTouchListener(listener)
     }
 
+    /**
+     * Updates the position of the rescue ring overlay
+     */
+    fun updatePosition(deltaX: Int, deltaY: Int) {
+        layoutParams?.let { params ->
+            params.x += deltaX
+            params.y += deltaY
+            overlayView?.let { windowManager.updateViewLayout(it, params) }
+        }
+    }
+
     private fun initViews() {
         overlayView?.let { view ->
             rescueRingContainer = view.findViewById(R.id.rescueRingContainer)
@@ -196,16 +223,26 @@ class ChatOverlayManager(
             WindowManager.LayoutParams.TYPE_PHONE
         }
 
+        // Convert 48dp to pixels for the rescue ring size
+        val ringSize = (48 * context.resources.displayMetrics.density).toInt()
+        
+        // Get screen dimensions to center horizontally at top
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        
         layoutParams = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
+            ringSize,  // 48dp width
+            ringSize,  // 48dp height
             layoutType,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                    or WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+                    or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
+            // Center horizontally at top
+            x = (screenWidth - ringSize) / 2
+            y = 100  // Small margin from top
         }
     }
 

@@ -171,7 +171,8 @@ class OverlayService : Service() {
         }
 
         gestureDetector.onPositionChanged = { deltaX, deltaY ->
-            // Position changes not needed for full-screen chat overlay
+            // Update rescue ring position when user drags it
+            chatOverlayManager.updatePosition(deltaX, deltaY)
         }
 
         gestureDetector.onDragModeChanged = { enabled ->
