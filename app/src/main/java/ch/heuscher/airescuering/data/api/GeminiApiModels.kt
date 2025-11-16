@@ -99,17 +99,18 @@ data class Tool(
  */
 @Serializable
 data class ComputerUse(
-    val environment: String = "ENVIRONMENT_DESKTOP",
+    val environment: String = "ENVIRONMENT_BROWSER",
     @SerialName("excluded_predefined_functions")
     val excludedPredefinedFunctions: List<String>? = null
 )
 
 /**
  * Environment constants for Computer Use
+ * Note: Only ENVIRONMENT_BROWSER is supported by the API.
+ * For mobile/Android use, use BROWSER with excluded functions.
  */
 object Environment {
     const val BROWSER = "ENVIRONMENT_BROWSER"
-    const val DESKTOP = "ENVIRONMENT_DESKTOP"
 }
 
 /**
