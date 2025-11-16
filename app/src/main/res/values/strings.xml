@@ -78,9 +78,9 @@
     <!-- Dialogs -->
     <string name="allow_assistipoint_display">Display Rescue Ring</string>
     <string name="allow_assistipoint_message">Allow AI Rescue Ring to be displayed over other apps for instant help.</string>
-    <string name="allow_navigation_title">Enable AI Assistant</string>
-    <string name="allow_navigation_message">Enable the AI assistant service to help you with device tasks.\n\nTurn on \"AI Rescue Ring\" in accessibility settings.</string>
-    <string name="open">Open</string>
+    <string name="allow_navigation_title">Accessibility Service Required</string>
+    <string name="allow_navigation_message">AI Rescue Ring uses Android\'s Accessibility Service to provide a better user experience.\n\n<b>Why we need this permission:</b>\n• Detect when the keyboard appears to automatically move the rescue ring out of the way\n• Detect system UI elements to ensure the ring stays visible and accessible\n\n<b>What we use it for:</b>\n• Smart positioning - automatically repositioning the floating ring\n• Keyboard detection - moving the ring when you type\n• Window monitoring - tracking app changes for optimal ring placement\n\n<b>What we DON\'T do:</b>\n• We do NOT collect any personal data\n• We do NOT share any information with third parties\n• We do NOT read your screen content\n• We do NOT track your activity\n\nThis permission is only used to improve the floating ring\'s behavior on your device.\n\nIn the next screen, find and enable \"AI Rescue Ring\" in accessibility settings.</string>
+    <string name="open">Open Settings</string>
     <string name="cancel">Cancel</string>
     <string name="choose_custom_color">Choose rescue ring color</string>
     <string name="ok">OK</string>

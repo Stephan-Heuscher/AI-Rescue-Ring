@@ -200,9 +200,24 @@ class MainActivity : AppCompatActivity() {
     private fun openAccessibilitySettings() {
         Log.d(TAG, "openAccessibilitySettings: Called")
         try {
+            // Create a scrollable TextView for the prominent disclosure
+            val messageView = TextView(this).apply {
+                text = android.text.Html.fromHtml(
+                    getString(R.string.allow_navigation_message),
+                    android.text.Html.FROM_HTML_MODE_LEGACY
+                )
+                setPadding(60, 40, 60, 40)
+                textSize = 14f
+                setTextColor(getColor(android.R.color.black))
+            }
+
+            val scrollView = android.widget.ScrollView(this).apply {
+                addView(messageView)
+            }
+
             AlertDialog.Builder(this)
                 .setTitle(getString(R.string.allow_navigation_title))
-                .setMessage(getString(R.string.allow_navigation_message))
+                .setView(scrollView)
                 .setPositiveButton(getString(R.string.open)) { _, _ ->
                     Log.d(TAG, "openAccessibilitySettings: User clicked Open button")
                     try {

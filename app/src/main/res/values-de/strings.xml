@@ -77,9 +77,9 @@
     <!-- Dialogs -->
     <string name="allow_assistipoint_display">Rettungsring anzeigen</string>
     <string name="allow_assistipoint_message">Erlauben Sie AI Rescue Ring, über anderen Apps angezeigt zu werden für sofortige Hilfe.</string>
-    <string name="allow_navigation_title">KI-Assistent aktivieren</string>
-    <string name="allow_navigation_message">Aktivieren Sie den KI-Assistenzdienst, um Ihnen bei Geräteaufgaben zu helfen.\n\nSchalten Sie \"AI Rescue Ring\" in den Bedienungshilfen ein.</string>
-    <string name="open">Öffnen</string>
+    <string name="allow_navigation_title">Bedienungshilfe erforderlich</string>
+    <string name="allow_navigation_message">AI Rescue Ring nutzt Androids Bedienungshilfe, um eine bessere Benutzererfahrung zu bieten.\n\n<b>Warum wir diese Berechtigung benötigen:</b>\n• Erkennung wenn die Tastatur erscheint, um den Rettungsring automatisch aus dem Weg zu bewegen\n• Erkennung von System-UI-Elementen, um sicherzustellen dass der Ring sichtbar und zugänglich bleibt\n\n<b>Wofür wir sie verwenden:</b>\n• Intelligente Positionierung - automatisches Neupositionieren des schwebenden Rings\n• Tastaturerkennung - Ring verschieben wenn Sie tippen\n• Fensterüberwachung - App-Wechsel verfolgen für optimale Ring-Platzierung\n\n<b>Was wir NICHT tun:</b>\n• Wir erfassen KEINE persönlichen Daten\n• Wir teilen KEINE Informationen mit Dritten\n• Wir lesen NICHT Ihre Bildschirminhalte\n• Wir verfolgen NICHT Ihre Aktivitäten\n\nDiese Berechtigung wird nur verwendet, um das Verhalten des schwebenden Rings auf Ihrem Gerät zu verbessern.\n\nIm nächsten Bildschirm finden und aktivieren Sie \"AI Rescue Ring\" in den Bedienungshilfen.</string>
+    <string name="open">Einstellungen öffnen</string>
     <string name="cancel">Abbrechen</string>
     <string name="choose_custom_color">Rettungsring-Farbe wählen</string>
     <string name="ok">OK</string>
