@@ -1,15 +1,10 @@
 package ch.heuscher.airescuering
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
-import android.widget.SeekBar
-import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import android.view.View
 import androidx.lifecycle.lifecycleScope
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.repository.AIHelperRepository
@@ -30,7 +25,6 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var aiHelperRepository: AIHelperRepository
 
     // UI state holders
-    private var currentColor = 0xFF2196F3.toInt()
     private var keyboardAvoidanceEnabled = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +41,6 @@ class SettingsActivity : AppCompatActivity() {
         setupBackButton()
         setupImpressumButton()
         setupKeyboardAvoidanceSwitch()
-        setupColorButtons()
         setupAIHelperControls()
     }
 
@@ -78,94 +71,16 @@ class SettingsActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 settingsRepository.setKeyboardAvoidanceEnabled(isChecked)
             }
-            broadcastSettingsUpdate()
         }
-    }
-
-    private fun setupColorButtons() {
-        findViewById<Button>(R.id.color_blue).setOnClickListener { setColor(0xFF2196F3.toInt()) }
-        findViewById<Button>(R.id.color_red).setOnClickListener { setColor(0xFFF44336.toInt()) }
-        findViewById<Button>(R.id.color_green).setOnClickListener { setColor(0xFF4CAF50.toInt()) }
-        findViewById<Button>(R.id.color_orange).setOnClickListener { setColor(0xFFFF9800.toInt()) }
-        findViewById<Button>(R.id.color_purple).setOnClickListener { setColor(0xFF9C27B0.toInt()) }
-        findViewById<Button>(R.id.color_cyan).setOnClickListener { setColor(0xFF00BCD4.toInt()) }
-        findViewById<Button>(R.id.color_yellow).setOnClickListener { setColor(0xFFFFEB3B.toInt()) }
-        findViewById<Button>(R.id.color_gray).setOnClickListener { setColor(0xFF607D8B.toInt()) }
-        findViewById<Button>(R.id.color_custom).setOnClickListener { showColorPickerDialog() }
     }
 
     private fun observeSettings() {
-        lifecycleScope.launch {
-            settingsRepository.getColor().collect { color ->
-                currentColor = color
-            }
-        }
-
         lifecycleScope.launch {
             settingsRepository.isKeyboardAvoidanceEnabled().collect { enabled ->
                 keyboardAvoidanceEnabled = enabled
                 keyboardAvoidanceSwitch.isChecked = enabled
             }
         }
-    }
-
-    private fun setColor(color: Int) {
-        currentColor = color
-        lifecycleScope.launch {
-            settingsRepository.setColor(color)
-        }
-        broadcastSettingsUpdate()
-    }
-
-    private fun broadcastSettingsUpdate() {
-        val intent = Intent(AppConstants.ACTION_UPDATE_SETTINGS)
-        sendBroadcast(intent)
-    }
-
-    private fun showColorPickerDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.color_picker_dialog, null)
-        val colorPreview = dialogView.findViewById<View>(R.id.color_preview)
-        val redSeekBar = dialogView.findViewById<SeekBar>(R.id.red_seekbar)
-        val greenSeekBar = dialogView.findViewById<SeekBar>(R.id.green_seekbar)
-        val blueSeekBar = dialogView.findViewById<SeekBar>(R.id.blue_seekbar)
-        val redValue = dialogView.findViewById<TextView>(R.id.red_value)
-        val greenValue = dialogView.findViewById<TextView>(R.id.green_value)
-        val blueValue = dialogView.findViewById<TextView>(R.id.blue_value)
-
-        val currentColor = this@SettingsActivity.currentColor
-        redSeekBar.progress = Color.red(currentColor)
-        greenSeekBar.progress = Color.green(currentColor)
-        blueSeekBar.progress = Color.blue(currentColor)
-
-        fun updateColor() {
-            val color = Color.rgb(redSeekBar.progress, greenSeekBar.progress, blueSeekBar.progress)
-            colorPreview.setBackgroundColor(color)
-            redValue.text = redSeekBar.progress.toString()
-            greenValue.text = greenSeekBar.progress.toString()
-            blueValue.text = blueSeekBar.progress.toString()
-        }
-        updateColor()
-
-        val seekBarListener = object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                updateColor()
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        }
-        redSeekBar.setOnSeekBarChangeListener(seekBarListener)
-        greenSeekBar.setOnSeekBarChangeListener(seekBarListener)
-        blueSeekBar.setOnSeekBarChangeListener(seekBarListener)
-
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.choose_custom_color))
-            .setView(dialogView)
-            .setPositiveButton(getString(R.string.ok)) { _, _ ->
-                val selectedColor = Color.rgb(redSeekBar.progress, greenSeekBar.progress, blueSeekBar.progress)
-                setColor(selectedColor)
-            }
-            .setNegativeButton(getString(R.string.cancel), null)
-            .show()
     }
 
     private fun setupAIHelperControls() {
