@@ -51,6 +51,11 @@ class AIHelperActivity : AppCompatActivity() {
     private var geminiService: GeminiApiService? = null
     private var currentScreenshot: Bitmap? = null
 
+    // Two-stage flow: planning and execution
+    private var currentUserRequest: String? = null
+    private var currentPlan: String? = null
+    private val executionHistory = mutableListOf<ch.heuscher.airescuering.data.api.Content>()
+
     companion object {
         private const val TAG = "AIHelperActivity"
         private const val VOICE_RECOGNITION_REQUEST_CODE = 1001
@@ -238,12 +243,15 @@ class AIHelperActivity : AppCompatActivity() {
         )
         addMessage(userMessage)
 
+        // Store current request for two-stage flow
+        currentUserRequest = text
+
         // Show loading
         loadingIndicator.visibility = View.VISIBLE
         sendButton.isEnabled = false
         voiceButton.isEnabled = false
 
-        // Get AI response
+        // STAGE 1: Generate solution plan using Gemini 2.5 Pro
         lifecycleScope.launch {
             try {
                 val service = geminiService
@@ -256,38 +264,31 @@ class AIHelperActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                // Convert messages to API format
-                val conversationHistory = messages
-                    .filter { it.role != MessageRole.SYSTEM }
-                    .map { message ->
-                        val role = when (message.role) {
-                            MessageRole.USER -> "user"
-                            MessageRole.ASSISTANT -> "model"
-                            MessageRole.SYSTEM -> "user"
-                        }
-                        role to message.content
-                    }
-
-                val result = service.generateAssistanceSuggestion(
+                Log.d(TAG, "Stage 1: Generating solution plan...")
+                val planResult = service.generateSolutionPlan(
                     userRequest = text,
                     screenshot = currentScreenshot,
                     context = "The user is on their Android device"
                 )
 
-                result.onSuccess { response ->
-                    val assistantMessage = AIMessage(
+                planResult.onSuccess { plan ->
+                    Log.d(TAG, "Stage 1: Plan generated successfully")
+
+                    // Show plan to user
+                    val planMessage = AIMessage(
                         id = UUID.randomUUID().toString(),
-                        content = response,
+                        content = "📋 Here's my plan to help you:\n\n$plan",
                         role = MessageRole.ASSISTANT
                     )
-                    addMessage(assistantMessage)
+                    addMessage(planMessage)
 
-                    // Check if we should show suggestion dialog
-                    if (response.contains("suggest", ignoreCase = true) ||
-                        response.contains("recommend", ignoreCase = true)) {
-                        showSuggestionDialog(response)
-                    }
+                    // Store the plan
+                    currentPlan = plan
+
+                    // Show approval dialog
+                    showPlanApprovalDialog(plan)
                 }.onFailure { error ->
+                    Log.e(TAG, "Stage 1: Error generating plan", error)
                     Toast.makeText(
                         this@AIHelperActivity,
                         "Error: ${error.message}",
@@ -296,7 +297,7 @@ class AIHelperActivity : AppCompatActivity() {
 
                     val errorMessage = AIMessage(
                         id = UUID.randomUUID().toString(),
-                        content = "Sorry, I encountered an error: ${error.message}",
+                        content = "Sorry, I encountered an error while creating a plan: ${error.message}",
                         role = MessageRole.ASSISTANT
                     )
                     addMessage(errorMessage)
@@ -306,6 +307,183 @@ class AIHelperActivity : AppCompatActivity() {
                 sendButton.isEnabled = true
                 voiceButton.isEnabled = true
             }
+        }
+    }
+
+    /**
+     * Show dialog to approve or reject the generated plan
+     */
+    private fun showPlanApprovalDialog(plan: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Approve Plan")
+            .setMessage("Do you want me to execute this plan?")
+            .setPositiveButton("Execute") { dialog, _ ->
+                dialog.dismiss()
+                executePlan(plan)
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+                val cancelMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "Plan cancelled. Feel free to ask me to try a different approach!",
+                    role = MessageRole.ASSISTANT
+                )
+                addMessage(cancelMessage)
+            }
+            .setNeutralButton("Refine") { dialog, _ ->
+                dialog.dismiss()
+                messageInput.setText("Please refine the plan: ")
+                messageInput.setSelection(messageInput.text.length)
+                messageInput.requestFocus()
+            }
+            .show()
+    }
+
+    /**
+     * STAGE 2: Execute the approved plan using computer use model
+     */
+    private fun executePlan(plan: String) {
+        val request = currentUserRequest ?: return
+        val screenshot = currentScreenshot
+
+        if (screenshot == null) {
+            Toast.makeText(this, "No screenshot available for execution", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Clear previous execution history
+        executionHistory.clear()
+
+        val executingMessage = AIMessage(
+            id = UUID.randomUUID().toString(),
+            content = "🤖 Executing plan...",
+            role = MessageRole.ASSISTANT
+        )
+        addMessage(executingMessage)
+
+        loadingIndicator.visibility = View.VISIBLE
+        sendButton.isEnabled = false
+        voiceButton.isEnabled = false
+
+        lifecycleScope.launch {
+            try {
+                val service = geminiService
+                if (service == null) {
+                    Toast.makeText(
+                        this@AIHelperActivity,
+                        "AI service not initialized.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@launch
+                }
+
+                Log.d(TAG, "Stage 2: Executing plan with computer use model...")
+                executeRound(service, request, plan, screenshot, 1)
+            } catch (e: Exception) {
+                Log.e(TAG, "Stage 2: Error during execution", e)
+                val errorMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "Error during execution: ${e.message}",
+                    role = MessageRole.ASSISTANT
+                )
+                addMessage(errorMessage)
+            } finally {
+                loadingIndicator.visibility = View.GONE
+                sendButton.isEnabled = true
+                voiceButton.isEnabled = true
+            }
+        }
+    }
+
+    /**
+     * Execute one round of computer use interaction
+     */
+    private suspend fun executeRound(
+        service: GeminiApiService,
+        request: String,
+        plan: String,
+        screenshot: Bitmap,
+        roundNumber: Int
+    ) {
+        if (roundNumber > 10) {
+            val maxRoundsMessage = AIMessage(
+                id = UUID.randomUUID().toString(),
+                content = "⚠️ Maximum rounds reached. Stopping execution.",
+                role = MessageRole.ASSISTANT
+            )
+            addMessage(maxRoundsMessage)
+            return
+        }
+
+        Log.d(TAG, "Executing round $roundNumber...")
+
+        val result = service.executeWithComputerUse(
+            userRequest = request,
+            approvedPlan = plan,
+            screenshot = screenshot,
+            conversationHistory = executionHistory.toList()
+        )
+
+        result.onSuccess { response ->
+            Log.d(TAG, "Round $roundNumber: Response received")
+
+            // Add model's response to history
+            response.candidates.firstOrNull()?.content?.let { content ->
+                executionHistory.add(content)
+            }
+
+            // Check for function calls
+            val firstPart = response.candidates.firstOrNull()?.content?.parts?.firstOrNull()
+
+            if (firstPart?.functionCall != null) {
+                val functionCall = firstPart.functionCall
+                Log.d(TAG, "Round $roundNumber: Function call - ${functionCall.name}")
+
+                // Show what action is being performed
+                val actionMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "🔧 Action: ${functionCall.name} ${functionCall.args}",
+                    role = MessageRole.ASSISTANT
+                )
+                addMessage(actionMessage)
+
+                // TODO: Actually perform the action here
+                // For now, we'll simulate a response
+                val functionResponse = ch.heuscher.airescuering.data.api.Content(
+                    role = "user",
+                    parts = listOf(ch.heuscher.airescuering.data.api.Part(
+                        functionResponse = ch.heuscher.airescuering.data.api.FunctionResponse(
+                            name = functionCall.name,
+                            response = mapOf("status" to kotlinx.serialization.json.JsonPrimitive("success"))
+                        )
+                    ))
+                )
+                executionHistory.add(functionResponse)
+
+                // Continue to next round
+                // TODO: Capture new screenshot after action
+                executeRound(service, request, plan, screenshot, roundNumber + 1)
+
+            } else if (firstPart?.text != null) {
+                // Text response - execution complete
+                Log.d(TAG, "Round $roundNumber: Text response (execution complete)")
+                val completionMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "✅ ${firstPart.text}",
+                    role = MessageRole.ASSISTANT
+                )
+                addMessage(completionMessage)
+            } else {
+                Log.w(TAG, "Round $roundNumber: No function call or text in response")
+            }
+        }.onFailure { error ->
+            Log.e(TAG, "Round $roundNumber: Error", error)
+            val errorMessage = AIMessage(
+                id = UUID.randomUUID().toString(),
+                content = "Error in round $roundNumber: ${error.message}",
+                role = MessageRole.ASSISTANT
+            )
+            addMessage(errorMessage)
         }
     }
 

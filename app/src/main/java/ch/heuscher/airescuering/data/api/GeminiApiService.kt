@@ -236,6 +236,132 @@ class GeminiApiService(
     }
 
     /**
+     * Generate a solution plan using Gemini 2.5 Pro (planning stage).
+     * This is the first stage where we analyze the screenshot and user request,
+     * then generate a step-by-step plan for the user to approve.
+     *
+     * @param userRequest The user's request description
+     * @param screenshot Optional screenshot of the current screen
+     * @param context Additional context about the device state
+     * @return A detailed plan as text
+     */
+    suspend fun generateSolutionPlan(
+        userRequest: String,
+        screenshot: Bitmap? = null,
+        context: String = ""
+    ): Result<String> {
+        val systemPrompt = """
+You are an AI assistant analyzing an Android screen to help the user accomplish their task.
+
+Your job is to:
+1. Carefully analyze the screenshot to understand what's currently on screen
+2. Understand what the user wants to accomplish
+3. Create a clear, step-by-step plan to accomplish their goal
+
+Format your response as a numbered plan with:
+- Brief summary of what you see on screen
+- Clear steps to accomplish the user's goal
+- Any important notes or warnings
+
+Be specific about UI elements visible in the screenshot.
+Keep the plan concise but actionable.
+        """.trimIndent()
+
+        val userMessage = buildString {
+            if (screenshot != null) {
+                append("I'm looking at my Android screen. ")
+            }
+            append("User request: $userRequest")
+            if (context.isNotEmpty()) {
+                append("\n\nDevice context: $context")
+            }
+        }
+
+        return if (screenshot != null) {
+            generateContentWithImage(
+                model = "gemini-2.0-flash-thinking-exp-01-21",
+                text = userMessage,
+                image = screenshot,
+                systemPrompt = systemPrompt
+            )
+        } else {
+            generateContent(
+                model = "gemini-2.0-flash-thinking-exp-01-21",
+                messages = listOf("user" to userMessage),
+                systemPrompt = systemPrompt
+            )
+        }
+    }
+
+    /**
+     * Execute the approved plan using Gemini's computer use model (execution stage).
+     * This is the second stage where the computer use model interacts with the screen
+     * based on the approved plan.
+     *
+     * @param userRequest The original user request
+     * @param approvedPlan The plan that was approved by the user
+     * @param screenshot The screenshot of the current screen
+     * @param conversationHistory Previous interactions for multi-round execution
+     * @return GeminiResponse with potential function calls
+     */
+    suspend fun executeWithComputerUse(
+        userRequest: String,
+        approvedPlan: String,
+        screenshot: Bitmap,
+        conversationHistory: List<Content> = emptyList()
+    ): Result<GeminiResponse> {
+        val systemPrompt = """
+You are an AI assistant with computer use capabilities to help users interact with their Android device.
+
+You have been given an approved plan. Your job is to execute this plan by:
+1. Analyzing the current screenshot
+2. Following the approved plan step-by-step
+3. Using the available computer use functions to interact with the screen
+
+Available functions:
+- click_at(x, y): Click at specific coordinates
+- scroll(direction): Scroll in a direction (up/down/left/right)
+- type_text(text): Type text into the current input field
+
+Be careful and precise with your actions. Only perform actions specified in the approved plan.
+        """.trimIndent()
+
+        val userMessage = buildString {
+            append("Original request: $userRequest\n\n")
+            append("Approved plan:\n$approvedPlan\n\n")
+            append("Please execute this plan step by step. I'm looking at my Android screen now.")
+        }
+
+        // Build conversation with history
+        val contents = conversationHistory.toMutableList()
+
+        // Add user message with screenshot
+        val base64Image = bitmapToBase64(screenshot)
+        contents.add(
+            Content(
+                role = "user",
+                parts = listOf(
+                    Part(text = userMessage),
+                    Part(inlineData = InlineData(
+                        mimeType = "image/jpeg",
+                        data = base64Image
+                    ))
+                )
+            )
+        )
+
+        return generateContentFull(
+            model = "gemini-2.5-computer-use-preview-10-2025",
+            contents = contents,
+            systemPrompt = systemPrompt,
+            tools = listOf(Tool(computerUse = ComputerUse(
+                environment = Environment.BROWSER,
+                excludedPredefinedFunctions = ExcludedFunctions.MOBILE_EXCLUDED
+            )))
+        )
+    }
+
+    /**
      * Generate suggestions for device assistance using Gemini's computer use model.
      *
      * @param userRequest The user's request description
