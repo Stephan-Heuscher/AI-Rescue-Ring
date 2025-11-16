@@ -302,13 +302,15 @@ Keep the plan concise but actionable.
      * @param approvedPlan The plan that was approved by the user
      * @param screenshot The screenshot of the current screen
      * @param conversationHistory Previous interactions for multi-round execution
+     * @param functionResponse Optional function response to include in the same turn as screenshot
      * @return GeminiResponse with potential function calls
      */
     suspend fun executeWithComputerUse(
         userRequest: String,
         approvedPlan: String,
         screenshot: Bitmap,
-        conversationHistory: List<Content> = emptyList()
+        conversationHistory: List<Content> = emptyList(),
+        functionResponse: FunctionResponse? = null
     ): Result<GeminiResponse> {
         val systemPrompt = """
 You are an AI assistant with computer use capabilities to help users interact with their Android device.
@@ -326,29 +328,34 @@ Available functions:
 Be careful and precise with your actions. Only perform actions specified in the approved plan.
         """.trimIndent()
 
-        val userMessage = buildString {
-            append("Original request: $userRequest\n\n")
-            append("Approved plan:\n$approvedPlan\n\n")
-            append("Please execute this plan step by step. I'm looking at my Android screen now.")
-        }
-
         // Build conversation with history
         val contents = conversationHistory.toMutableList()
 
-        // Add user message with screenshot
+        // Build parts for the user turn
+        val parts = mutableListOf<Part>()
+
+        // Add function response if this is a continuation (round 2+)
+        if (functionResponse != null) {
+            parts.add(Part(functionResponse = functionResponse))
+        } else {
+            // First round - add the plan and request
+            val userMessage = buildString {
+                append("Original request: $userRequest\n\n")
+                append("Approved plan:\n$approvedPlan\n\n")
+                append("Please execute this plan step by step. I'm looking at my Android screen now.")
+            }
+            parts.add(Part(text = userMessage))
+        }
+
+        // Always add screenshot
         val base64Image = bitmapToBase64(screenshot)
-        contents.add(
-            Content(
-                role = "user",
-                parts = listOf(
-                    Part(text = userMessage),
-                    Part(inlineData = InlineData(
-                        mimeType = "image/jpeg",
-                        data = base64Image
-                    ))
-                )
-            )
-        )
+        parts.add(Part(inlineData = InlineData(
+            mimeType = "image/jpeg",
+            data = base64Image
+        )))
+
+        // Add user turn with function response (if any) + screenshot
+        contents.add(Content(role = "user", parts = parts))
 
         return generateContentFull(
             model = "gemini-2.5-computer-use-preview-10-2025",

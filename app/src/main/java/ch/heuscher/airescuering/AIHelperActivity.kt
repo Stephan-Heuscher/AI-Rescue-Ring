@@ -404,13 +404,41 @@ class AIHelperActivity : AppCompatActivity() {
     }
 
     /**
-     * Execute one round of computer use interaction
+     * Execute one round of computer use interaction (initial round without function response)
      */
     private suspend fun executeRound(
         service: GeminiApiService,
         request: String,
         plan: String,
         screenshot: Bitmap,
+        roundNumber: Int
+    ) {
+        executeRoundInternal(service, request, plan, screenshot, null, roundNumber)
+    }
+
+    /**
+     * Execute one round of computer use interaction (subsequent round with function response)
+     */
+    private suspend fun executeRoundWithResponse(
+        service: GeminiApiService,
+        request: String,
+        plan: String,
+        screenshot: Bitmap,
+        functionResponse: ch.heuscher.airescuering.data.api.FunctionResponse,
+        roundNumber: Int
+    ) {
+        executeRoundInternal(service, request, plan, screenshot, functionResponse, roundNumber)
+    }
+
+    /**
+     * Internal method to execute one round of computer use interaction
+     */
+    private suspend fun executeRoundInternal(
+        service: GeminiApiService,
+        request: String,
+        plan: String,
+        screenshot: Bitmap,
+        functionResponse: ch.heuscher.airescuering.data.api.FunctionResponse?,
         roundNumber: Int
     ) {
         // Check if execution was stopped
@@ -443,7 +471,8 @@ class AIHelperActivity : AppCompatActivity() {
             userRequest = request,
             approvedPlan = plan,
             screenshot = screenshot,
-            conversationHistory = executionHistory.toList()
+            conversationHistory = executionHistory.toList(),
+            functionResponse = functionResponse
         )
 
         result.onSuccess { response ->
@@ -472,21 +501,15 @@ class AIHelperActivity : AppCompatActivity() {
                 // Actually perform the action
                 val actionSuccess = performAction(functionCall)
 
-                // Create function response
-                val functionResponse = ch.heuscher.airescuering.data.api.Content(
-                    role = "user",
-                    parts = listOf(ch.heuscher.airescuering.data.api.Part(
-                        functionResponse = ch.heuscher.airescuering.data.api.FunctionResponse(
-                            name = functionCall.name,
-                            response = mapOf(
-                                "status" to kotlinx.serialization.json.JsonPrimitive(
-                                    if (actionSuccess) "success" else "failed"
-                                )
-                            )
+                // Create function response (don't add to history yet - will be sent with next screenshot)
+                val functionResponse = ch.heuscher.airescuering.data.api.FunctionResponse(
+                    name = functionCall.name,
+                    response = mapOf(
+                        "status" to kotlinx.serialization.json.JsonPrimitive(
+                            if (actionSuccess) "success" else "failed"
                         )
-                    ))
+                    )
                 )
-                executionHistory.add(functionResponse)
 
                 // Wait a bit for the action to complete and screen to update
                 kotlinx.coroutines.delay(500)
@@ -498,11 +521,11 @@ class AIHelperActivity : AppCompatActivity() {
 
                 if (newScreenshot != null) {
                     currentScreenshot = newScreenshot
-                    // Continue to next round with new screenshot
-                    executeRound(service, request, plan, newScreenshot, roundNumber + 1)
+                    // Continue to next round with new screenshot and function response
+                    executeRoundWithResponse(service, request, plan, newScreenshot, functionResponse, roundNumber + 1)
                 } else {
                     // Continue with old screenshot if capture failed
-                    executeRound(service, request, plan, screenshot, roundNumber + 1)
+                    executeRoundWithResponse(service, request, plan, screenshot, functionResponse, roundNumber + 1)
                 }
 
             } else if (firstPart?.text != null) {
