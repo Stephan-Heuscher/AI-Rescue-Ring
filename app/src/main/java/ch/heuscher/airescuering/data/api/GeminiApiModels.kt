@@ -99,7 +99,7 @@ data class Tool(
  */
 @Serializable
 data class ComputerUse(
-    val environment: String = "ENVIRONMENT_BROWSER",
+    val environment: String = "ENVIRONMENT_DESKTOP",
     @SerialName("excluded_predefined_functions")
     val excludedPredefinedFunctions: List<String>? = null
 )
