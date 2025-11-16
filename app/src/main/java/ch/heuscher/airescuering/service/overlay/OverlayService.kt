@@ -49,6 +49,7 @@ class OverlayService : Service() {
     private lateinit var keyboardManager: KeyboardManager
     private lateinit var positionAnimator: PositionAnimator
     private lateinit var orientationHandler: OrientationHandler
+    private var chatOverlayManager: ChatOverlayManager? = null
 
     // Service scope for coroutines
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -136,12 +137,17 @@ class OverlayService : Service() {
 
         // Start keyboard monitoring
         keyboardManager.startMonitoring()
+
+        // Initialize chat overlay manager
+        initializeChatOverlay()
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
         // Clean up
+        chatOverlayManager?.destroy()
+        chatOverlayManager = null
         keyboardManager.stopMonitoring()
         positionAnimator.cancel()
         serviceScope.cancel()
@@ -298,8 +304,8 @@ class OverlayService : Service() {
 
     private fun handleTap() {
         Log.d(TAG, "handleTap: Tap gesture detected on ring")
-        // Single tap opens AI Helper
-        launchAIHelper()
+        // Single tap toggles the chat overlay
+        toggleChatOverlay()
     }
 
     private fun handleLongPress() {
@@ -308,21 +314,71 @@ class OverlayService : Service() {
         Log.d(TAG, "Long press detected - drag mode activated (repositioning rescue ring)")
     }
 
-    private fun launchAIHelper() {
-        Log.d(TAG, "launchAIHelper: Ring clicked, attempting to launch activity")
+    private fun initializeChatOverlay() {
         serviceScope.launch {
             try {
-                // Always open AI chat interface, even without API key configured
-                Log.d(TAG, "launchAIHelper: Launching AIHelperActivity")
-                val intent = Intent(this@OverlayService, ch.heuscher.airescuering.AIHelperActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                // Get API key from repository
+                val apiKey = ServiceLocator.aiHelperRepository.getApiKey().first()
+                if (apiKey.isEmpty()) {
+                    Log.w(TAG, "API key not set, chat overlay will show warning")
                 }
-                startActivity(intent)
-                Log.d(TAG, "launchAIHelper: AIHelperActivity launched successfully")
+
+                // Create chat overlay manager
+                chatOverlayManager = ChatOverlayManager(
+                    context = this@OverlayService,
+                    geminiApiKey = apiKey.ifEmpty { "dummy-key" },
+                    scope = serviceScope
+                ).apply {
+                    onHideRequest = {
+                        hideChatOverlay()
+                    }
+                    onScreenshotRequest = {
+                        requestScreenshot()
+                    }
+                }
+
+                // Set up screenshot callback in accessibility service
+                BackHomeAccessibilityService.instance?.let { accessibilityService ->
+                    accessibilityService.onScreenshotCaptured = { bitmap ->
+                        Log.d(TAG, "Screenshot captured, passing to chat overlay")
+                        chatOverlayManager?.processScreenshot(bitmap)
+                    }
+                    Log.d(TAG, "Screenshot callback registered with accessibility service")
+                } ?: run {
+                    Log.w(TAG, "Accessibility service not available for screenshots")
+                }
+
+                Log.d(TAG, "Chat overlay manager initialized")
             } catch (e: Exception) {
-                Log.e(TAG, "launchAIHelper: Error launching activity", e)
+                Log.e(TAG, "Error initializing chat overlay", e)
             }
         }
+    }
+
+    private fun requestScreenshot() {
+        Log.d(TAG, "Screenshot requested")
+        val accessibilityService = BackHomeAccessibilityService.instance
+        if (accessibilityService != null) {
+            accessibilityService.takeScreenshot()
+        } else {
+            Log.w(TAG, "Accessibility service not available for screenshot")
+            // Show a toast to the user
+            android.widget.Toast.makeText(
+                this,
+                "Please enable Accessibility Service for screenshot feature",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private fun toggleChatOverlay() {
+        Log.d(TAG, "toggleChatOverlay: Toggling chat overlay")
+        chatOverlayManager?.toggle()
+    }
+
+    private fun hideChatOverlay() {
+        Log.d(TAG, "hideChatOverlay: Hiding chat overlay")
+        chatOverlayManager?.hide()
     }
 
     private fun isOnHomeScreen(): Boolean {

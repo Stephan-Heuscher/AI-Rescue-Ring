@@ -3,10 +3,13 @@ package ch.heuscher.airescuering
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.graphics.Bitmap
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import androidx.annotation.RequiresApi
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.repository.SettingsRepository
 import ch.heuscher.airescuering.util.AppConstants
@@ -16,6 +19,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.cancel
+import java.util.concurrent.Executors
 
 /**
  * Accessibility service for performing system navigation actions
@@ -32,6 +36,9 @@ class BackHomeAccessibilityService : AccessibilityService() {
     // Track current foreground package for home screen detection
     private var currentPackageName: String? = null
     private var launcherPackageName: String? = null
+
+    // Screenshot callback
+    var onScreenshotCaptured: ((Bitmap) -> Unit)? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -181,6 +188,89 @@ class BackHomeAccessibilityService : AccessibilityService() {
                           currentPackageName == launcherPackageName
         Log.d(TAG, "isOnHomeScreen: current=$currentPackageName, launcher=$launcherPackageName, result=$onHomeScreen")
         return onHomeScreen
+    }
+
+    /**
+     * Take a screenshot using AccessibilityService (Android 11+)
+     * Falls back to showing a message on older versions
+     */
+    fun takeScreenshot() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            takeScreenshotAPI30()
+        } else {
+            Log.w(TAG, "Screenshot not supported on Android versions below 11")
+            // Broadcast a message that screenshots are not supported
+            val intent = Intent(AppConstants.ACTION_SCREENSHOT_FAILED)
+            intent.putExtra("error", "Screenshot requires Android 11 or higher")
+            sendBroadcast(intent)
+        }
+    }
+
+    /**
+     * Take screenshot using Android 11+ API
+     */
+    @RequiresApi(Build.VERSION_CODES.R)
+    private fun takeScreenshotAPI30() {
+        try {
+            val executor = Executors.newSingleThreadExecutor()
+
+            takeScreenshot(
+                android.view.Display.DEFAULT_DISPLAY,
+                executor,
+                object : TakeScreenshotCallback {
+                    override fun onSuccess(screenshot: ScreenshotResult) {
+                        try {
+                            val bitmap = Bitmap.wrapHardwareBuffer(
+                                screenshot.hardwareBuffer,
+                                screenshot.colorSpace
+                            )
+
+                            if (bitmap != null) {
+                                Log.d(TAG, "Screenshot captured successfully: ${bitmap.width}x${bitmap.height}")
+
+                                // Convert hardware bitmap to software bitmap for processing
+                                val softwareBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, false)
+
+                                // Invoke callback
+                                Handler(Looper.getMainLooper()).post {
+                                    onScreenshotCaptured?.invoke(softwareBitmap)
+                                }
+
+                                // Broadcast success
+                                val intent = Intent(AppConstants.ACTION_SCREENSHOT_CAPTURED)
+                                sendBroadcast(intent)
+                            } else {
+                                Log.e(TAG, "Failed to create bitmap from hardware buffer")
+                                broadcastScreenshotError("Failed to create bitmap")
+                            }
+
+                            // Clean up
+                            screenshot.hardwareBuffer.close()
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error processing screenshot", e)
+                            broadcastScreenshotError(e.message ?: "Unknown error")
+                        }
+                    }
+
+                    override fun onFailure(errorCode: Int) {
+                        Log.e(TAG, "Screenshot failed with error code: $errorCode")
+                        broadcastScreenshotError("Screenshot failed with error code: $errorCode")
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error taking screenshot", e)
+            broadcastScreenshotError(e.message ?: "Unknown error")
+        }
+    }
+
+    /**
+     * Broadcast screenshot error
+     */
+    private fun broadcastScreenshotError(error: String) {
+        val intent = Intent(AppConstants.ACTION_SCREENSHOT_FAILED)
+        intent.putExtra("error", error)
+        sendBroadcast(intent)
     }
 
     companion object {
