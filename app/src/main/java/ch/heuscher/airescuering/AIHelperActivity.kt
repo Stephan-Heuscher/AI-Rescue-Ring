@@ -55,6 +55,8 @@ class AIHelperActivity : AppCompatActivity() {
     private var currentUserRequest: String? = null
     private var currentPlan: String? = null
     private val executionHistory = mutableListOf<ch.heuscher.airescuering.data.api.Content>()
+    private var isExecuting = false
+    private var stopButton: Button? = null
 
     companion object {
         private const val TAG = "AIHelperActivity"
@@ -353,6 +355,7 @@ class AIHelperActivity : AppCompatActivity() {
 
         // Clear previous execution history
         executionHistory.clear()
+        isExecuting = true
 
         val executingMessage = AIMessage(
             id = UUID.randomUUID().toString(),
@@ -360,6 +363,9 @@ class AIHelperActivity : AppCompatActivity() {
             role = MessageRole.ASSISTANT
         )
         addMessage(executingMessage)
+
+        // Show stop button
+        showStopButton()
 
         loadingIndicator.visibility = View.VISIBLE
         sendButton.isEnabled = false
@@ -387,6 +393,8 @@ class AIHelperActivity : AppCompatActivity() {
                     role = MessageRole.ASSISTANT
                 )
                 addMessage(errorMessage)
+                hideStopButton()
+                isExecuting = false
             } finally {
                 loadingIndicator.visibility = View.GONE
                 sendButton.isEnabled = true
@@ -405,6 +413,19 @@ class AIHelperActivity : AppCompatActivity() {
         screenshot: Bitmap,
         roundNumber: Int
     ) {
+        // Check if execution was stopped
+        if (!isExecuting) {
+            Log.d(TAG, "Execution stopped by user")
+            val stoppedMessage = AIMessage(
+                id = UUID.randomUUID().toString(),
+                content = "⛔ Execution stopped by user.",
+                role = MessageRole.ASSISTANT
+            )
+            addMessage(stoppedMessage)
+            hideStopButton()
+            return
+        }
+
         if (roundNumber > 10) {
             val maxRoundsMessage = AIMessage(
                 id = UUID.randomUUID().toString(),
@@ -412,6 +433,7 @@ class AIHelperActivity : AppCompatActivity() {
                 role = MessageRole.ASSISTANT
             )
             addMessage(maxRoundsMessage)
+            hideStopButton()
             return
         }
 
@@ -447,22 +469,41 @@ class AIHelperActivity : AppCompatActivity() {
                 )
                 addMessage(actionMessage)
 
-                // TODO: Actually perform the action here
-                // For now, we'll simulate a response
+                // Actually perform the action
+                val actionSuccess = performAction(functionCall)
+
+                // Create function response
                 val functionResponse = ch.heuscher.airescuering.data.api.Content(
                     role = "user",
                     parts = listOf(ch.heuscher.airescuering.data.api.Part(
                         functionResponse = ch.heuscher.airescuering.data.api.FunctionResponse(
                             name = functionCall.name,
-                            response = mapOf("status" to kotlinx.serialization.json.JsonPrimitive("success"))
+                            response = mapOf(
+                                "status" to kotlinx.serialization.json.JsonPrimitive(
+                                    if (actionSuccess) "success" else "failed"
+                                )
+                            )
                         )
                     ))
                 )
                 executionHistory.add(functionResponse)
 
-                // Continue to next round
-                // TODO: Capture new screenshot after action
-                executeRound(service, request, plan, screenshot, roundNumber + 1)
+                // Wait a bit for the action to complete and screen to update
+                kotlinx.coroutines.delay(500)
+
+                // Capture new screenshot after action
+                hideStopButton() // Hide stop button before screenshot
+                val newScreenshot = captureScreenshotSync()
+                showStopButton() // Show stop button again after screenshot
+
+                if (newScreenshot != null) {
+                    currentScreenshot = newScreenshot
+                    // Continue to next round with new screenshot
+                    executeRound(service, request, plan, newScreenshot, roundNumber + 1)
+                } else {
+                    // Continue with old screenshot if capture failed
+                    executeRound(service, request, plan, screenshot, roundNumber + 1)
+                }
 
             } else if (firstPart?.text != null) {
                 // Text response - execution complete
@@ -473,8 +514,12 @@ class AIHelperActivity : AppCompatActivity() {
                     role = MessageRole.ASSISTANT
                 )
                 addMessage(completionMessage)
+                hideStopButton()
+                isExecuting = false
             } else {
                 Log.w(TAG, "Round $roundNumber: No function call or text in response")
+                hideStopButton()
+                isExecuting = false
             }
         }.onFailure { error ->
             Log.e(TAG, "Round $roundNumber: Error", error)
@@ -484,6 +529,111 @@ class AIHelperActivity : AppCompatActivity() {
                 role = MessageRole.ASSISTANT
             )
             addMessage(errorMessage)
+            hideStopButton()
+            isExecuting = false
+        }
+    }
+
+    /**
+     * Perform the action specified by the function call
+     */
+    private suspend fun performAction(functionCall: ch.heuscher.airescuering.data.api.FunctionCall): Boolean {
+        val accessibilityService = ch.heuscher.airescuering.service.accessibility.AIAssistantAccessibilityService.getInstance()
+        if (accessibilityService == null) {
+            Log.e(TAG, "Accessibility service not available")
+            Toast.makeText(this, "Accessibility service not enabled", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        // Get screen dimensions
+        val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        return when (functionCall.name) {
+            "click_at" -> {
+                val x = functionCall.args["x"]?.toString()?.toDoubleOrNull()?.toInt() ?: 0
+                val y = functionCall.args["y"]?.toString()?.toDoubleOrNull()?.toInt() ?: 0
+                Log.d(TAG, "Performing click at ($x, $y)")
+                accessibilityService.performTap(x, y, screenWidth, screenHeight)
+            }
+            "scroll" -> {
+                val direction = functionCall.args["direction"]?.toString()?.trim('"') ?: "down"
+                Log.d(TAG, "Performing scroll: $direction")
+
+                // Define swipe coordinates based on direction
+                val (startX, startY, endX, endY) = when (direction.lowercase()) {
+                    "up" -> listOf(500, 700, 500, 300) // Swipe up
+                    "down" -> listOf(500, 300, 500, 700) // Swipe down
+                    "left" -> listOf(700, 500, 300, 500) // Swipe left
+                    "right" -> listOf(300, 500, 700, 500) // Swipe right
+                    else -> listOf(500, 700, 500, 300) // Default to up
+                }
+
+                accessibilityService.performSwipe(startX, startY, endX, endY, screenWidth, screenHeight)
+            }
+            "type_text" -> {
+                val text = functionCall.args["text"]?.toString()?.trim('"') ?: ""
+                Log.d(TAG, "Performing type text: $text")
+                accessibilityService.performTypeText(text)
+            }
+            else -> {
+                Log.w(TAG, "Unknown action: ${functionCall.name}")
+                false
+            }
+        }
+    }
+
+    /**
+     * Capture screenshot synchronously (returns bitmap or null)
+     */
+    private suspend fun captureScreenshotSync(): Bitmap? = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            BackHomeAccessibilityService.captureScreen { bitmap ->
+                continuation.resume(bitmap)
+            }
+        } else {
+            continuation.resume(null)
+        }
+    }
+
+    /**
+     * Show stop button during execution
+     */
+    private fun showStopButton() {
+        runOnUiThread {
+            if (stopButton == null) {
+                stopButton = Button(this).apply {
+                    text = "⛔ STOP"
+                    textSize = 18f
+                    setBackgroundColor(0xFFFF0000.toInt())
+                    setTextColor(0xFFFFFFFF.toInt())
+                    setPadding(40, 20, 40, 20)
+                    setOnClickListener {
+                        isExecuting = false
+                        val stoppedMessage = AIMessage(
+                            id = UUID.randomUUID().toString(),
+                            content = "⛔ Stopping execution...",
+                            role = MessageRole.ASSISTANT
+                        )
+                        addMessage(stoppedMessage)
+                    }
+                }
+
+                // Add to layout at the top
+                val rootLayout = findViewById<LinearLayout>(R.id.chatLayout)
+                rootLayout?.addView(stopButton, 0)
+            }
+            stopButton?.visibility = View.VISIBLE
+        }
+    }
+
+    /**
+     * Hide stop button
+     */
+    private fun hideStopButton() {
+        runOnUiThread {
+            stopButton?.visibility = View.GONE
         }
     }
 

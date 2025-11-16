@@ -186,6 +186,41 @@ class AIAssistantAccessibilityService : AccessibilityService() {
     }
 
     /**
+     * Type text by sending key events
+     * Note: This requires an input field to be focused
+     * @param text The text to type
+     */
+    fun performTypeText(text: String): Boolean {
+        if (text.isEmpty()) {
+            Log.w(TAG, "Cannot type empty text")
+            return false
+        }
+
+        Log.d(TAG, "Typing text: $text")
+
+        // Find the currently focused node
+        val focusedNode = rootInActiveWindow?.findFocus(android.view.accessibility.AccessibilityNodeInfo.FOCUS_INPUT)
+
+        if (focusedNode == null) {
+            Log.w(TAG, "No input field is focused. Cannot type text.")
+            return false
+        }
+
+        // Use AccessibilityNodeInfo.ACTION_SET_TEXT to input text
+        val arguments = android.os.Bundle()
+        arguments.putCharSequence(android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
+
+        val success = focusedNode.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
+        focusedNode.recycle()
+
+        if (!success) {
+            Log.w(TAG, "Failed to set text on focused node")
+        }
+
+        return success
+    }
+
+    /**
      * Dispatch a gesture and wait for completion
      */
     private suspend fun dispatchGestureAsync(gesture: GestureDescription): Boolean =
