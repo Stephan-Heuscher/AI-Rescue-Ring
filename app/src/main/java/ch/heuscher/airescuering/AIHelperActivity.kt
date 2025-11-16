@@ -29,6 +29,8 @@ import ch.heuscher.airescuering.domain.model.AIMessage
 import ch.heuscher.airescuering.domain.model.MessageRole
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -587,7 +589,7 @@ class AIHelperActivity : AppCompatActivity() {
     /**
      * Capture screenshot synchronously (returns bitmap or null)
      */
-    private suspend fun captureScreenshotSync(): Bitmap? = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+    private suspend fun captureScreenshotSync(): Bitmap? = suspendCoroutine { continuation ->
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             BackHomeAccessibilityService.captureScreen { bitmap ->
                 continuation.resume(bitmap)
@@ -621,7 +623,8 @@ class AIHelperActivity : AppCompatActivity() {
                 }
 
                 // Add to layout at the top
-                val rootLayout = findViewById<LinearLayout>(R.id.chatLayout)
+                val messagesContainer = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.messagesRecyclerView)
+                val rootLayout = messagesContainer?.parent as? android.view.ViewGroup
                 rootLayout?.addView(stopButton, 0)
             }
             stopButton?.visibility = View.VISIBLE
