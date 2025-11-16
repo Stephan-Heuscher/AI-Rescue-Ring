@@ -3,10 +3,14 @@ package ch.heuscher.airescuering
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.graphics.Bitmap
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Display
 import android.view.accessibility.AccessibilityEvent
+import androidx.annotation.RequiresApi
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.repository.SettingsRepository
 import ch.heuscher.airescuering.util.AppConstants
@@ -16,6 +20,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.cancel
+import java.util.concurrent.Executors
+import java.util.function.Consumer
 
 /**
  * Accessibility service for performing system navigation actions
@@ -181,6 +187,62 @@ class BackHomeAccessibilityService : AccessibilityService() {
                           currentPackageName == launcherPackageName
         Log.d(TAG, "isOnHomeScreen: current=$currentPackageName, launcher=$launcherPackageName, result=$onHomeScreen")
         return onHomeScreen
+    }
+
+    /**
+     * Take a screenshot using AccessibilityService API
+     * Requires Android R (API 30) or higher
+     * @param callback Called with the screenshot bitmap on success, or null on failure
+     */
+    fun takeScreenshot(callback: (Bitmap?) -> Unit) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            Log.e(TAG, "Screenshot API requires Android R (API 30) or higher")
+            callback(null)
+            return
+        }
+
+        try {
+            takeScreenshotInternal(callback)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error taking screenshot", e)
+            callback(null)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    private fun takeScreenshotInternal(callback: (Bitmap?) -> Unit) {
+        val executor = Executors.newSingleThreadExecutor()
+
+        takeScreenshot(
+            Display.DEFAULT_DISPLAY,
+            executor,
+            object : TakeScreenshotCallback {
+                override fun onSuccess(screenshot: ScreenshotResult) {
+                    try {
+                        val bitmap = Bitmap.wrapHardwareBuffer(
+                            screenshot.hardwareBuffer,
+                            screenshot.colorSpace
+                        )
+                        Log.d(TAG, "Screenshot taken successfully: ${bitmap?.width}x${bitmap?.height}")
+                        callback(bitmap)
+
+                        // Clean up
+                        screenshot.hardwareBuffer.close()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error processing screenshot", e)
+                        callback(null)
+                    } finally {
+                        executor.shutdown()
+                    }
+                }
+
+                override fun onFailure(errorCode: Int) {
+                    Log.e(TAG, "Failed to take screenshot. Error code: $errorCode")
+                    callback(null)
+                    executor.shutdown()
+                }
+            }
+        )
     }
 
     companion object {
