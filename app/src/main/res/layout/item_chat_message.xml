@@ -86,7 +86,7 @@
 
             <!-- Action Buttons for AI Suggestions -->
             <LinearLayout
-                android:id="@+id/actionButtonsContainer"
+                android:id="@+id/aiActionButtonsContainer"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -94,7 +94,7 @@
                 android:visibility="gone">
 
                 <Button
-                    android:id="@+id/approveButton"
+                    android:id="@+id/aiApproveButton"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
                     android:text="✓ Approve"
@@ -105,7 +105,7 @@
                     style="?android:attr/buttonBarButtonStyle" />
 
                 <Button
-                    android:id="@+id/refineButton"
+                    android:id="@+id/aiRefineButton"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
                     android:text="✎ Refine"
