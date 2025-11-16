@@ -7,8 +7,8 @@
 
     <TextView
         android:id="@+id/floating_dot"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:layout_gravity="center"
         android:text="🛟"
         android:textSize="38sp"
