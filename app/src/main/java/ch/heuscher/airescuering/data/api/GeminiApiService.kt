@@ -88,8 +88,8 @@ class GeminiApiService(
                 },
                 tools = if (model.contains("computer-use")) {
                     listOf(Tool(computerUse = ComputerUse(
-                        environment = Environment.MOBILE_PHONE,
-                        excludedPredefinedFunctions = listOf("open_browser")
+                        environment = Environment.BROWSER,
+                        excludedPredefinedFunctions = ExcludedFunctions.MOBILE_EXCLUDED
                     )))
                 } else {
                     null
@@ -179,8 +179,8 @@ class GeminiApiService(
                 },
                 tools = tools ?: if (model.contains("computer-use")) {
                     listOf(Tool(computerUse = ComputerUse(
-                        environment = Environment.MOBILE_PHONE,
-                        excludedPredefinedFunctions = listOf("open_browser")
+                        environment = Environment.BROWSER,
+                        excludedPredefinedFunctions = ExcludedFunctions.MOBILE_EXCLUDED
                     )))
                 } else {
                     null
@@ -331,8 +331,8 @@ Be helpful and specific about which UI elements to interact with if visible in t
                 },
                 tools = if (model.contains("computer-use")) {
                     listOf(Tool(computerUse = ComputerUse(
-                        environment = Environment.MOBILE_PHONE,
-                        excludedPredefinedFunctions = listOf("open_browser")
+                        environment = Environment.BROWSER,
+                        excludedPredefinedFunctions = ExcludedFunctions.MOBILE_EXCLUDED
                     )))
                 } else {
                     null

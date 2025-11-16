@@ -99,7 +99,7 @@ data class Tool(
  */
 @Serializable
 data class ComputerUse(
-    val environment: String = "ENVIRONMENT_MOBILE_PHONE",
+    val environment: String = "ENVIRONMENT_BROWSER",
     @SerialName("excluded_predefined_functions")
     val excludedPredefinedFunctions: List<String>? = null
 )
@@ -110,7 +110,21 @@ data class ComputerUse(
 object Environment {
     const val BROWSER = "ENVIRONMENT_BROWSER"
     const val DESKTOP = "ENVIRONMENT_DESKTOP"
-    const val MOBILE_PHONE = "ENVIRONMENT_MOBILE_PHONE"
+}
+
+/**
+ * Predefined functions that can be excluded for mobile environments
+ */
+object ExcludedFunctions {
+    // Functions not suitable for mobile use
+    val MOBILE_EXCLUDED = listOf(
+        "open_web_browser",  // Not applicable on mobile apps
+        "search",            // Browser-specific
+        "navigate",          // Browser navigation
+        "hover_at",          // No hover on touchscreens
+        "go_forward",        // Browser navigation
+        "key_combination"    // Limited keyboard on mobile
+    )
 }
 
 /**
