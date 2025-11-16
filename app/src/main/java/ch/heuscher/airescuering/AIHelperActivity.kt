@@ -662,8 +662,16 @@ class AIHelperActivity : AppCompatActivity() {
      */
     private suspend fun captureScreenshotSync(): Bitmap? = suspendCoroutine { continuation ->
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            BackHomeAccessibilityService.captureScreen { bitmap ->
-                continuation.resume(bitmap)
+            val service = BackHomeAccessibilityService.instance
+            if (service != null) {
+                service.onScreenshotCaptured = { bitmap ->
+                    continuation.resume(bitmap)
+                    service.onScreenshotCaptured = null
+                }
+                service.takeScreenshot()
+            } else {
+                Log.w(TAG, "BackHomeAccessibilityService not available")
+                continuation.resume(null)
             }
         } else {
             continuation.resume(null)

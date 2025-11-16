@@ -42,22 +42,21 @@ object ScreenshotHelper {
             return
         }
 
-        service.takeScreenshot(
-            onSuccess = { path ->
-                Log.d(TAG, "Screenshot captured: $path")
-                if (showToast) {
-                    Toast.makeText(context, "Screenshot saved!", Toast.LENGTH_SHORT).show()
-                }
-                onSuccess(path)
-            },
-            onFailure = { error ->
-                Log.e(TAG, "Screenshot failed: $error")
-                if (showToast) {
-                    Toast.makeText(context, "Screenshot failed: $error", Toast.LENGTH_LONG).show()
-                }
-                onFailure(error)
+        // Set up callback for this screenshot request
+        service.onScreenshotCaptured = { bitmap ->
+            // For now, we don't save to file, just notify success
+            Log.d(TAG, "Screenshot captured: ${bitmap.width}x${bitmap.height}")
+            if (showToast) {
+                Toast.makeText(context, "Screenshot captured!", Toast.LENGTH_SHORT).show()
             }
-        )
+            // Since we don't have a file path, return a placeholder
+            onSuccess("screenshot_${System.currentTimeMillis()}")
+            // Clear the callback
+            service.onScreenshotCaptured = null
+        }
+
+        // Request the screenshot
+        service.takeScreenshot()
     }
 
     /**

@@ -217,7 +217,124 @@ Did that work? If you're stuck on any step, just tell me which one! 😊"
     }
 
     /**
-<<<<<<< HEAD
+     * Generate assistance with a screenshot for visual context.
+     * Uses Gemini Pro's vision capabilities to analyze the screen.
+     *
+     * @param userRequest The user's request description
+     * @param imageBase64 Base64 encoded screenshot image (JPEG)
+     * @param context Additional context about the device state
+     * @return Suggested actions as text
+     */
+    suspend fun generateAssistanceWithImage(
+        userRequest: String,
+        imageBase64: String,
+        context: String = ""
+    ): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val systemPrompt = """
+You are a patient, friendly AI rescue assistant helping technically challenged users with their Android device. The user has shared a screenshot of their screen.
+
+IMPORTANT GUIDELINES:
+- Analyze the screenshot carefully to understand what the user sees
+- Use very simple, non-technical language
+- Give specific instructions based on what you see in the image
+- Point out exact buttons, icons, or text they should look for
+- Break down tasks into small, clear steps
+- Use emojis to make instructions friendly and visual
+- Be encouraging and supportive
+- Reference specific things you see on their screen (e.g., "I can see the Settings icon in the top right")
+
+RESPONSE FORMAT:
+1. Acknowledge what you see on their screen
+2. Specific step-by-step instructions based on the screenshot
+3. Encouraging message
+        """.trimIndent()
+
+            val userMessage = buildString {
+                append("User request: $userRequest")
+                if (context.isNotEmpty()) {
+                    append("\n\nDevice context: $context")
+                }
+            }
+
+            // Create content with both text and image
+            val contents = listOf(
+                Content(
+                    role = "user",
+                    parts = listOf(
+                        Part(text = userMessage),
+                        Part(inlineData = InlineData(mimeType = "image/jpeg", data = imageBase64))
+                    )
+                )
+            )
+
+            val request = GeminiRequest(
+                contents = contents,
+                generationConfig = GenerationConfig(
+                    temperature = 0.7,  // Lower temperature for more focused responses
+                    maxOutputTokens = 8192
+                ),
+                systemInstruction = Content(
+                    role = "system",
+                    parts = listOf(Part(text = systemPrompt))
+                )
+            )
+
+            val url = "$BASE_URL/gemini-2.5-pro:generateContent?key=$apiKey"
+            val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
+                .toRequestBody("application/json".toMediaType())
+
+            val httpRequest = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build()
+
+            if (debug) {
+                Log.d(TAG, "Request with image: model=gemini-2.5-pro")
+            }
+
+            client.newCall(httpRequest).execute().use { response ->
+                val responseBody = response.body?.string() ?: ""
+
+                if (debug) {
+                    Log.d(TAG, "Response code: ${response.code}")
+                    Log.d(TAG, "Response body: $responseBody")
+                }
+
+                if (!response.isSuccessful) {
+                    val errorResponse = try {
+                        json.decodeFromString<GeminiErrorResponse>(responseBody)
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    val errorMessage = errorResponse?.error?.message
+                        ?: "API request failed with code ${response.code}"
+
+                    Log.e(TAG, "API error: $errorMessage")
+                    return@withContext Result.failure(Exception(errorMessage))
+                }
+
+                val geminiResponse = json.decodeFromString<GeminiResponse>(responseBody)
+                val text = geminiResponse.candidates.firstOrNull()
+                    ?.content
+                    ?.parts
+                    ?.firstOrNull()
+                    ?.text
+
+                if (text != null) {
+                    Result.success(text)
+                } else {
+                    Result.failure(Exception("No text in response"))
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating content with image", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Generate suggestions for device assistance using Gemini's computer use model.
      *
      * @param userRequest The user's request description
@@ -300,63 +417,12 @@ Be helpful and specific about which UI elements to interact with if visible in t
                 Content(
                     role = "user",
                     parts = parts
-=======
-     * Generate assistance with a screenshot for visual context.
-     * Uses Gemini Pro's vision capabilities to analyze the screen.
-     *
-     * @param userRequest The user's request description
-     * @param imageBase64 Base64 encoded screenshot image (JPEG)
-     * @param context Additional context about the device state
-     * @return Suggested actions as text
-     */
-    suspend fun generateAssistanceWithImage(
-        userRequest: String,
-        imageBase64: String,
-        context: String = ""
-    ): Result<String> = withContext(Dispatchers.IO) {
-        try {
-            val systemPrompt = """
-You are a patient, friendly AI rescue assistant helping technically challenged users with their Android device. The user has shared a screenshot of their screen.
-
-IMPORTANT GUIDELINES:
-- Analyze the screenshot carefully to understand what the user sees
-- Use very simple, non-technical language
-- Give specific instructions based on what you see in the image
-- Point out exact buttons, icons, or text they should look for
-- Break down tasks into small, clear steps
-- Use emojis to make instructions friendly and visual
-- Be encouraging and supportive
-- Reference specific things you see on their screen (e.g., "I can see the Settings icon in the top right")
-
-RESPONSE FORMAT:
-1. Acknowledge what you see on their screen
-2. Specific step-by-step instructions based on the screenshot
-3. Encouraging message
-        """.trimIndent()
-
-            val userMessage = buildString {
-                append("User request: $userRequest")
-                if (context.isNotEmpty()) {
-                    append("\n\nDevice context: $context")
-                }
-            }
-
-            // Create content with both text and image
-            val contents = listOf(
-                Content(
-                    role = "user",
-                    parts = listOf(
-                        Part(text = userMessage),
-                        Part(inlineData = InlineData(mimeType = "image/jpeg", data = imageBase64))
-                    )
->>>>>>> origin/claude/chat-overlay-rescue-button-011hUxVMjXfqKWBg9xBUB5uy
                 )
             )
 
             val request = GeminiRequest(
                 contents = contents,
                 generationConfig = GenerationConfig(
-<<<<<<< HEAD
                     temperature = 1.0,
                     maxOutputTokens = 8192
                 ),
@@ -377,18 +443,6 @@ RESPONSE FORMAT:
             )
 
             val url = "$BASE_URL/$model:generateContent?key=$apiKey"
-=======
-                    temperature = 0.7,  // Lower temperature for more focused responses
-                    maxOutputTokens = 8192
-                ),
-                systemInstruction = Content(
-                    role = "system",
-                    parts = listOf(Part(text = systemPrompt))
-                )
-            )
-
-            val url = "$BASE_URL/gemini-2.5-pro:generateContent?key=$apiKey"
->>>>>>> origin/claude/chat-overlay-rescue-button-011hUxVMjXfqKWBg9xBUB5uy
             val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
                 .toRequestBody("application/json".toMediaType())
 
@@ -398,11 +452,7 @@ RESPONSE FORMAT:
                 .build()
 
             if (debug) {
-<<<<<<< HEAD
                 Log.d(TAG, "Request with image: text=$text, imageSize=${image.width}x${image.height}")
-=======
-                Log.d(TAG, "Request with image: model=gemini-2.5-pro")
->>>>>>> origin/claude/chat-overlay-rescue-button-011hUxVMjXfqKWBg9xBUB5uy
             }
 
             client.newCall(httpRequest).execute().use { response ->
@@ -428,7 +478,6 @@ RESPONSE FORMAT:
                 }
 
                 val geminiResponse = json.decodeFromString<GeminiResponse>(responseBody)
-<<<<<<< HEAD
                 val firstPart = geminiResponse.candidates.firstOrNull()
                     ?.content
                     ?.parts
@@ -453,16 +502,6 @@ RESPONSE FORMAT:
                         else -> "🔧 I detected an action: ${functionCall.name}. Let me know if you'd like me to explain what to do."
                     }
                     Result.success(actionDescription)
-=======
-                val text = geminiResponse.candidates.firstOrNull()
-                    ?.content
-                    ?.parts
-                    ?.firstOrNull()
-                    ?.text
-
-                if (text != null) {
-                    Result.success(text)
->>>>>>> origin/claude/chat-overlay-rescue-button-011hUxVMjXfqKWBg9xBUB5uy
                 } else {
                     Result.failure(Exception("No text in response"))
                 }
@@ -472,7 +511,6 @@ RESPONSE FORMAT:
             Result.failure(e)
         }
     }
-<<<<<<< HEAD
 
     /**
      * Convert Bitmap to Base64 encoded JPEG
@@ -484,6 +522,170 @@ RESPONSE FORMAT:
         val byteArray = byteArrayOutputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.NO_WRAP)
     }
-=======
->>>>>>> origin/claude/chat-overlay-rescue-button-011hUxVMjXfqKWBg9xBUB5uy
+
+    /**
+     * Generate content using the specified Gemini model with full Content objects.
+     * Used for advanced scenarios like computer use with conversation history.
+     *
+     * @param model The model to use (e.g., "gemini-2.5-computer-use-preview-10-2025")
+     * @param contents List of Content objects representing the conversation
+     * @param systemPrompt Optional system instruction
+     * @return Response from the API
+     */
+    suspend fun generateContentFull(
+        model: String,
+        contents: List<Content>,
+        systemPrompt: String? = null
+    ): Result<GeminiResponse> = withContext(Dispatchers.IO) {
+        try {
+            val request = GeminiRequest(
+                contents = contents,
+                generationConfig = GenerationConfig(
+                    temperature = 1.0,
+                    maxOutputTokens = 8192
+                ),
+                systemInstruction = systemPrompt?.let {
+                    Content(
+                        role = "system",
+                        parts = listOf(Part(text = it))
+                    )
+                },
+                tools = if (model.contains("computer-use")) {
+                    listOf(Tool(computerUse = ComputerUse(
+                        environment = Environment.BROWSER,
+                        excludedPredefinedFunctions = ExcludedFunctions.MOBILE_EXCLUDED
+                    )))
+                } else {
+                    null
+                }
+            )
+
+            val url = "$BASE_URL/$model:generateContent?key=$apiKey"
+            val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
+                .toRequestBody("application/json".toMediaType())
+
+            val httpRequest = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build()
+
+            if (debug) {
+                Log.d(TAG, "Full content request: model=$model, contents=${contents.size}")
+            }
+
+            client.newCall(httpRequest).execute().use { response ->
+                val responseBody = response.body?.string() ?: ""
+
+                if (debug) {
+                    Log.d(TAG, "Response code: ${response.code}")
+                    Log.d(TAG, "Response body: $responseBody")
+                }
+
+                if (!response.isSuccessful) {
+                    val errorResponse = try {
+                        json.decodeFromString<GeminiErrorResponse>(responseBody)
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    val errorMessage = errorResponse?.error?.message
+                        ?: "API request failed with code ${response.code}"
+
+                    Log.e(TAG, "API error: $errorMessage")
+                    return@withContext Result.failure(Exception(errorMessage))
+                }
+
+                val geminiResponse = json.decodeFromString<GeminiResponse>(responseBody)
+                Result.success(geminiResponse)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating full content", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Execute computer use functionality with conversation history and function responses.
+     * This is a high-level method that handles the computer use agent loop.
+     *
+     * @param userRequest The user's request
+     * @param approvedPlan Optional approved plan text
+     * @param screenshot Optional screenshot bitmap
+     * @param conversationHistory Previous conversation contents
+     * @param functionResponse Optional function response from previous action
+     * @return Response from the API
+     */
+    suspend fun executeWithComputerUse(
+        userRequest: String,
+        approvedPlan: String? = null,
+        screenshot: Bitmap? = null,
+        conversationHistory: List<Content> = emptyList(),
+        functionResponse: FunctionResponse? = null
+    ): Result<GeminiResponse> = withContext(Dispatchers.IO) {
+        try {
+            val contents = mutableListOf<Content>()
+
+            // Add conversation history
+            contents.addAll(conversationHistory)
+
+            // Create user message with request and optional screenshot
+            val userParts = mutableListOf<Part>()
+
+            val requestText = buildString {
+                append(userRequest)
+                if (approvedPlan != null) {
+                    append("\n\nApproved plan: $approvedPlan")
+                }
+            }
+            userParts.add(Part(text = requestText))
+
+            // Add screenshot if provided
+            if (screenshot != null) {
+                val base64Image = bitmapToBase64(screenshot)
+                userParts.add(Part(inlineData = InlineData(
+                    mimeType = "image/jpeg",
+                    data = base64Image
+                )))
+            }
+
+            // Add function response if provided
+            if (functionResponse != null) {
+                contents.add(Content(
+                    role = "user",
+                    parts = listOf(Part(functionResponse = functionResponse))
+                ))
+            } else {
+                // Add the user message
+                contents.add(Content(
+                    role = "user",
+                    parts = userParts
+                ))
+            }
+
+            val systemPrompt = """
+You are an AI assistant with computer use capabilities helping users with their Android device.
+
+You can perform actions like:
+- click_at: Click at specific coordinates (x,y) on screen
+- scroll: Scroll in a direction (up, down, left, right)
+- type_text: Type text into the focused field
+- go_back: Press the back button
+- go_home: Press the home button
+
+When you need to perform an action, use the appropriate function call.
+When you've completed the task or want to communicate with the user, provide text responses.
+
+Always be helpful and precise in your actions.
+            """.trimIndent()
+
+            return@withContext generateContentFull(
+                model = "gemini-2.5-computer-use-preview-10-2025",
+                contents = contents,
+                systemPrompt = systemPrompt
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error executing with computer use", e)
+            Result.failure(e)
+        }
+    }
 }
