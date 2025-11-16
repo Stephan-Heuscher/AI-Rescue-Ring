@@ -359,7 +359,25 @@ class OverlayService : Service() {
         Log.d(TAG, "Screenshot requested")
         val accessibilityService = BackHomeAccessibilityService.instance
         if (accessibilityService != null) {
-            accessibilityService.takeScreenshot()
+            // Hide chat overlay before taking screenshot so it's not included in the image
+            val wasVisible = chatOverlayManager?.isShowing() == true
+            if (wasVisible) {
+                Log.d(TAG, "Hiding chat overlay before screenshot")
+                chatOverlayManager?.hide()
+            }
+
+            // Wait a bit for the overlay to fully hide, then take screenshot
+            updateHandler.postDelayed({
+                accessibilityService.takeScreenshot()
+
+                // Show chat overlay again after a short delay (screenshot should be captured by then)
+                if (wasVisible) {
+                    updateHandler.postDelayed({
+                        Log.d(TAG, "Showing chat overlay after screenshot")
+                        chatOverlayManager?.show()
+                    }, 200)
+                }
+            }, 100)
         } else {
             Log.w(TAG, "Accessibility service not available for screenshot")
             // Show a toast to the user
