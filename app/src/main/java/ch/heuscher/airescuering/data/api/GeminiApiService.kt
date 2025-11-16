@@ -328,6 +328,14 @@ Be helpful and specific about which UI elements to interact with if visible in t
                         role = "system",
                         parts = listOf(Part(text = it))
                     )
+                },
+                tools = if (model.contains("computer-use")) {
+                    listOf(Tool(computerUse = ComputerUse(
+                        environment = Environment.MOBILE_PHONE,
+                        excludedPredefinedFunctions = listOf("open_browser")
+                    )))
+                } else {
+                    null
                 }
             )
 
