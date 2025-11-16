@@ -83,12 +83,21 @@
             android:textSize="16sp" />
 
         <Button
+            android:id="@+id/screenshotButton"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:text="📸"
+            android:textSize="20sp"
+            android:layout_marginStart="8dp"
+            style="?android:attr/borderlessButtonStyle" />
+
+        <Button
             android:id="@+id/voiceButton"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:text="🎤"
             android:textSize="20sp"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="4dp"
             style="?android:attr/borderlessButtonStyle" />
 
         <Button

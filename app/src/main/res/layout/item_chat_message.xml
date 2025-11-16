@@ -41,6 +41,39 @@
                 android:lineSpacingMultiplier="1.2"
                 android:maxWidth="300dp" />
 
+            <!-- Action Buttons Container -->
+            <LinearLayout
+                android:id="@+id/actionButtonsContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/approveButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Approve"
+                    android:minHeight="40dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textSize="14sp"
+                    style="?android:attr/buttonBarButtonStyle" />
+
+                <Button
+                    android:id="@+id/refineButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Refine"
+                    android:minHeight="40dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:layout_marginStart="8dp"
+                    android:textSize="14sp"
+                    style="?android:attr/buttonBarButtonStyle" />
+            </LinearLayout>
+
             <TextView
                 android:id="@+id/messageTime"
                 android:layout_width="wrap_content"
