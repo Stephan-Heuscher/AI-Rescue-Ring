@@ -50,6 +50,7 @@ class AIHelperActivity : AppCompatActivity() {
     private lateinit var adapter: ChatAdapter
 
     private var geminiService: GeminiApiService? = null
+    private var currentScreenshotPath: String? = null
 
     companion object {
         private const val VOICE_RECOGNITION_REQUEST_CODE = 1001
@@ -64,12 +65,8 @@ class AIHelperActivity : AppCompatActivity() {
         setupListeners()
         initGeminiService()
 
-        // Add welcome message
-        addMessage(AIMessage(
-            id = UUID.randomUUID().toString(),
-            content = "Hello! I'm your AI assistant. You can type your questions below or use the microphone button 🎤 for voice input.",
-            role = MessageRole.ASSISTANT
-        ))
+        // Take screenshot first, then show welcome message
+        takeInitialScreenshot()
     }
 
     private fun initViews() {
@@ -299,6 +296,95 @@ class AIHelperActivity : AppCompatActivity() {
     }
 
     /**
+     * Take initial screenshot when activity opens
+     */
+    private fun takeInitialScreenshot() {
+        if (!ScreenshotHelper.isAvailable()) {
+            // Show error and welcome message
+            val errorMessage = AIMessage(
+                id = UUID.randomUUID().toString(),
+                content = "⚠️ Screenshot Unavailable\n\n" +
+                        "The screenshot feature requires the Accessibility Service to be enabled.\n\n" +
+                        ScreenshotHelper.getEnableInstructions(),
+                role = MessageRole.ASSISTANT,
+                messageType = MessageType.ERROR
+            )
+            addMessage(errorMessage)
+
+            // Add welcome message
+            addMessage(AIMessage(
+                id = UUID.randomUUID().toString(),
+                content = "Hello! I'm your AI assistant. You can type your questions below, use the microphone button 🎤 for voice input, or take a screenshot 📸 of what you need help with.",
+                role = MessageRole.ASSISTANT
+            ))
+            return
+        }
+
+        // Add status message
+        val statusMessage = AIMessage(
+            id = UUID.randomUUID().toString(),
+            content = "📸 Taking screenshot of your current screen...",
+            role = MessageRole.SYSTEM,
+            messageType = MessageType.SCREENSHOT
+        )
+        addMessage(statusMessage)
+
+        // Disable buttons while taking screenshot
+        screenshotButton.isEnabled = false
+        sendButton.isEnabled = false
+        voiceButton.isEnabled = false
+
+        ScreenshotHelper.takeScreenshot(
+            context = this,
+            onSuccess = { filePath ->
+                currentScreenshotPath = filePath
+
+                val successMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "✅ Screenshot captured!\n\nI've captured a screenshot of what you were viewing before opening this chat.\n\nSaved to: $filePath\n\nYou can now ask me questions about what you see in the screenshot, or take another screenshot 📸 anytime.",
+                    role = MessageRole.ASSISTANT,
+                    messageType = MessageType.SCREENSHOT
+                )
+                addMessage(successMessage)
+
+                // Add welcome message
+                addMessage(AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "What would you like help with?",
+                    role = MessageRole.ASSISTANT
+                ))
+
+                // Re-enable buttons
+                screenshotButton.isEnabled = true
+                sendButton.isEnabled = true
+                voiceButton.isEnabled = true
+            },
+            onFailure = { error ->
+                val errorMessage = AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "❌ Screenshot Failed\n\n$error\n\nPlease make sure the Accessibility Service is properly enabled. You can try taking a screenshot again using the 📸 button.",
+                    role = MessageRole.ASSISTANT,
+                    messageType = MessageType.ERROR
+                )
+                addMessage(errorMessage)
+
+                // Add welcome message anyway
+                addMessage(AIMessage(
+                    id = UUID.randomUUID().toString(),
+                    content = "Hello! I'm your AI assistant. You can type your questions below, use the microphone button 🎤 for voice input, or take a screenshot 📸 of what you need help with.",
+                    role = MessageRole.ASSISTANT
+                ))
+
+                // Re-enable buttons
+                screenshotButton.isEnabled = true
+                sendButton.isEnabled = true
+                voiceButton.isEnabled = true
+            },
+            showToast = false  // We handle messages in chat
+        )
+    }
+
+    /**
      * Take a screenshot and add it to the chat
      */
     private fun takeScreenshot() {
@@ -332,6 +418,8 @@ class AIHelperActivity : AppCompatActivity() {
         ScreenshotHelper.takeScreenshot(
             context = this,
             onSuccess = { filePath ->
+                currentScreenshotPath = filePath
+
                 val successMessage = AIMessage(
                     id = UUID.randomUUID().toString(),
                     content = "✅ Screenshot captured successfully!\n\nSaved to: $filePath\n\nYou can now ask me questions about this screenshot.",
