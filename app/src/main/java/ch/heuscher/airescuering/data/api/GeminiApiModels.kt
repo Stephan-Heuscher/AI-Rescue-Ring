@@ -1,4 +1,4 @@
-package ch.heuscher.airescuering.data.api
+﻿package ch.heuscher.airescuering.data.api
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

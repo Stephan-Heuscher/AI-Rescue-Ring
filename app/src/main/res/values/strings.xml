@@ -4,6 +4,7 @@
 
     <!-- Permissions -->
     <string name="accessibility_service_description">Lets AI Rescue Ring help you with device tasks using AI assistance</string>
+    <string name="ai_assistant_accessibility_description">Allows the AI Assistant to see your screen and perform actions to help you complete tasks. The AI can tap, swipe, and interact with your device on your behalf.</string>
     <string name="overlay_permission_needed">Display rescue ring needed</string>
     <string name="accessibility_service_needed">AI assistant service needed</string>
     <string name="please_enable_overlay">Please allow this app to display the rescue ring</string>

@@ -39,7 +39,8 @@
                 android:text="Message content"
                 android:textSize="16sp"
                 android:lineSpacingMultiplier="1.2"
-                android:maxWidth="300dp" />
+                android:maxWidth="300dp"
+                android:textIsSelectable="true" />
 
             <TextView
                 android:id="@+id/messageTime"

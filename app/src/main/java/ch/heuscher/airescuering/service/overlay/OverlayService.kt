@@ -12,7 +12,9 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import ch.heuscher.airescuering.AIHelperActivity
 import ch.heuscher.airescuering.BackHomeAccessibilityService
+import ch.heuscher.airescuering.MainActivity
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.model.DotPosition
 import ch.heuscher.airescuering.domain.model.Gesture
@@ -26,6 +28,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Refactored OverlayService with clear separation of concerns.
@@ -290,6 +293,7 @@ class OverlayService : Service() {
         serviceScope.launch {
             when (gesture) {
                 Gesture.TAP -> handleTap()
+                Gesture.QUADRUPLE_TAP -> handleQuadrupleTap()
                 Gesture.LONG_PRESS -> handleLongPress()
                 else -> { /* No-op */ }
             }
@@ -297,32 +301,73 @@ class OverlayService : Service() {
     }
 
     private fun handleTap() {
-        Log.d(TAG, "handleTap: Tap gesture detected on ring")
-        // Single tap opens AI Helper
-        launchAIHelper()
+        Log.d(TAG, "=== handleTap: START - Tap gesture detected on ring ===")
+
+        // Hide overlay first, then capture screenshot
+        serviceScope.launch {
+            try {
+                Log.d(TAG, "handleTap: Hiding overlay...")
+                // Hide overlay on main thread
+                withContext(Dispatchers.Main) {
+                    viewManager.removeOverlayView()
+                    Log.d(TAG, "handleTap: Overlay removed")
+                }
+                
+                // Wait longer for system to fully settle after hiding overlay
+                // The system needs time to remove the overlay window and update the window state
+                Log.d(TAG, "handleTap: Waiting 2 seconds for system to settle...")
+                kotlinx.coroutines.delay(2000)
+                
+                // Recreate overlay before launching activity
+                withContext(Dispatchers.Main) {
+                    viewManager.createOverlayView()
+                    Log.d(TAG, "handleTap: Overlay recreated")
+                }
+                
+                // Launch AI Helper Activity (it will capture screenshot itself)
+                Log.d(TAG, "handleTap: Creating intent for AIHelperActivity")
+                val intent = Intent(this@OverlayService, AIHelperActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                Log.d(TAG, "handleTap: Starting AIHelperActivity...")
+                startActivity(intent)
+                Log.d(TAG, "=== handleTap: END - AIHelperActivity started ===")
+            } catch (e: Exception) {
+                Log.e(TAG, "handleTap: Error during screenshot capture", e)
+                // Recreate overlay if error occurs
+                withContext(Dispatchers.Main) {
+                    viewManager.createOverlayView()
+                }
+                // Launch without screenshot if capture fails
+                val intent = Intent(this@OverlayService, AIHelperActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                startActivity(intent)
+            }
+        }
+    }
+
+    private fun handleQuadrupleTap() {
+        Log.d(TAG, "handleQuadrupleTap: 4+ taps detected, switching to main app")
+
+        serviceScope.launch {
+            try {
+                // Launch MainActivity
+                val intent = Intent(this@OverlayService, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                startActivity(intent)
+                Log.d(TAG, "handleQuadrupleTap: MainActivity launched successfully")
+            } catch (e: Exception) {
+                Log.e(TAG, "handleQuadrupleTap: Error launching MainActivity", e)
+            }
+        }
     }
 
     private fun handleLongPress() {
         // Long press + drag repositions the button
         // The drag mode is already activated by GestureDetector's onDragModeChanged callback
         Log.d(TAG, "Long press detected - drag mode activated (repositioning rescue ring)")
-    }
-
-    private fun launchAIHelper() {
-        Log.d(TAG, "launchAIHelper: Ring clicked, attempting to launch activity")
-        serviceScope.launch {
-            try {
-                // Always open AI chat interface, even without API key configured
-                Log.d(TAG, "launchAIHelper: Launching AIHelperActivity")
-                val intent = Intent(this@OverlayService, ch.heuscher.airescuering.AIHelperActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                }
-                startActivity(intent)
-                Log.d(TAG, "launchAIHelper: AIHelperActivity launched successfully")
-            } catch (e: Exception) {
-                Log.e(TAG, "launchAIHelper: Error launching activity", e)
-            }
-        }
     }
 
     private fun isOnHomeScreen(): Boolean {
