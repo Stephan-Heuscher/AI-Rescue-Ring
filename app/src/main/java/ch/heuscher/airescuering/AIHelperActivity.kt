@@ -74,8 +74,24 @@ class AIHelperActivity : AppCompatActivity() {
         setupListeners()
         initGeminiService()
 
-        // Capture screenshot of the screen before opening chat
-        captureScreenshot()
+        // Get screenshot from Intent (captured before activity launch)
+        val screenshotBase64 = intent.getStringExtra("screenshot_base64")
+        if (screenshotBase64 != null) {
+            // Convert base64 to bitmap and set as background
+            try {
+                val decodedBytes = android.util.Base64.decode(screenshotBase64, android.util.Base64.NO_WRAP)
+                val bitmap = android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                if (bitmap != null) {
+                    currentScreenshot = bitmap
+                    setScreenshotBackground(bitmap)
+                    Log.d(TAG, "Screenshot set as background: ${bitmap.width}x${bitmap.height}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to decode screenshot from Intent", e)
+            }
+        } else {
+            Log.w(TAG, "No screenshot provided in Intent")
+        }
 
         // Add welcome message
         addMessage(AIMessage(
@@ -86,45 +102,37 @@ class AIHelperActivity : AppCompatActivity() {
     }
 
     /**
-     * Capture a screenshot of the screen using accessibility service
+     * Set screenshot as dimmed background
      */
-    private fun captureScreenshot() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Log.d(TAG, "Requesting screenshot capture...")
-            BackHomeAccessibilityService.captureScreen { bitmap ->
-                if (bitmap != null) {
-                    currentScreenshot = bitmap
-                    Log.d(TAG, "Screenshot captured: ${bitmap.width}x${bitmap.height}")
+    private fun setScreenshotBackground(bitmap: Bitmap) {
+        val screenshotBackground = findViewById<android.widget.ImageView>(R.id.screenshotBackground)
+        val dimmingOverlay = findViewById<View>(R.id.dimmingOverlay)
 
-                    // Add message indicating screenshot was captured
-                    runOnUiThread {
-                        val screenshotMessage = AIMessage(
-                            id = UUID.randomUUID().toString(),
-                            content = "­ƒô© I've captured a screenshot of what was on your screen (${bitmap.width}x${bitmap.height}). I can analyze it to help you.",
-                            role = MessageRole.ASSISTANT
-                        )
-                        addMessage(screenshotMessage)
-                    }
-                } else {
-                    Log.w(TAG, "Screenshot capture failed or returned null")
-                    runOnUiThread {
-                        val failureMessage = AIMessage(
-                            id = UUID.randomUUID().toString(),
-                            content = "ÔÜá´©Å Couldn't capture a screenshot. Make sure accessibility service is enabled. I can still help with text-based questions!",
-                            role = MessageRole.ASSISTANT
-                        )
-                        addMessage(failureMessage)
-                    }
-                }
-            }
-        } else {
-            Log.w(TAG, "Screenshot capture requires Android R (API 30+)")
-            val notSupportedMessage = AIMessage(
-                id = UUID.randomUUID().toString(),
-                content = "ÔÜá´©Å Screenshot capture requires Android 11+. I can still help with text-based questions!",
-                role = MessageRole.ASSISTANT
-            )
-            addMessage(notSupportedMessage)
+        screenshotBackground?.let {
+            it.setImageBitmap(bitmap)
+            it.visibility = View.VISIBLE
+        }
+
+        dimmingOverlay?.visibility = View.VISIBLE
+    }
+
+    /**
+     * Hide AI Helper activity during execution so AI can interact with apps
+     */
+    private fun hideActivity() {
+        runOnUiThread {
+            window.decorView.visibility = View.GONE
+            Log.d(TAG, "Activity hidden for execution")
+        }
+    }
+
+    /**
+     * Show AI Helper activity after execution
+     */
+    private fun showActivity() {
+        runOnUiThread {
+            window.decorView.visibility = View.VISIBLE
+            Log.d(TAG, "Activity shown after execution")
         }
     }
 
@@ -385,6 +393,10 @@ class AIHelperActivity : AppCompatActivity() {
                     return@launch
                 }
 
+                // Hide activity so AI can interact with the actual apps
+                hideActivity()
+                kotlinx.coroutines.delay(300) // Give time for UI to hide
+
                 Log.d(TAG, "Stage 2: Executing plan with computer use model...")
                 executeRound(service, request, plan, screenshot, 1)
             } catch (e: Exception) {
@@ -397,6 +409,7 @@ class AIHelperActivity : AppCompatActivity() {
                 addMessage(errorMessage)
                 hideStopButton()
                 isExecuting = false
+                showActivity() // Show activity on error
             } finally {
                 loadingIndicator.visibility = View.GONE
                 sendButton.isEnabled = true
@@ -453,6 +466,7 @@ class AIHelperActivity : AppCompatActivity() {
             )
             addMessage(stoppedMessage)
             hideStopButton()
+            showActivity() // Show activity again
             return
         }
 
@@ -464,6 +478,7 @@ class AIHelperActivity : AppCompatActivity() {
             )
             addMessage(maxRoundsMessage)
             hideStopButton()
+            showActivity() // Show activity again
             return
         }
 
@@ -541,10 +556,12 @@ class AIHelperActivity : AppCompatActivity() {
                 addMessage(completionMessage)
                 hideStopButton()
                 isExecuting = false
+                showActivity() // Show activity again after completion
             } else {
                 Log.w(TAG, "Round $roundNumber: No function call or text in response")
                 hideStopButton()
                 isExecuting = false
+                showActivity() // Show activity again
             }
         }.onFailure { error ->
             Log.e(TAG, "Round $roundNumber: Error", error)
@@ -556,6 +573,7 @@ class AIHelperActivity : AppCompatActivity() {
             addMessage(errorMessage)
             hideStopButton()
             isExecuting = false
+            showActivity() // Show activity again on error
         }
     }
 

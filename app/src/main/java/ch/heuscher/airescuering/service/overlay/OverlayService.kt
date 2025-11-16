@@ -303,7 +303,7 @@ class OverlayService : Service() {
     private fun handleTap() {
         Log.d(TAG, "=== handleTap: START - Tap gesture detected on ring ===")
 
-        // Hide overlay first, then capture screenshot
+        // Hide overlay first, capture screenshot, then launch activity
         serviceScope.launch {
             try {
                 Log.d(TAG, "handleTap: Hiding overlay...")
@@ -312,22 +312,35 @@ class OverlayService : Service() {
                     viewManager.removeOverlayView()
                     Log.d(TAG, "handleTap: Overlay removed")
                 }
-                
+
                 // Wait longer for system to fully settle after hiding overlay
                 // The system needs time to remove the overlay window and update the window state
-                Log.d(TAG, "handleTap: Waiting 2 seconds for system to settle...")
-                kotlinx.coroutines.delay(2000)
-                
-                // Recreate overlay before launching activity
+                Log.d(TAG, "handleTap: Waiting 500ms for system to settle...")
+                kotlinx.coroutines.delay(500)
+
+                // Capture screenshot BEFORE recreating overlay or launching activity
+                Log.d(TAG, "handleTap: Capturing screenshot...")
+                val screenshotBase64 = ch.heuscher.airescuering.util.ScreenCaptureManager.captureScreenAsBase64()
+
+                if (screenshotBase64 != null) {
+                    Log.d(TAG, "handleTap: Screenshot captured successfully")
+                } else {
+                    Log.w(TAG, "handleTap: Screenshot capture failed")
+                }
+
+                // Recreate overlay after screenshot capture
                 withContext(Dispatchers.Main) {
                     viewManager.createOverlayView()
                     Log.d(TAG, "handleTap: Overlay recreated")
                 }
-                
-                // Launch AI Helper Activity (it will capture screenshot itself)
+
+                // Launch AI Helper Activity with screenshot
                 Log.d(TAG, "handleTap: Creating intent for AIHelperActivity")
                 val intent = Intent(this@OverlayService, AIHelperActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    if (screenshotBase64 != null) {
+                        putExtra("screenshot_base64", screenshotBase64)
+                    }
                 }
                 Log.d(TAG, "handleTap: Starting AIHelperActivity...")
                 startActivity(intent)
