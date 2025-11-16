@@ -4,8 +4,6 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.ColorSpace
-import android.hardware.HardwareBuffer
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -22,11 +20,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.cancel
-import java.io.File
-import java.io.FileOutputStream
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.util.concurrent.Executors
 
 /**
@@ -44,6 +37,9 @@ class BackHomeAccessibilityService : AccessibilityService() {
     // Track current foreground package for home screen detection
     private var currentPackageName: String? = null
     private var launcherPackageName: String? = null
+
+    // Screenshot callback
+    var onScreenshotCaptured: ((Bitmap) -> Unit)? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -196,198 +192,86 @@ class BackHomeAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Take a screenshot using AccessibilityService API
-     * Requires Android R (API 30) or higher
-     * @param callback Called with the screenshot bitmap on success, or null on failure
+     * Take a screenshot using AccessibilityService (Android 11+)
+     * Falls back to showing a message on older versions
      */
-    fun takeScreenshot(callback: (Bitmap?) -> Unit) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            Log.e(TAG, "Screenshot API requires Android R (API 30) or higher")
-            callback(null)
-            return
-        }
-
-        try {
-            takeScreenshotInternal(callback)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error taking screenshot", e)
-            callback(null)
-        }
-    }
-
-    /**
-     * Take a screenshot using the best available method for this Android version.
-     * For Android 11+, uses the modern takeScreenshot API with fallback to performGlobalAction.
-     * For older versions, uses performGlobalAction directly.
-     *
-     * @param onSuccess Callback with the screenshot file path
-     * @param onFailure Callback with error message
-     */
-    fun takeScreenshot(
-        onSuccess: (String) -> Unit = {},
-        onFailure: (String) -> Unit = {}
-    ) {
+    fun takeScreenshot() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Use modern API for Android 11+
-            takeScreenshotModern(onSuccess, onFailure)
+            takeScreenshotAPI30()
         } else {
-            // Fall back to system default for older versions
-            takeScreenshotLegacy(onSuccess, onFailure)
+            Log.w(TAG, "Screenshot not supported on Android versions below 11")
+            // Broadcast a message that screenshots are not supported
+            val intent = Intent(AppConstants.ACTION_SCREENSHOT_FAILED)
+            intent.putExtra("error", "Screenshot requires Android 11 or higher")
+            sendBroadcast(intent)
         }
     }
 
     /**
-     * Modern screenshot method using AccessibilityService.takeScreenshot() API (Android 11+)
-     * Falls back to performGlobalAction if this fails
+     * Take screenshot using Android 11+ API
      */
     @RequiresApi(Build.VERSION_CODES.R)
-    private fun takeScreenshotModern(
-        onSuccess: (String) -> Unit,
-        onFailure: (String) -> Unit
-    ) {
-        Log.d(TAG, "Taking screenshot using modern API (Android 11+)")
-
+    private fun takeScreenshotAPI30() {
         try {
-            super.takeScreenshot(
-                Display.DEFAULT_DISPLAY,
-                { r -> Thread(r).start() },
+            val executor = Executors.newSingleThreadExecutor()
+
+            takeScreenshot(
+                android.view.Display.DEFAULT_DISPLAY,
+                executor,
                 object : TakeScreenshotCallback {
                     override fun onSuccess(screenshot: ScreenshotResult) {
                         try {
-                            Log.d(TAG, "Screenshot captured successfully via modern API")
+                            val bitmap = Bitmap.wrapHardwareBuffer(
+                                screenshot.hardwareBuffer,
+                                screenshot.colorSpace
+                            )
 
-                            // Convert HardwareBuffer to Bitmap
-                            val hardwareBuffer = screenshot.hardwareBuffer
-                            val bitmap = Bitmap.wrapHardwareBuffer(hardwareBuffer, screenshot.colorSpace)
-                                ?: throw IllegalStateException("Failed to wrap hardware buffer")
+                            if (bitmap != null) {
+                                Log.d(TAG, "Screenshot captured successfully: ${bitmap.width}x${bitmap.height}")
 
-                            // Save bitmap to file
-                            val filePath = saveBitmapToFile(bitmap)
+                                // Convert hardware bitmap to software bitmap for processing
+                                val softwareBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, false)
+
+                                // Invoke callback
+                                Handler(Looper.getMainLooper()).post {
+                                    onScreenshotCaptured?.invoke(softwareBitmap)
+                                }
+
+                                // Broadcast success
+                                val intent = Intent(AppConstants.ACTION_SCREENSHOT_CAPTURED)
+                                sendBroadcast(intent)
+                            } else {
+                                Log.e(TAG, "Failed to create bitmap from hardware buffer")
+                                broadcastScreenshotError("Failed to create bitmap")
+                            }
 
                             // Clean up
-                            bitmap.recycle()
-                            hardwareBuffer.close()
-
-                            onSuccess(filePath)
-                            Log.d(TAG, "Screenshot saved to: $filePath")
+                            screenshot.hardwareBuffer.close()
                         } catch (e: Exception) {
-                            Log.e(TAG, "Error processing screenshot from modern API", e)
-                            onFailure("Failed to process screenshot: ${e.message}")
+                            Log.e(TAG, "Error processing screenshot", e)
+                            broadcastScreenshotError(e.message ?: "Unknown error")
                         }
                     }
 
                     override fun onFailure(errorCode: Int) {
-                        Log.w(TAG, "Modern API failed with code $errorCode, falling back to system default")
-                        // Fall back to the legacy method
-                        takeScreenshotLegacy(onSuccess, onFailure)
+                        Log.e(TAG, "Screenshot failed with error code: $errorCode")
+                        broadcastScreenshotError("Screenshot failed with error code: $errorCode")
                     }
                 }
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Exception calling modern screenshot API, falling back", e)
-            takeScreenshotLegacy(onSuccess, onFailure)
+            Log.e(TAG, "Error taking screenshot", e)
+            broadcastScreenshotError(e.message ?: "Unknown error")
         }
     }
 
     /**
-     * Legacy screenshot method that simulates pressing the physical screenshot button.
-     * This method works on Android 9+ and uses the device's native screenshot functionality.
+     * Broadcast screenshot error
      */
-    private fun takeScreenshotLegacy(
-        onSuccess: (String) -> Unit,
-        onFailure: (String) -> Unit
-    ) {
-        Log.d(TAG, "Taking screenshot using legacy method (performGlobalAction)")
-
-        try {
-            val success = performGlobalAction(GLOBAL_ACTION_TAKE_SCREENSHOT)
-
-            if (success) {
-                Log.d(TAG, "Screenshot action triggered successfully")
-                // Note: With performGlobalAction, we can't get the file path directly
-                // The system handles the screenshot and saves it to the default location
-                onSuccess("Screenshot saved to system default location")
-            } else {
-                Log.e(TAG, "Failed to trigger screenshot action")
-                onFailure("Failed to trigger screenshot. Ensure accessibility service is properly enabled.")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Exception triggering screenshot action", e)
-            onFailure("Exception: ${e.message}")
-        }
-    }
-
-    /**
-     * Convert HardwareBuffer to Bitmap
-     */
-    @RequiresApi(Build.VERSION_CODES.R)
-    private fun hardwareBufferToBitmap(hardwareBuffer: HardwareBuffer): Bitmap {
-        val bitmap = Bitmap.wrapHardwareBuffer(hardwareBuffer, null)
-            ?: throw IllegalStateException("Failed to create bitmap from hardware buffer")
-
-        // Convert to software bitmap for easier manipulation
-        return bitmap.copy(Bitmap.Config.ARGB_8888, false)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.R)
-    private fun takeScreenshotInternal(callback: (Bitmap?) -> Unit) {
-        val executor = Executors.newSingleThreadExecutor()
-
-        takeScreenshot(
-            Display.DEFAULT_DISPLAY,
-            executor,
-            object : TakeScreenshotCallback {
-                override fun onSuccess(screenshot: ScreenshotResult) {
-                    try {
-                        val bitmap = Bitmap.wrapHardwareBuffer(
-                            screenshot.hardwareBuffer,
-                            screenshot.colorSpace
-                        )
-                        Log.d(TAG, "Screenshot taken successfully: ${bitmap?.width}x${bitmap?.height}")
-                        callback(bitmap)
-
-                        // Clean up
-                        screenshot.hardwareBuffer.close()
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error processing screenshot", e)
-                        callback(null)
-                    } finally {
-                        executor.shutdown()
-                    }
-                }
-
-                override fun onFailure(errorCode: Int) {
-                    Log.e(TAG, "Failed to take screenshot. Error code: $errorCode")
-                    callback(null)
-                    executor.shutdown()
-                }
-            }
-        )
-    }
-
-    /**
-     * Save a bitmap to the screenshots directory
-     * @return The file path where the screenshot was saved
-     */
-    private fun saveBitmapToFile(bitmap: Bitmap): String {
-        // Create screenshots directory in app's external files directory
-        val screenshotsDir = File(getExternalFilesDir(null), "screenshots").apply {
-            if (!exists()) {
-                mkdirs()
-            }
-        }
-
-        // Generate filename with timestamp
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val filename = "screenshot_$timestamp.png"
-        val file = File(screenshotsDir, filename)
-
-        // Save bitmap to file
-        FileOutputStream(file).use { out ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-        }
-
-        return file.absolutePath
+    private fun broadcastScreenshotError(error: String) {
+        val intent = Intent(AppConstants.ACTION_SCREENSHOT_FAILED)
+        intent.putExtra("error", error)
+        sendBroadcast(intent)
     }
 
     companion object {
@@ -396,19 +280,5 @@ class BackHomeAccessibilityService : AccessibilityService() {
             private set
 
         fun isServiceEnabled(): Boolean = instance != null
-
-        /**
-         * Take a screenshot via the singleton instance
-         */
-        @RequiresApi(Build.VERSION_CODES.R)
-        fun captureScreen(callback: (Bitmap?) -> Unit) {
-            val service = instance
-            if (service == null) {
-                Log.e(TAG, "captureScreen: Accessibility service not available")
-                callback(null)
-                return
-            }
-            service.takeScreenshot(callback)
-        }
     }
 }

@@ -52,6 +52,8 @@ object AppConstants {
     // Intent actions
     const val ACTION_UPDATE_SETTINGS = "ch.heuscher.airescuering.UPDATE_SETTINGS"
     const val ACTION_UPDATE_KEYBOARD = "ch.heuscher.airescuering.UPDATE_KEYBOARD"
+    const val ACTION_SCREENSHOT_CAPTURED = "ch.heuscher.airescuering.SCREENSHOT_CAPTURED"
+    const val ACTION_SCREENSHOT_FAILED = "ch.heuscher.airescuering.SCREENSHOT_FAILED"
 
     // SharedPreferences
     const val PREFS_NAME = "overlay_settings"

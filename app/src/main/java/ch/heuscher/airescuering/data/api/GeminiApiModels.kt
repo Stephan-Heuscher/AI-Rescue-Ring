@@ -31,7 +31,7 @@ data class Part(
     val functionCall: FunctionCall? = null,
     @SerialName("functionResponse")
     val functionResponse: FunctionResponse? = null,
-    @SerialName("inlineData")
+    @SerialName("inline_data")
     val inlineData: InlineData? = null
 )
 
@@ -151,7 +151,7 @@ data class FunctionResponse(
  */
 @Serializable
 data class InlineData(
-    @SerialName("mimeType")
+    @SerialName("mime_type")
     val mimeType: String,
     val data: String  // Base64 encoded
 )

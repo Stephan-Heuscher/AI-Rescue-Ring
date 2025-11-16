@@ -1,300 +1,250 @@
 package ch.heuscher.airescuering.service.overlay
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.PixelFormat
+import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.speech.RecognizerIntent
-import android.text.InputType
+import android.util.Base64
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
-import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ch.heuscher.airescuering.R
 import ch.heuscher.airescuering.data.api.GeminiApiService
-import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.model.AIMessage
 import ch.heuscher.airescuering.domain.model.MessageRole
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 import java.util.*
 
 /**
- * Manages the chat overlay view with integrated rescue ring
+ * Manages the floating chat overlay window.
+ * Handles chat UI, message display, user input, and AI interactions.
  */
 class ChatOverlayManager(
     private val context: Context,
-    private val windowManager: WindowManager,
+    private val geminiApiKey: String,
     private val scope: CoroutineScope
 ) {
     companion object {
         private const val TAG = "ChatOverlayManager"
+        private const val VOICE_RECOGNITION_REQUEST_CODE = 2001
     }
 
-    private var overlayView: View? = null
-    private var rescueRingContainer: View? = null
-    private var chatContainer: View? = null
+    private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private var chatOverlayView: View? = null
+    private var isVisible = false
+
+    // UI Components
     private var messagesRecyclerView: RecyclerView? = null
     private var messageInput: EditText? = null
     private var sendButton: Button? = null
     private var voiceButton: Button? = null
-    private var closeButton: Button? = null
+    private var screenshotButton: Button? = null
+    private var hideButton: Button? = null
     private var loadingIndicator: ProgressBar? = null
 
+    // Chat state
     private val messages = mutableListOf<AIMessage>()
-    private var adapter: ChatAdapter? = null
+    private var adapter: ChatOverlayAdapter? = null
     private var geminiService: GeminiApiService? = null
+    private var currentScreenshotBitmap: Bitmap? = null
 
-    private var layoutParams: WindowManager.LayoutParams? = null
-    private var touchListener: View.OnTouchListener? = null
+    // Callbacks
+    var onHideRequest: (() -> Unit)? = null
+    var onScreenshotRequest: (() -> Unit)? = null
 
-    private val handler = Handler(Looper.getMainLooper())
-
-    var onHideOverlay: (() -> Unit)? = null
-
-    /**
-     * Creates and adds the chat overlay to the window
-     */
-    fun createOverlay(): View {
-        if (overlayView != null) return overlayView!!
-
-        overlayView = LayoutInflater.from(context).inflate(R.layout.overlay_chat_layout, null)
-
-        initViews()
-        setupLayoutParams()
-        setupRecyclerView()
-        setupListeners()
-        initGeminiService()
-
-        windowManager.addView(overlayView, layoutParams)
-
-        // Start with chat hidden, only rescue ring visible
-        chatContainer?.visibility = View.GONE
-
-        // Add welcome message
-        addMessage(AIMessage(
-            id = UUID.randomUUID().toString(),
-            content = "Hello! I'm your AI Rescue Assistant. How can I help you?",
-            role = MessageRole.ASSISTANT
-        ))
-
-        return overlayView!!
+    init {
+        geminiService = GeminiApiService(geminiApiKey, debug = true)
     }
 
     /**
-     * Removes the overlay from the window
+     * Create and show the chat overlay
      */
-    fun removeOverlay() {
-        overlayView?.let { windowManager.removeView(it) }
-        overlayView = null
-        rescueRingContainer = null
-        chatContainer = null
-        messagesRecyclerView = null
-        messageInput = null
-        sendButton = null
-        voiceButton = null
-        closeButton = null
-        loadingIndicator = null
-        adapter = null
-        layoutParams = null
-    }
-
-    /**
-     * Shows the chat interface (expands from rescue ring)
-     */
-    fun showChat() {
-        Log.d(TAG, "showChat: Expanding chat interface")
-        chatContainer?.visibility = View.VISIBLE
-        rescueRingContainer?.visibility = View.GONE
-
-        // Expand window to full screen for chat
-        layoutParams?.let { params ->
-            params.width = WindowManager.LayoutParams.MATCH_PARENT
-            params.height = WindowManager.LayoutParams.MATCH_PARENT
-            params.x = 0
-            params.y = 0
-            params.flags = WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
-                          WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-            overlayView?.let { windowManager.updateViewLayout(it, params) }
+    fun show() {
+        if (isVisible) {
+            Log.d(TAG, "Chat overlay already visible")
+            return
         }
 
-        // Scroll to last message
-        messagesRecyclerView?.scrollToPosition(messages.size - 1)
-    }
+        try {
+            // Inflate the chat overlay layout
+            val inflater = LayoutInflater.from(context)
+            chatOverlayView = inflater.inflate(R.layout.chat_overlay_layout, null)
 
-    /**
-     * Hides the chat interface (collapses to rescue ring)
-     */
-    fun hideChat() {
-        Log.d(TAG, "hideChat: Collapsing to rescue ring")
-        chatContainer?.visibility = View.GONE
-        rescueRingContainer?.visibility = View.VISIBLE
+            // Set up the window layout parameters
+            val params = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                } else {
+                    @Suppress("DEPRECATION")
+                    WindowManager.LayoutParams.TYPE_PHONE
+                },
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT
+            ).apply {
+                gravity = Gravity.CENTER
+                // Make it focusable when shown to allow text input
+                flags = flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
+            }
 
-        // Collapse window back to 48dp rescue ring size
-        layoutParams?.let { params ->
-            val ringSize = (48 * context.resources.displayMetrics.density).toInt()
-            val displayMetrics = context.resources.displayMetrics
-            val screenWidth = displayMetrics.widthPixels
-            
-            params.width = ringSize
-            params.height = ringSize
-            params.x = (screenWidth - ringSize) / 2  // Center horizontally
-            params.y = 100  // Top margin
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                          WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                          WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
-                          WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-            overlayView?.let { windowManager.updateViewLayout(it, params) }
+            // Add view to window manager
+            windowManager.addView(chatOverlayView, params)
+            isVisible = true
+
+            // Initialize UI components
+            initializeViews()
+            setupListeners()
+            setupRecyclerView()
+
+            // Add welcome message
+            addWelcomeMessage()
+
+            Log.d(TAG, "Chat overlay shown successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error showing chat overlay", e)
+            Toast.makeText(context, "Error showing chat: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
     /**
-     * Hides the entire overlay (including rescue ring)
+     * Hide the chat overlay
      */
-    fun hideOverlay() {
-        Log.d(TAG, "hideOverlay: Hiding entire overlay")
-        overlayView?.visibility = View.GONE
-    }
+    fun hide() {
+        if (!isVisible) {
+            Log.d(TAG, "Chat overlay already hidden")
+            return
+        }
 
-    /**
-     * Shows the entire overlay
-     */
-    fun showOverlay() {
-        Log.d(TAG, "showOverlay: Showing overlay")
-        overlayView?.visibility = View.VISIBLE
-    }
+        try {
+            chatOverlayView?.let {
+                windowManager.removeView(it)
+                chatOverlayView = null
+            }
+            isVisible = false
 
-    /**
-     * Sets touch listener for the rescue ring
-     */
-    fun setRingTouchListener(listener: View.OnTouchListener) {
-        touchListener = listener
-        rescueRingContainer?.setOnTouchListener(listener)
-        overlayView?.findViewById<View>(R.id.floating_dot)?.setOnTouchListener(listener)
-    }
+            // Clean up
+            messagesRecyclerView = null
+            messageInput = null
+            sendButton = null
+            voiceButton = null
+            screenshotButton = null
+            hideButton = null
+            loadingIndicator = null
+            adapter = null
 
-    /**
-     * Updates the position of the rescue ring overlay
-     */
-    fun updatePosition(deltaX: Int, deltaY: Int) {
-        layoutParams?.let { params ->
-            params.x += deltaX
-            params.y += deltaY
-            overlayView?.let { windowManager.updateViewLayout(it, params) }
+            Log.d(TAG, "Chat overlay hidden successfully")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error hiding chat overlay", e)
         }
     }
 
-    private fun initViews() {
-        overlayView?.let { view ->
-            rescueRingContainer = view.findViewById(R.id.rescueRingContainer)
-            chatContainer = view.findViewById(R.id.chatContainer)
-            messagesRecyclerView = view.findViewById(R.id.messagesRecyclerView)
-            messageInput = view.findViewById(R.id.messageInput)
-            sendButton = view.findViewById(R.id.sendButton)
-            voiceButton = view.findViewById(R.id.voiceButton)
-            closeButton = view.findViewById(R.id.closeButton)
-            loadingIndicator = view.findViewById(R.id.loadingIndicator)
-        }
-    }
-
-    private fun setupLayoutParams() {
-        val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+    /**
+     * Toggle visibility
+     */
+    fun toggle() {
+        if (isVisible) {
+            hide()
         } else {
-            @Suppress("DEPRECATION")
-            WindowManager.LayoutParams.TYPE_PHONE
-        }
-
-        // Convert 48dp to pixels for the rescue ring size
-        val ringSize = (48 * context.resources.displayMetrics.density).toInt()
-        
-        // Get screen dimensions to center horizontally at top
-        val displayMetrics = context.resources.displayMetrics
-        val screenWidth = displayMetrics.widthPixels
-        
-        layoutParams = WindowManager.LayoutParams(
-            ringSize,  // 48dp width
-            ringSize,  // 48dp height
-            layoutType,
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                    or WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
-                    or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            PixelFormat.TRANSLUCENT
-        ).apply {
-            gravity = Gravity.TOP or Gravity.START
-            // Center horizontally at top
-            x = (screenWidth - ringSize) / 2
-            y = 100  // Small margin from top
+            show()
         }
     }
 
-    private fun setupRecyclerView() {
-        adapter = ChatAdapter(messages) { message, action ->
-            handleActionButton(message, action)
-        }
-        messagesRecyclerView?.adapter = adapter
-        messagesRecyclerView?.layoutManager = LinearLayoutManager(context).apply {
-            stackFromEnd = true
+    /**
+     * Check if chat is visible
+     */
+    fun isShowing(): Boolean = isVisible
+
+    /**
+     * Initialize UI components
+     */
+    private fun initializeViews() {
+        chatOverlayView?.let { view ->
+            messagesRecyclerView = view.findViewById(R.id.chatMessagesRecyclerView)
+            messageInput = view.findViewById(R.id.chatMessageInput)
+            sendButton = view.findViewById(R.id.chatSendButton)
+            voiceButton = view.findViewById(R.id.chatVoiceButton)
+            screenshotButton = view.findViewById(R.id.chatScreenshotButton)
+            hideButton = view.findViewById(R.id.hideButton)
+            loadingIndicator = view.findViewById(R.id.chatLoadingIndicator)
         }
     }
 
+    /**
+     * Set up button listeners
+     */
     private fun setupListeners() {
+        hideButton?.setOnClickListener {
+            onHideRequest?.invoke()
+        }
+
         sendButton?.setOnClickListener {
-            val text = messageInput?.text.toString().trim()
-            if (text.isNotEmpty()) {
+            val text = messageInput?.text?.toString()?.trim()
+            if (!text.isNullOrEmpty()) {
                 sendMessage(text)
                 messageInput?.text?.clear()
             }
         }
 
         voiceButton?.setOnClickListener {
-            Toast.makeText(context, "Voice input available in full activity", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Voice input: Please use the app directly for voice features", Toast.LENGTH_SHORT).show()
+            // Note: Voice recognition requires an Activity context, so we can't use it directly in overlay
         }
 
-        closeButton?.setOnClickListener {
-            hideChat()
-        }
-
-        rescueRingContainer?.setOnClickListener {
-            showChat()
+        screenshotButton?.setOnClickListener {
+            onScreenshotRequest?.invoke()
+            // The screenshot will be taken by the service and passed back via processScreenshot()
         }
     }
 
-    private fun initGeminiService() {
-        scope.launch {
-            val apiKey = ServiceLocator.aiHelperRepository.getApiKey().firstOrNull() ?: ""
-            if (apiKey.isEmpty()) {
-                val warningMessage = AIMessage(
-                    id = UUID.randomUUID().toString(),
-                    content = "⚠️ API Key Not Configured\n\nPlease set up your Gemini API key in the app settings.",
-                    role = MessageRole.ASSISTANT
-                )
-                addMessage(warningMessage)
-                return@launch
+    /**
+     * Set up RecyclerView for messages
+     */
+    private fun setupRecyclerView() {
+        messagesRecyclerView?.let { recyclerView ->
+            adapter = ChatOverlayAdapter(messages)
+            recyclerView.adapter = adapter
+            recyclerView.layoutManager = LinearLayoutManager(context).apply {
+                stackFromEnd = true
             }
-            geminiService = GeminiApiService(apiKey, debug = true)
         }
     }
 
-    private fun sendMessage(text: String) {
+    /**
+     * Add welcome message
+     */
+    private fun addWelcomeMessage() {
+        val welcomeMessage = AIMessage(
+            id = UUID.randomUUID().toString(),
+            content = "👋 Hello! I'm your AI rescue assistant. I'm here to help you step-by-step with any task on your device.\n\nWhat would you like to do today?",
+            role = MessageRole.ASSISTANT
+        )
+        addMessage(welcomeMessage)
+    }
+
+    /**
+     * Send a message to the AI
+     */
+    private fun sendMessage(text: String, screenshotBase64: String? = null) {
         // Add user message
         val userMessage = AIMessage(
             id = UUID.randomUUID().toString(),
@@ -307,26 +257,31 @@ class ChatOverlayManager(
         loadingIndicator?.visibility = View.VISIBLE
         sendButton?.isEnabled = false
         voiceButton?.isEnabled = false
+        screenshotButton?.isEnabled = false
 
         // Get AI response
         scope.launch {
             try {
                 val service = geminiService
                 if (service == null) {
-                    handler.post {
-                        Toast.makeText(
-                            context,
-                            "AI service not initialized. Please check API key.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    showError("AI service not available")
                     return@launch
                 }
 
-                val result = service.generateAssistanceSuggestion(
-                    userRequest = text,
-                    context = "The user is on their Android device"
-                )
+                val result = if (screenshotBase64 != null) {
+                    // Send with screenshot
+                    service.generateAssistanceWithImage(
+                        userRequest = text,
+                        imageBase64 = screenshotBase64,
+                        context = "The user needs help with their Android device. Guide them step-by-step."
+                    )
+                } else {
+                    // Send text only
+                    service.generateAssistanceSuggestion(
+                        userRequest = text,
+                        context = "The user needs help with their Android device. Guide them step-by-step."
+                    )
+                }
 
                 result.onSuccess { response ->
                     val assistantMessage = AIMessage(
@@ -334,171 +289,88 @@ class ChatOverlayManager(
                         content = response,
                         role = MessageRole.ASSISTANT
                     )
-
-                    // Check if this is a suggestion (action item)
-                    val hasSuggestion = response.contains("suggest", ignoreCase = true) ||
-                                      response.contains("recommend", ignoreCase = true) ||
-                                      response.contains("you can", ignoreCase = true) ||
-                                      response.contains("should", ignoreCase = true)
-
-                    addMessage(assistantMessage, showActions = hasSuggestion)
+                    addMessage(assistantMessage)
                 }.onFailure { error ->
-                    handler.post {
-                        Toast.makeText(
-                            context,
-                            "Error: ${error.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+                    showError("Error: ${error.message}")
 
                     val errorMessage = AIMessage(
                         id = UUID.randomUUID().toString(),
-                        content = "Sorry, I encountered an error: ${error.message}",
+                        content = "Sorry, I encountered an error: ${error.message}\n\nPlease try again or ask a different question.",
                         role = MessageRole.ASSISTANT
                     )
                     addMessage(errorMessage)
                 }
             } finally {
-                handler.post {
+                withContext(Dispatchers.Main) {
                     loadingIndicator?.visibility = View.GONE
                     sendButton?.isEnabled = true
                     voiceButton?.isEnabled = true
-                }
-            }
-        }
-    }
-
-    private fun addMessage(message: AIMessage, showActions: Boolean = false) {
-        handler.post {
-            messages.add(message)
-            adapter?.addMessage(message, showActions)
-            messagesRecyclerView?.scrollToPosition(messages.size - 1)
-        }
-    }
-
-    private fun handleActionButton(message: AIMessage, action: String) {
-        when (action) {
-            "approve" -> {
-                Log.d(TAG, "Approve action for message: ${message.content}")
-
-                // Hide overlay before executing command
-                onHideOverlay?.invoke()
-
-                handler.post {
-                    Toast.makeText(context, "Executing suggestion...", Toast.LENGTH_SHORT).show()
-                }
-
-                // TODO: Execute the approved action
-                // For now, just show a confirmation message after a delay
-                handler.postDelayed({
-                    addMessage(AIMessage(
-                        id = UUID.randomUUID().toString(),
-                        content = "Action executed successfully!",
-                        role = MessageRole.ASSISTANT
-                    ))
-                    showOverlay()
-                    showChat()
-                }, 2000)
-            }
-            "refine" -> {
-                Log.d(TAG, "Refine action for message: ${message.content}")
-                handler.post {
-                    messageInput?.setText("I'd like to refine that suggestion: ")
-                    messageInput?.setSelection(messageInput?.text?.length ?: 0)
-                    messageInput?.requestFocus()
+                    screenshotButton?.isEnabled = true
                 }
             }
         }
     }
 
     /**
-     * Chat adapter with action button support
+     * Process a screenshot and send it with a message
      */
-    private class ChatAdapter(
-        private val messages: MutableList<AIMessage>,
-        private val onActionClick: (AIMessage, String) -> Unit
-    ) : RecyclerView.Adapter<ChatAdapter.MessageViewHolder>() {
+    fun processScreenshot(bitmap: Bitmap) {
+        currentScreenshotBitmap = bitmap
 
-        private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        private val messageActions = mutableMapOf<String, Boolean>() // messageId -> showActions
+        // Convert to base64
+        val base64 = bitmapToBase64(bitmap)
 
-        class MessageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val messageCard: CardView = view.findViewById(R.id.messageCard)
-            val roleText: TextView = view.findViewById(R.id.messageRole)
-            val messageText: TextView = view.findViewById(R.id.messageText)
-            val timeText: TextView = view.findViewById(R.id.messageTime)
-            val actionButtonsContainer: ViewGroup = view.findViewById(R.id.actionButtonsContainer)
-            val approveButton: Button = view.findViewById(R.id.approveButton)
-            val refineButton: Button = view.findViewById(R.id.refineButton)
+        // Show message that screenshot was captured
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(context, "📸 Screenshot captured! Now tell me what you need help with.", Toast.LENGTH_SHORT).show()
+
+            // Auto-fill a message prompt
+            messageInput?.setText("I need help with this screen. What should I do?")
+            messageInput?.requestFocus()
+
+            // Auto-send with screenshot
+            val text = messageInput?.text?.toString()?.trim() ?: "What should I do here?"
+            sendMessage(text, base64)
+            messageInput?.text?.clear()
         }
+    }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_chat_message, parent, false)
-            return MessageViewHolder(view)
+    /**
+     * Convert bitmap to base64 string
+     */
+    private fun bitmapToBase64(bitmap: Bitmap): String {
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+        val byteArray = outputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.NO_WRAP)
+    }
+
+    /**
+     * Add a message to the chat
+     */
+    private fun addMessage(message: AIMessage) {
+        Handler(Looper.getMainLooper()).post {
+            messages.add(message)
+            adapter?.notifyItemInserted(messages.size - 1)
+            messagesRecyclerView?.scrollToPosition(messages.size - 1)
         }
+    }
 
-        override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
-            val message = messages[position]
-
-            holder.roleText.text = when (message.role) {
-                MessageRole.USER -> "You"
-                MessageRole.ASSISTANT -> "AI Assistant"
-                MessageRole.SYSTEM -> "System"
-            }
-
-            holder.messageText.text = message.content
-            holder.timeText.text = timeFormat.format(Date(message.timestamp))
-
-            // Show/hide action buttons
-            val showActions = messageActions[message.id] == true && message.role == MessageRole.ASSISTANT
-            holder.actionButtonsContainer.visibility = if (showActions) View.VISIBLE else View.GONE
-
-            if (showActions) {
-                holder.approveButton.setOnClickListener {
-                    onActionClick(message, "approve")
-                    // Hide buttons after click
-                    messageActions[message.id] = false
-                    notifyItemChanged(position)
-                }
-                holder.refineButton.setOnClickListener {
-                    onActionClick(message, "refine")
-                }
-            }
-
-            // Style based on role
-            when (message.role) {
-                MessageRole.USER -> {
-                    val params = holder.messageCard.layoutParams
-                    if (params is LinearLayout.LayoutParams) {
-                        params.gravity = android.view.Gravity.END
-                        holder.messageCard.layoutParams = params
-                    }
-                    holder.messageCard.setCardBackgroundColor(0xFF2196F3.toInt())
-                    holder.roleText.setTextColor(0xFFFFFFFF.toInt())
-                    holder.messageText.setTextColor(0xFFFFFFFF.toInt())
-                }
-                MessageRole.ASSISTANT -> {
-                    val params = holder.messageCard.layoutParams
-                    if (params is LinearLayout.LayoutParams) {
-                        params.gravity = android.view.Gravity.START
-                        holder.messageCard.layoutParams = params
-                    }
-                    holder.messageCard.setCardBackgroundColor(0xFFEEEEEE.toInt())
-                    holder.roleText.setTextColor(0xFF000000.toInt())
-                    holder.messageText.setTextColor(0xFF000000.toInt())
-                }
-                MessageRole.SYSTEM -> {
-                    holder.messageCard.setCardBackgroundColor(0xFFFFF9C4.toInt())
-                }
-            }
+    /**
+     * Show an error toast
+     */
+    private fun showError(message: String) {
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
+    }
 
-        override fun getItemCount() = messages.size
-
-        fun addMessage(message: AIMessage, showActions: Boolean = false) {
-            messageActions[message.id] = showActions
-            notifyItemInserted(messages.size - 1)
-        }
+    /**
+     * Clean up resources
+     */
+    fun destroy() {
+        hide()
+        currentScreenshotBitmap?.recycle()
+        currentScreenshotBitmap = null
     }
 }
