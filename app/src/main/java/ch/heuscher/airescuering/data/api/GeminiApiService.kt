@@ -189,7 +189,7 @@ Did that work? If you're stuck on any step, just tell me which one! 😊"
         }
 
         return generateContent(
-            model = "gemini-1.5-pro",
+            model = "gemini-2.5-pro",
             messages = listOf("user" to userMessage),
             systemPrompt = systemPrompt
         )
@@ -259,7 +259,7 @@ RESPONSE FORMAT:
                 )
             )
 
-            val url = "$BASE_URL/gemini-1.5-pro:generateContent?key=$apiKey"
+            val url = "$BASE_URL/gemini-2.5-pro:generateContent?key=$apiKey"
             val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
                 .toRequestBody("application/json".toMediaType())
 
@@ -269,7 +269,7 @@ RESPONSE FORMAT:
                 .build()
 
             if (debug) {
-                Log.d(TAG, "Request with image: model=gemini-1.5-pro")
+                Log.d(TAG, "Request with image: model=gemini-2.5-pro")
             }
 
             client.newCall(httpRequest).execute().use { response ->
