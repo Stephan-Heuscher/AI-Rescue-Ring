@@ -2,7 +2,6 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="64dp"
     android:layout_height="64dp"
-    android:clickable="true"
     android:focusable="false">
 
     <TextView
@@ -13,7 +12,6 @@
         android:text="🛟"
         android:textSize="40sp"
         android:gravity="center"
-        android:clickable="true"
         android:focusable="false"
         android:visibility="visible" />
 
