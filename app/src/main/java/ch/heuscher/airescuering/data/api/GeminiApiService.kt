@@ -32,6 +32,7 @@ class GeminiApiService(
         ignoreUnknownKeys = true
         encodeDefaults = true
         prettyPrint = debug
+        isLenient = true
     }
 
     private val client: OkHttpClient by lazy {
@@ -84,6 +85,11 @@ class GeminiApiService(
                         role = "system",
                         parts = listOf(Part(text = it))
                     )
+                },
+                tools = if (model.contains("computer-use")) {
+                    listOf(Tool(computerUse = ComputerUse(environment = Environment.BROWSER)))
+                } else {
+                    null
                 }
             )
 
@@ -134,6 +140,84 @@ class GeminiApiService(
                 } else {
                     Result.failure(Exception("No text in response"))
                 }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating content", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Generate content with full conversation support (including function calls/responses)
+     * @param model The model to use
+     * @param contents Full conversation history
+     * @param systemPrompt Optional system instruction
+     * @param tools Optional tools to provide to the model
+     * @return Full GeminiResponse with function calls if present
+     */
+    suspend fun generateContentFull(
+        model: String,
+        contents: List<Content>,
+        systemPrompt: String? = null,
+        tools: List<Tool>? = null
+    ): Result<GeminiResponse> = withContext(Dispatchers.IO) {
+        try {
+            val request = GeminiRequest(
+                contents = contents,
+                generationConfig = GenerationConfig(
+                    temperature = 1.0,
+                    maxOutputTokens = 8192
+                ),
+                systemInstruction = systemPrompt?.let {
+                    Content(
+                        role = "system",
+                        parts = listOf(Part(text = it))
+                    )
+                },
+                tools = tools ?: if (model.contains("computer-use")) {
+                    listOf(Tool(computerUse = ComputerUse(environment = Environment.BROWSER)))
+                } else {
+                    null
+                }
+            )
+
+            val url = "$BASE_URL/$model:generateContent?key=$apiKey"
+            val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
+                .toRequestBody("application/json".toMediaType())
+
+            val httpRequest = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build()
+
+            if (debug) {
+                Log.d(TAG, "Request: $requestBody")
+            }
+
+            client.newCall(httpRequest).execute().use { response ->
+                val responseBody = response.body?.string() ?: ""
+
+                if (debug) {
+                    Log.d(TAG, "Response code: ${response.code}")
+                    Log.d(TAG, "Response body: $responseBody")
+                }
+
+                if (!response.isSuccessful) {
+                    val errorResponse = try {
+                        json.decodeFromString<GeminiErrorResponse>(responseBody)
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    val errorMessage = errorResponse?.error?.message
+                        ?: "API request failed with code ${response.code}"
+
+                    Log.e(TAG, "API error: $errorMessage")
+                    return@withContext Result.failure(Exception(errorMessage))
+                }
+
+                val geminiResponse = json.decodeFromString<GeminiResponse>(responseBody)
+                Result.success(geminiResponse)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error generating content", e)

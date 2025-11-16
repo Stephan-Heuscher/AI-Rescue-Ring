@@ -142,6 +142,14 @@ class AIAssistantAccessibilityService : AccessibilityService() {
     }
 
     /**
+     * Perform the recent apps action
+     */
+    fun performRecents(): Boolean {
+        Log.d(TAG, "Performing recents action")
+        return performGlobalAction(GLOBAL_ACTION_RECENTS)
+    }
+
+    /**
      * Perform a long press at the specified coordinates
      * @param x X coordinate (normalized 0-1000)
      * @param y Y coordinate (normalized 0-1000)
