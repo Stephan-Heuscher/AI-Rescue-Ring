@@ -132,14 +132,18 @@ class GeminiApiService(
                 }
 
                 val geminiResponse = json.decodeFromString<GeminiResponse>(responseBody)
-                val text = geminiResponse.candidates.firstOrNull()
+                val firstPart = geminiResponse.candidates.firstOrNull()
                     ?.content
                     ?.parts
                     ?.firstOrNull()
-                    ?.text
 
+                val text = firstPart?.text
                 if (text != null) {
                     Result.success(text)
+                } else if (firstPart?.functionCall != null) {
+                    val functionCall = firstPart.functionCall
+                    val actionDescription = "I want to perform action: ${functionCall.name}. However, I can only provide text responses in this mode. Please ask me to describe what you should do instead."
+                    Result.success(actionDescription)
                 } else {
                     Result.failure(Exception("No text in response"))
                 }
@@ -375,14 +379,30 @@ Be helpful and specific about which UI elements to interact with if visible in t
                 }
 
                 val geminiResponse = json.decodeFromString<GeminiResponse>(responseBody)
-                val text = geminiResponse.candidates.firstOrNull()
+                val firstPart = geminiResponse.candidates.firstOrNull()
                     ?.content
                     ?.parts
                     ?.firstOrNull()
-                    ?.text
 
+                val text = firstPart?.text
                 if (text != null) {
                     Result.success(text)
+                } else if (firstPart?.functionCall != null) {
+                    val functionCall = firstPart.functionCall
+                    val actionDescription = when (functionCall.name) {
+                        "click_at" -> {
+                            val x = functionCall.args["x"]?.toString()?.toIntOrNull() ?: 0
+                            val y = functionCall.args["y"]?.toString()?.toIntOrNull() ?: 0
+                            "📱 I see you want to interact with the screen. I suggest tapping at position ($x, $y) on your screen. Would you like me to describe what's at that location?"
+                        }
+                        "scroll" -> "📜 I suggest scrolling the screen to see more content."
+                        "type_text" -> {
+                            val textToType = functionCall.args["text"]?.toString() ?: ""
+                            "⌨️ I suggest typing: \"$textToType\""
+                        }
+                        else -> "🔧 I detected an action: ${functionCall.name}. Let me know if you'd like me to explain what to do."
+                    }
+                    Result.success(actionDescription)
                 } else {
                     Result.failure(Exception("No text in response"))
                 }
