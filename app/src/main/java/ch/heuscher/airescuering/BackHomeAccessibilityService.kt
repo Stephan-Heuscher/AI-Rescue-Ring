@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.RequiresApi
 import ch.heuscher.airescuering.di.ServiceLocator
@@ -20,6 +21,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.cancel
+import java.util.concurrent.Executors
+import java.util.function.Consumer
 
 /**
  * Accessibility service for performing system navigation actions
@@ -188,46 +191,21 @@ class BackHomeAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Take a screenshot of the current screen
-     * Requires Android R (API 30+) and canTakeScreenshot permission
+     * Take a screenshot using AccessibilityService API
+     * Requires Android R (API 30) or higher
+     * @param callback Called with the screenshot bitmap on success, or null on failure
      */
     fun takeScreenshot(callback: (Bitmap?) -> Unit) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            Log.e(TAG, "takeScreenshot: Requires Android R (API 30+)")
+            Log.e(TAG, "Screenshot API requires Android R (API 30) or higher")
             callback(null)
             return
         }
 
         try {
-            Log.d(TAG, "takeScreenshot: Requesting screenshot...")
-            takeScreenshot(
-                android.view.Display.DEFAULT_DISPLAY,
-                application.mainExecutor,
-                object : TakeScreenshotCallback {
-                    override fun onSuccess(screenshotResult: ScreenshotResult) {
-                        Log.d(TAG, "takeScreenshot: Success!")
-                        try {
-                            val hardwareBuffer = screenshotResult.hardwareBuffer
-                            val bitmap = hardwareBufferToBitmap(hardwareBuffer)
-                            hardwareBuffer.close()
-                            screenshotResult.colorSpace
-
-                            Log.d(TAG, "takeScreenshot: Bitmap created: ${bitmap.width}x${bitmap.height}")
-                            callback(bitmap)
-                        } catch (e: Exception) {
-                            Log.e(TAG, "takeScreenshot: Error creating bitmap", e)
-                            callback(null)
-                        }
-                    }
-
-                    override fun onFailure(errorCode: Int) {
-                        Log.e(TAG, "takeScreenshot: Failed with error code: $errorCode")
-                        callback(null)
-                    }
-                }
-            )
+            takeScreenshotInternal(callback)
         } catch (e: Exception) {
-            Log.e(TAG, "takeScreenshot: Exception", e)
+            Log.e(TAG, "Error taking screenshot", e)
             callback(null)
         }
     }
@@ -242,6 +220,42 @@ class BackHomeAccessibilityService : AccessibilityService() {
 
         // Convert to software bitmap for easier manipulation
         return bitmap.copy(Bitmap.Config.ARGB_8888, false)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.R)
+    private fun takeScreenshotInternal(callback: (Bitmap?) -> Unit) {
+        val executor = Executors.newSingleThreadExecutor()
+
+        takeScreenshot(
+            Display.DEFAULT_DISPLAY,
+            executor,
+            object : TakeScreenshotCallback {
+                override fun onSuccess(screenshot: ScreenshotResult) {
+                    try {
+                        val bitmap = Bitmap.wrapHardwareBuffer(
+                            screenshot.hardwareBuffer,
+                            screenshot.colorSpace
+                        )
+                        Log.d(TAG, "Screenshot taken successfully: ${bitmap?.width}x${bitmap?.height}")
+                        callback(bitmap)
+
+                        // Clean up
+                        screenshot.hardwareBuffer.close()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error processing screenshot", e)
+                        callback(null)
+                    } finally {
+                        executor.shutdown()
+                    }
+                }
+
+                override fun onFailure(errorCode: Int) {
+                    Log.e(TAG, "Failed to take screenshot. Error code: $errorCode")
+                    callback(null)
+                    executor.shutdown()
+                }
+            }
+        )
     }
 
     companion object {
