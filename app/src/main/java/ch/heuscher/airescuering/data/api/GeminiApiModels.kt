@@ -99,7 +99,7 @@ data class Tool(
  */
 @Serializable
 data class ComputerUse(
-    val environment: String = "ENVIRONMENT_BROWSER",
+    val environment: String = "ENVIRONMENT_MOBILE_PHONE",
     @SerialName("excluded_predefined_functions")
     val excludedPredefinedFunctions: List<String>? = null
 )
@@ -110,6 +110,7 @@ data class ComputerUse(
 object Environment {
     const val BROWSER = "ENVIRONMENT_BROWSER"
     const val DESKTOP = "ENVIRONMENT_DESKTOP"
+    const val MOBILE_PHONE = "ENVIRONMENT_MOBILE_PHONE"
 }
 
 /**

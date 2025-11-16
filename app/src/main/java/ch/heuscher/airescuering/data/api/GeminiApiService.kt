@@ -84,7 +84,10 @@ class GeminiApiService(
                     )
                 },
                 tools = if (model.contains("computer-use")) {
-                    listOf(Tool(computerUse = ComputerUse(environment = Environment.BROWSER)))
+                    listOf(Tool(computerUse = ComputerUse(
+                        environment = Environment.MOBILE_PHONE,
+                        excludedPredefinedFunctions = listOf("open_browser")
+                    )))
                 } else {
                     null
                 }
@@ -172,7 +175,10 @@ class GeminiApiService(
                     )
                 },
                 tools = tools ?: if (model.contains("computer-use")) {
-                    listOf(Tool(computerUse = ComputerUse(environment = Environment.BROWSER)))
+                    listOf(Tool(computerUse = ComputerUse(
+                        environment = Environment.MOBILE_PHONE,
+                        excludedPredefinedFunctions = listOf("open_browser")
+                    )))
                 } else {
                     null
                 }
