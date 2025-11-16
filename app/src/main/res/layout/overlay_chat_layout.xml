@@ -19,13 +19,12 @@
         android:focusable="true"
         android:focusableInTouchMode="true">
 
-        <TextView
+        <ImageView
             android:id="@+id/floating_dot"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:text="🛟"
-            android:textSize="40sp"
-            android:gravity="center"
+            android:src="@drawable/ic_rescue_ring"
+            android:contentDescription="@string/app_name"
             android:clickable="true"
             android:focusable="true"
             android:focusableInTouchMode="true"
@@ -51,15 +50,14 @@
             android:background="#6200EE">
 
             <!-- Rescue Ring in Top Bar -->
-            <TextView
+            <ImageView
                 android:id="@+id/topRescueRing"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="8dp"
-                android:text="🛟"
-                android:textSize="40sp"
-                android:gravity="center" />
+                android:src="@drawable/ic_rescue_ring"
+                android:contentDescription="@string/app_name" />
 
             <!-- Title and Close Button -->
             <LinearLayout
