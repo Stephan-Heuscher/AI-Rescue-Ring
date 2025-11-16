@@ -313,12 +313,12 @@ class OverlayService : Service() {
                     Log.d(TAG, "handleTap: Overlay removed")
                 }
 
-                // Wait longer for system to fully settle after hiding overlay
-                // The system needs time to remove the overlay window and update the window state
-                Log.d(TAG, "handleTap: Waiting 500ms for system to settle...")
-                kotlinx.coroutines.delay(500)
+                // Wait for system to settle after hiding overlay
+                // Increased to 2000ms to ensure screenshot capture succeeds
+                Log.d(TAG, "handleTap: Waiting 2000ms for system to settle...")
+                kotlinx.coroutines.delay(2000)
 
-                // Capture screenshot BEFORE recreating overlay or launching activity
+                // Capture screenshot BEFORE launching activity
                 Log.d(TAG, "handleTap: Capturing screenshot...")
                 val screenshotBase64 = ch.heuscher.airescuering.util.ScreenCaptureManager.captureScreenAsBase64()
 

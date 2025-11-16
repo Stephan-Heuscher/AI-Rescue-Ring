@@ -67,6 +67,7 @@ class AIHelperActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d(TAG, "=== onCreate: START ===")
         setContentView(R.layout.activity_ai_helper)
 
         initViews()
@@ -76,6 +77,8 @@ class AIHelperActivity : AppCompatActivity() {
 
         // Get screenshot from Intent (captured before activity launch)
         val screenshotBase64 = intent.getStringExtra("screenshot_base64")
+        Log.d(TAG, "onCreate: screenshotBase64 is ${if (screenshotBase64 == null) "NULL" else "present (${screenshotBase64.length} chars)"}")
+        
         if (screenshotBase64 != null) {
             // Convert base64 to bitmap and set as background
             try {
@@ -84,7 +87,9 @@ class AIHelperActivity : AppCompatActivity() {
                 if (bitmap != null) {
                     currentScreenshot = bitmap
                     setScreenshotBackground(bitmap)
-                    Log.d(TAG, "Screenshot set as background: ${bitmap.width}x${bitmap.height}")
+                    Log.d(TAG, "Screenshot set as background from intent: ${bitmap.width}x${bitmap.height}")
+                } else {
+                    Log.e(TAG, "Failed to decode bitmap from base64")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to decode screenshot from Intent", e)
@@ -355,13 +360,17 @@ class AIHelperActivity : AppCompatActivity() {
      * STAGE 2: Execute the approved plan using computer use model
      */
     private fun executePlan(plan: String) {
+        Log.d(TAG, "executePlan: ENTER")
         val request = currentUserRequest ?: return
         val screenshot = currentScreenshot
+        Log.d(TAG, "executePlan: currentScreenshot is ${if (screenshot == null) "NULL" else "available (${screenshot.width}x${screenshot.height})"}")
 
         if (screenshot == null) {
+            Log.e(TAG, "executePlan: FAIL - No screenshot available, showing toast")
             Toast.makeText(this, "No screenshot available for execution", Toast.LENGTH_SHORT).show()
             return
         }
+        Log.d(TAG, "executePlan: Screenshot OK, proceeding with execution")
 
         // Clear previous execution history
         executionHistory.clear()
@@ -393,11 +402,16 @@ class AIHelperActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                // Hide activity so AI can interact with the actual apps
+                Log.d(TAG, "Stage 2: Starting execution with computer use model...")
+                
+                // Move to background so AI can interact with the actual apps
+                moveTaskToBack(true)
+                kotlinx.coroutines.delay(500) // Give time for UI to go to background
+                
+                // Hide activity after moving to background (this keeps the activity alive)
                 hideActivity()
-                kotlinx.coroutines.delay(300) // Give time for UI to hide
 
-                Log.d(TAG, "Stage 2: Executing plan with computer use model...")
+                Log.d(TAG, "Stage 2: Activity moved to background, executing round 1...")
                 executeRound(service, request, plan, screenshot, 1)
             } catch (e: Exception) {
                 Log.e(TAG, "Stage 2: Error during execution", e)
