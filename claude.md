@@ -1,82 +1,120 @@
-# Chat Overlay Implementation Notes
+# AI Rescue Ring - Project Context
 
-## Overview
-This document describes the implementation of the chat overlay with the rescue ring positioned at the top middle.
+## Project Overview
+Android app providing AI-powered assistance through a floating rescue ring UI. Users can access AI help from anywhere on their device via a persistent floating button.
 
-## Implementation Approach
+## Tech Stack
+- **Language**: Kotlin
+- **Platform**: Android
+- **AI Model**: Gemini 2.5 Computer Use Preview (gemini-2.5-computer-use-preview-10-2025)
+- **API**: Google Generative AI API
+- **UI**: Material Design components, RecyclerView for chat
 
-### 1. Chat Overlay Layout
-- Created `overlay_chat_layout.xml` with:
-  - Rescue ring positioned at top center (when minimized)
-  - Full-screen chat interface (when expanded)
-  - Rescue ring integrated into the top bar of the chat
-  - Chat messages, input field, voice button, and send button
+## Key Requirements
 
-### 2. Inline Action Buttons
-- Modified `item_chat_message.xml` to include:
-  - "Approve" button (✓ Approve)
-  - "Refine" button (✎ Refine)
-  - Buttons are hidden by default and shown only for AI suggestions
+### AI Model Configuration
+- **Default Model**: `gemini-2.5-computer-use-preview-10-2025`
+  - Configured in: `app/src/main/java/ch/heuscher/airescuering/data/local/SecureAIHelperDataSource.kt:33`
+- **Computer Use**: Enabled with proper tool definitions
+- **User Approval Flow**: ALL AI-suggested actions MUST be approved by user via dialog before execution
 
-### 3. Screenshot Functionality
-**Decision: NOT IMPLEMENTED**
+### User Interface
+- **Chat Interface**: Semi-transparent overlay over the current screen
+- **Floating Ring**: Persistent accessibility service-based overlay
+- **Message Display**: RecyclerView with user/assistant message differentiation
+- **Voice Input**: Supported via Android's RecognizerIntent
 
-MediaProjection API was considered but rejected because:
-- Requires explicit user permission for each screenshot
-- Shows persistent notification during capture
-- Requires user interaction to grant permission via system dialog
-- Too cumbersome for the intended user experience
+### API Integration
+- **Service**: `app/src/main/java/ch/heuscher/airescuering/data/api/GeminiApiService.kt`
+- **Models**: `app/src/main/java/ch/heuscher/airescuering/data/api/GeminiApiModels.kt`
+- **Tool Support**: Computer Use tool with ENVIRONMENT_BROWSER
+- **Response Types**: Text responses OR function calls (requires user approval)
 
-**Alternative considered:** Taking screenshots is not essential for the core functionality. The overlay can be hidden during AI command execution without requiring a screenshot.
-
-### 4. Overlay Visibility Management
-- Hide overlay when AI commands are being executed
-- Show overlay when user taps the rescue ring
-- Minimize to rescue ring only when user closes the chat
-
-### 5. Key Components
-
-#### ChatOverlayManager
-- Manages the chat overlay lifecycle
-- Handles showing/hiding the chat interface
-- Manages the transition between minimized (ring only) and expanded (full chat) states
-
-#### Modified OverlayService
-- Uses the new chat overlay layout instead of just the rescue ring
-- Coordinates with ChatOverlayManager for state management
-- Handles overlay visibility during AI command execution
-
-#### Modified ChatAdapter
-- Supports inline action buttons for AI suggestions
-- Handles button click events for approve/refine actions
-- Manages button visibility based on message type
+### Data Storage
+- **API Key**: Stored unencrypted in SharedPreferences for cloud backup support
+- **Preferences**: `ai_helper_prefs` in standard SharedPreferences
+- **Configuration**: AIHelperConfig domain model
 
 ## Architecture
 
+### Key Files
+- **AIHelperActivity.kt**: Main chat interface with approval dialogs
+- **GeminiApiService.kt**: API communication layer
+- **GeminiApiModels.kt**: Request/response data models with Computer Use support
+- **SecureAIHelperDataSource.kt**: Local data persistence
+- **AIHelperConfig.kt**: Domain model for configuration
+
+### Function Call Flow
+1. User sends message
+2. API returns `GeminiContentResult` (text OR functionCall)
+3. If functionCall → show approval dialog (`showActionApprovalDialog`)
+4. User approves/denies → decision recorded in chat
+5. (Action execution not yet implemented)
+
+## Development Guidelines
+
+### Git Workflow
+- Commit messages should be descriptive and follow conventional commits format
+- Include context in commit messages (what/why)
+- Test changes before committing when possible
+- Branch naming: Claude automatically creates branches with session IDs
+
+### Code Conventions
+- **File Operations**: Always prefer `Edit` over `Write` for existing files
+- **Read First**: Always use `Read` tool before editing files
+- **Kotlin Style**: Follow existing code patterns in the codebase
+- **Emojis**: Never use emojis unless explicitly requested by user
+- **Logging**: Use Android Log.d/Log.e with appropriate tags
+
+### Model Response Handling
+When handling Gemini API responses:
+```kotlin
+result.onSuccess { response ->
+    when {
+        response.hasText -> {
+            // Display text in chat
+        }
+        response.hasFunctionCall -> {
+            // Show approval dialog
+            showActionApprovalDialog(response.functionCall!!)
+        }
+    }
+}
 ```
-OverlayService
-    ├── ChatOverlayManager
-    │   ├── Shows/hides chat interface
-    │   ├── Manages rescue ring state
-    │   └── Handles user interactions
-    ├── GestureDetector (existing)
-    │   └── Detects taps on rescue ring
-    └── ChatAdapter
-        ├── Displays messages
-        └── Handles action buttons
-```
 
-## User Flow
+## Important Constraints
 
-1. User sees floating rescue ring at top middle of screen
-2. User taps rescue ring → Chat overlay expands to full screen
-3. User interacts with AI → Messages appear with optional action buttons
-4. When AI command is executed → Overlay automatically hides temporarily
-5. User taps close button → Chat collapses back to rescue ring only
+### Computer Use Tool
+- Tool must be included in API requests when using computer-use model
+- Format: `Tool(computerUse = ComputerUse(environment = "ENVIRONMENT_BROWSER"))`
+- Model expects tool definitions or will return error
 
-## Technical Notes
+### User Approval
+- **Critical**: NO action execution without explicit user approval
+- Approval dialog shows: action name, parameters, approve/deny buttons
+- User decisions recorded in chat history
+- Currently shows toast notification (execution not implemented)
 
-- No additional permissions required (MediaProjection not used)
-- Maintains existing overlay permissions
-- Uses existing WindowManager overlay system
-- Integrates with existing GeminiApiService for AI interactions
+## Common Tasks
+
+### Changing AI Model
+Edit `DEFAULT_MODEL` in `SecureAIHelperDataSource.kt:33`
+
+### Modifying System Prompt
+Edit `systemPrompt` in `GeminiApiService.kt:157-176` (generateAssistanceSuggestion method)
+
+### Adding New Tool Definitions
+Add to `GeminiApiModels.kt` following the pattern of `Tool` and `ComputerUse` classes
+
+### Updating API Request Structure
+Modify `GeminiRequest` in `GeminiApiModels.kt` and corresponding serialization in `GeminiApiService.kt`
+
+## Testing Notes
+- Gradle builds may fail in sandboxed environments (network restrictions)
+- Focus on code correctness and architecture
+- Test compilation when possible, but network errors are expected
+
+## Privacy & Security
+- API keys stored unencrypted for backup compatibility (documented in PRIVACY_POLICY.md)
+- No telemetry or analytics
+- User messages not logged externally
