@@ -1,7 +1,8 @@
-package ch.heuscher.airescuering.data.api
+﻿package ch.heuscher.airescuering.data.api
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Data models for Gemini API requests and responses
@@ -13,7 +14,8 @@ data class GeminiRequest(
     @SerialName("generationConfig")
     val generationConfig: GenerationConfig? = null,
     @SerialName("systemInstruction")
-    val systemInstruction: Content? = null
+    val systemInstruction: Content? = null,
+    val tools: List<Tool>? = null
 )
 
 @Serializable
@@ -24,7 +26,13 @@ data class Content(
 
 @Serializable
 data class Part(
-    val text: String? = null
+    val text: String? = null,
+    @SerialName("functionCall")
+    val functionCall: FunctionCall? = null,
+    @SerialName("functionResponse")
+    val functionResponse: FunctionResponse? = null,
+    @SerialName("inlineData")
+    val inlineData: InlineData? = null
 )
 
 @Serializable
@@ -75,4 +83,84 @@ data class GeminiError(
     val code: Int,
     val message: String,
     val status: String
+)
+
+/**
+ * Tool configuration for Gemini API
+ */
+@Serializable
+data class Tool(
+    @SerialName("computer_use")
+    val computerUse: ComputerUse? = null
+)
+
+/**
+ * Computer Use tool configuration
+ */
+@Serializable
+data class ComputerUse(
+    val environment: String = "ENVIRONMENT_BROWSER",
+    @SerialName("excluded_predefined_functions")
+    val excludedPredefinedFunctions: List<String>? = null
+)
+
+/**
+ * Environment constants for Computer Use
+ * Note: Only ENVIRONMENT_BROWSER is supported by the API.
+ * For mobile/Android use, use BROWSER with excluded functions.
+ */
+object Environment {
+    const val BROWSER = "ENVIRONMENT_BROWSER"
+}
+
+/**
+ * Predefined functions that can be excluded for mobile environments
+ */
+object ExcludedFunctions {
+    // Functions not suitable for mobile use
+    val MOBILE_EXCLUDED = listOf(
+        "open_web_browser",  // Not applicable on mobile apps
+        "search",            // Browser-specific
+        "navigate",          // Browser navigation
+        "hover_at",          // No hover on touchscreens
+        "go_forward",        // Browser navigation
+        "key_combination"    // Limited keyboard on mobile
+    )
+}
+
+/**
+ * Function call from the model
+ */
+@Serializable
+data class FunctionCall(
+    val name: String,
+    val args: Map<String, JsonElement> = emptyMap()
+)
+
+/**
+ * Function response back to the model
+ */
+@Serializable
+data class FunctionResponse(
+    val name: String,
+    val response: Map<String, JsonElement> = emptyMap()
+)
+
+/**
+ * Inline data for images/screenshots
+ */
+@Serializable
+data class InlineData(
+    @SerialName("mimeType")
+    val mimeType: String,
+    val data: String  // Base64 encoded
+)
+
+/**
+ * Safety decision from the model
+ */
+@Serializable
+data class SafetyDecision(
+    val decision: String,  // "require_confirmation", "allow", "block"
+    val explanation: String? = null
 )

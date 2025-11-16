@@ -1,19 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="?android:attr/colorBackground"
+    android:background="#80000000"
     tools:context=".AIHelperActivity">
+
+<!-- Screenshot Background (dimmed) -->
+<ImageView
+    android:id="@+id/screenshotBackground"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scaleType="centerCrop"
+    android:alpha="0.3"
+    android:visibility="gone" />
+
+<!-- Dimming overlay on top of screenshot -->
+<View
+    android:id="@+id/dimmingOverlay"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#60000000"
+    android:visibility="gone" />
+
+<androidx.cardview.widget.CardView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:layout_margin="16dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp"
+    app:cardBackgroundColor="#FFFFFF">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#FFFFFF"
+    android:maxHeight="600dp">
 
     <!-- Top Bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="?attr/colorPrimary"
+        android:background="#D91976D2"
         android:padding="16dp"
         android:gravity="center_vertical"
         android:elevation="4dp">
@@ -40,8 +73,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messagesRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="400dp"
         android:padding="16dp"
         android:paddingBottom="24dp"
         android:clipToPadding="false"
@@ -62,11 +94,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="12dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         android:paddingTop="16dp"
-        android:paddingBottom="16dp"
+        android:paddingBottom="32dp"
         android:gravity="center_vertical"
-        android:background="?android:attr/colorBackground"
+        android:background="#F5F5F5"
         android:elevation="8dp">
 
         <EditText
@@ -77,28 +110,44 @@
             android:hint="Ask me anything..."
             android:minHeight="56dp"
             android:background="@android:drawable/edit_text"
-            android:padding="16dp"
+            android:padding="18dp"
             android:inputType="textCapSentences|textMultiLine"
             android:maxLines="4"
-            android:textSize="16sp" />
+            android:textSize="17sp"
+            android:lineSpacingExtra="2dp" />
 
         <Button
-            android:id="@+id/voiceButton"
+            android:id="@+id/screenshotButton"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:text="🎤"
+            android:text="📸"
             android:textSize="20sp"
             android:layout_marginStart="8dp"
             style="?android:attr/borderlessButtonStyle" />
 
         <Button
-            android:id="@+id/sendButton"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:text="➤"
+            android:id="@+id/voiceButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:text="🎤"
             android:textSize="20sp"
             android:layout_marginStart="4dp"
+            style="?android:attr/borderlessButtonStyle" />
+
+        <Button
+            android:id="@+id/sendButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:text="➤"
+            android:textSize="24sp"
+            android:layout_marginStart="2dp"
+            android:background="#2196F3"
+            android:textColor="#FFFFFF"
             style="?android:attr/borderlessButtonStyle" />
     </LinearLayout>
 
 </LinearLayout>
+
+</androidx.cardview.widget.CardView>
+
+</FrameLayout>

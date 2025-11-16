@@ -7,8 +7,8 @@ package ch.heuscher.airescuering.util
 object AppConstants {
 
     // Overlay dimensions and appearance
-    const val DOT_SIZE_DP = 48
-    const val OVERLAY_LAYOUT_SIZE_DP = 64  // Layout size for emoji button
+    const val DOT_SIZE_DP = 64
+    const val OVERLAY_LAYOUT_SIZE_DP = 80  // Layout size for emoji button
     const val DOT_STROKE_WIDTH_DP = 3
 
     // Navigation bar margins

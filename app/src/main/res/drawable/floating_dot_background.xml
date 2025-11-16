@@ -7,8 +7,8 @@
         <shape android:shape="oval">
             <solid android:color="@color/floating_dot_color" />
             <size
-                android:width="48dp"
-                android:height="48dp" />
+                android:width="64dp"
+                android:height="64dp" />
         </shape>
     </item>
 
@@ -45,8 +45,8 @@
                 android:width="2dp"
                 android:color="@android:color/white" />
             <size
-                android:width="48dp"
-                android:height="48dp" />
+                android:width="64dp"
+                android:height="64dp" />
         </shape>
     </item>
 

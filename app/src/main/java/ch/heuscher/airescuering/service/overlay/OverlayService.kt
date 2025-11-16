@@ -12,7 +12,9 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import ch.heuscher.airescuering.AIHelperActivity
 import ch.heuscher.airescuering.BackHomeAccessibilityService
+import ch.heuscher.airescuering.MainActivity
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.model.DotPosition
 import ch.heuscher.airescuering.domain.model.Gesture
@@ -26,6 +28,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Refactored OverlayService with clear separation of concerns.
@@ -65,7 +68,8 @@ class OverlayService : Service() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == AppConstants.ACTION_UPDATE_SETTINGS) {
                 serviceScope.launch {
-                    updateOverlayAppearance()
+                    // Settings updated - gesture mode will be updated in observeSettings
+                    Log.d(TAG, "Settings changed via broadcast")
                 }
             }
         }
@@ -232,6 +236,7 @@ class OverlayService : Service() {
         serviceScope.launch {
             when (gesture) {
                 Gesture.TAP -> handleTap()
+                Gesture.QUADRUPLE_TAP -> handleQuadrupleTap()
                 Gesture.LONG_PRESS -> handleLongPress()
                 else -> { /* No-op */ }
             }
@@ -247,6 +252,23 @@ class OverlayService : Service() {
         } else {
             chatOverlayManager.showChat()
             isChatVisible = true
+        }
+    }
+
+    private fun handleQuadrupleTap() {
+        Log.d(TAG, "handleQuadrupleTap: 4+ taps detected, switching to main app")
+
+        serviceScope.launch {
+            try {
+                // Launch MainActivity
+                val intent = Intent(this@OverlayService, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+                startActivity(intent)
+                Log.d(TAG, "handleQuadrupleTap: MainActivity launched successfully")
+            } catch (e: Exception) {
+                Log.e(TAG, "handleQuadrupleTap: Error launching MainActivity", e)
+            }
         }
     }
 
