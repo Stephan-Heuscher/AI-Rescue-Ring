@@ -216,7 +216,7 @@ class UIActionExecutor(private val context: Context) {
         val actualY = (y / 1000f) * screenHeight
         val scrollDistance = (magnitude / 1000f) * minOf(screenWidth, screenHeight)
 
-        val (startX, startY, endX, endY) = when (direction.lowercase()) {
+        val coordinates = when (direction.lowercase()) {
             "up" -> {
                 Pair(actualX.toInt(), (actualY + scrollDistance / 2).toInt()) to
                         Pair(actualX.toInt(), (actualY - scrollDistance / 2).toInt())
@@ -235,6 +235,11 @@ class UIActionExecutor(private val context: Context) {
             }
             else -> return false
         }
+
+        val startX = coordinates.first.first
+        val startY = coordinates.first.second
+        val endX = coordinates.second.first
+        val endY = coordinates.second.second
 
         // Convert back to normalized coordinates for the service
         val normStartX = (startX.toFloat() / screenWidth * 1000).toInt()
