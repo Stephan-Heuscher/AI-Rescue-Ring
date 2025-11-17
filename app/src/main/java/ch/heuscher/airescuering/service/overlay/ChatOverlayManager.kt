@@ -336,6 +336,7 @@ class ChatOverlayManager(
      * Process a screenshot and display it as a deletable preview
      */
     fun processScreenshot(bitmap: Bitmap) {
+        Log.d(TAG, "Processing screenshot: ${bitmap.width}x${bitmap.height}")
         currentScreenshotBitmap = bitmap
 
         // Show message that screenshot was captured
@@ -343,6 +344,9 @@ class ChatOverlayManager(
             // Display screenshot preview
             screenshotPreviewImage?.setImageBitmap(bitmap)
             screenshotPreviewContainer?.visibility = View.VISIBLE
+
+            Log.d(TAG, "Screenshot preview displayed, container visible: ${screenshotPreviewContainer?.visibility == View.VISIBLE}")
+            Log.d(TAG, "Screenshot image set: ${screenshotPreviewImage?.drawable != null}")
 
             Toast.makeText(context, "Screenshot captured! It will be sent with your next message.", Toast.LENGTH_SHORT).show()
 
