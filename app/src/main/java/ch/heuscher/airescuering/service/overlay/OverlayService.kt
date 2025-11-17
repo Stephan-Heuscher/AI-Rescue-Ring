@@ -51,6 +51,9 @@ class OverlayService : Service() {
     private lateinit var orientationHandler: OrientationHandler
     private var chatOverlayManager: ChatOverlayManager? = null
 
+    // Pending screenshot to be processed after overlay is shown
+    private var pendingScreenshot: android.graphics.Bitmap? = null
+
     // Service scope for coroutines
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -341,7 +344,14 @@ class OverlayService : Service() {
                 AIRescueRingAccessibilityService.instance?.let { accessibilityService ->
                     accessibilityService.onScreenshotCaptured = { bitmap ->
                         Log.d(TAG, "Screenshot captured, passing to chat overlay")
-                        chatOverlayManager?.processScreenshot(bitmap)
+                        if (chatOverlayManager?.isShowing() == true) {
+                            // Overlay is already shown, process immediately
+                            chatOverlayManager?.processScreenshot(bitmap)
+                        } else {
+                            // Overlay not shown yet, store for later
+                            Log.d(TAG, "Storing screenshot as pending (overlay not shown yet)")
+                            pendingScreenshot = bitmap
+                        }
                     }
                     Log.d(TAG, "Screenshot callback registered with accessibility service")
                 } ?: run {
@@ -412,6 +422,13 @@ class OverlayService : Service() {
             requestScreenshot {
                 Log.d(TAG, "Screenshot captured, now showing overlay")
                 chatOverlayManager?.show()
+
+                // Process any pending screenshot after overlay is shown
+                pendingScreenshot?.let { bitmap ->
+                    Log.d(TAG, "Processing pending screenshot after overlay shown")
+                    chatOverlayManager?.processScreenshot(bitmap)
+                    pendingScreenshot = null
+                }
             }
         }
     }
