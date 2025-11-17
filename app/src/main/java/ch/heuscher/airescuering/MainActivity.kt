@@ -87,11 +87,14 @@ class MainActivity : AppCompatActivity() {
         settingsRepository = ServiceLocator.settingsRepository
         Log.d(TAG, "onCreate: SettingsRepository obtained")
 
+        // Check for duplicate accessibility service entries
+        AccessibilityServiceHelper.detectAndLogDuplicates(this)
+
         initializeViews()
         setupClickListeners()
         observeSettings()
         updateUI()
-        
+
         Log.d(TAG, "onCreate: MainActivity initialization complete")
     }
 
@@ -307,9 +310,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun hasAccessibilityPermission(): Boolean {
-        val enabledServices = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
-        val serviceComponent = ComponentName(this, BackHomeAccessibilityService::class.java).flattenToString()
-        return enabledServices?.split(":")?.contains(serviceComponent) == true
+        return AccessibilityServiceHelper.isServiceEnabled(this)
     }
 
     private fun hasAllRequiredPermissions(): Boolean {

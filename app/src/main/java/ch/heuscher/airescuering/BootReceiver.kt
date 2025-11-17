@@ -16,8 +16,11 @@ class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            // Check for duplicate accessibility service entries
+            AccessibilityServiceHelper.detectAndLogDuplicates(context)
+
             // Check if overlay permissions and accessibility are enabled
-            if (hasOverlayPermission(context) && isAccessibilityServiceEnabled(context)) {
+            if (hasOverlayPermission(context) && AccessibilityServiceHelper.isServiceEnabled(context)) {
                 // Initialize ServiceLocator
                 ServiceLocator.initialize(context)
 
@@ -44,27 +47,5 @@ class BootReceiver : BroadcastReceiver() {
         } else {
             true
         }
-    }
-
-    private fun isAccessibilityServiceEnabled(context: Context): Boolean {
-        val accessibilityEnabled = try {
-            Settings.Secure.getInt(
-                context.contentResolver,
-                Settings.Secure.ACCESSIBILITY_ENABLED
-            )
-        } catch (e: Exception) {
-            0
-        }
-
-        if (accessibilityEnabled == 1) {
-            val serviceString = Settings.Secure.getString(
-                context.contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-            ) ?: return false
-
-            return serviceString.contains(context.packageName + "/" + BackHomeAccessibilityService::class.java.name)
-        }
-
-        return false
     }
 }

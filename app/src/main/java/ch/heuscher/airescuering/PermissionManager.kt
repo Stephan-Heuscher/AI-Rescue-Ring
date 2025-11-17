@@ -24,7 +24,7 @@ class PermissionManager(private val context: Context) {
      * Check if accessibility service is enabled
      */
     fun hasAccessibilityPermission(): Boolean {
-        return BackHomeAccessibilityService.isServiceEnabled()
+        return AccessibilityServiceHelper.isServiceEnabled(context)
     }
 
     /**
