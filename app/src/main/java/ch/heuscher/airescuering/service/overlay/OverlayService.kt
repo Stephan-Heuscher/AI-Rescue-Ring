@@ -355,7 +355,7 @@ class OverlayService : Service() {
         }
     }
 
-    private fun requestScreenshot() {
+    private fun requestScreenshot(onComplete: (() -> Unit)? = null) {
         Log.d(TAG, "Screenshot requested")
         val accessibilityService = BackHomeAccessibilityService.instance
         if (accessibilityService != null) {
@@ -375,6 +375,12 @@ class OverlayService : Service() {
                     updateHandler.postDelayed({
                         Log.d(TAG, "Showing chat overlay after screenshot")
                         chatOverlayManager?.show()
+                        onComplete?.invoke()
+                    }, 200)
+                } else {
+                    // If overlay wasn't visible, call onComplete after screenshot is taken
+                    updateHandler.postDelayed({
+                        onComplete?.invoke()
                     }, 200)
                 }
             }, 100)
@@ -386,24 +392,27 @@ class OverlayService : Service() {
                 "Please enable Accessibility Service for screenshot feature",
                 android.widget.Toast.LENGTH_LONG
             ).show()
+            onComplete?.invoke()
         }
     }
 
     private fun toggleChatOverlay() {
         Log.d(TAG, "toggleChatOverlay: Toggling chat overlay")
 
-        // Check if we're about to show the overlay (not hide it)
-        val wasVisible = chatOverlayManager?.isShowing() == true
+        // Check if overlay is currently visible
+        val isCurrentlyVisible = chatOverlayManager?.isShowing() == true
 
-        chatOverlayManager?.toggle()
-
-        // If we just showed the overlay (it wasn't visible before), auto-capture screenshot
-        if (!wasVisible) {
-            Log.d(TAG, "Chat overlay shown, auto-capturing screenshot")
-            // Small delay to ensure overlay is fully shown
-            updateHandler.postDelayed({
-                requestScreenshot()
-            }, 150)
+        if (isCurrentlyVisible) {
+            // If visible, just hide it
+            Log.d(TAG, "Hiding chat overlay")
+            chatOverlayManager?.hide()
+        } else {
+            // If not visible, capture screenshot FIRST, then show overlay
+            Log.d(TAG, "Capturing screenshot before showing overlay")
+            requestScreenshot {
+                Log.d(TAG, "Screenshot captured, now showing overlay")
+                chatOverlayManager?.show()
+            }
         }
     }
 
