@@ -68,6 +68,7 @@ class ChatOverlayManager(
     private var adapter: ChatOverlayAdapter? = null
     private var geminiService: GeminiApiService? = null
     private var currentScreenshotBitmap: Bitmap? = null
+    private var pendingScreenshot: Bitmap? = null
 
     // Callbacks
     var onHideRequest: (() -> Unit)? = null
@@ -121,6 +122,13 @@ class ChatOverlayManager(
 
             // Add welcome message
             addWelcomeMessage()
+
+            // Process any pending screenshot now that views are initialized
+            pendingScreenshot?.let { bitmap ->
+                Log.d(TAG, "Processing pending screenshot after show()")
+                processScreenshotInternal(bitmap)
+                pendingScreenshot = null
+            }
 
             Log.d(TAG, "Chat overlay shown successfully")
         } catch (e: Exception) {
@@ -336,6 +344,20 @@ class ChatOverlayManager(
      * Process a screenshot and display it as a deletable preview
      */
     fun processScreenshot(bitmap: Bitmap) {
+        if (screenshotPreviewContainer == null || screenshotPreviewImage == null) {
+            // Views not initialized yet, store as pending
+            Log.d(TAG, "Views not initialized, storing screenshot as pending")
+            pendingScreenshot = bitmap
+            return
+        }
+
+        processScreenshotInternal(bitmap)
+    }
+
+    /**
+     * Internal method to process screenshot when views are guaranteed to be initialized
+     */
+    private fun processScreenshotInternal(bitmap: Bitmap) {
         Log.d(TAG, "Processing screenshot: ${bitmap.width}x${bitmap.height}")
         currentScreenshotBitmap = bitmap
 
