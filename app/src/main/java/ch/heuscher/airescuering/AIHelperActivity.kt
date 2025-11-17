@@ -611,7 +611,7 @@ class AIHelperActivity : AppCompatActivity() {
      * Perform the action specified by the function call
      */
     private suspend fun performAction(functionCall: ch.heuscher.airescuering.data.api.FunctionCall): Boolean {
-        val accessibilityService = ch.heuscher.airescuering.service.accessibility.AIAssistantAccessibilityService.getInstance()
+        val accessibilityService = BackHomeAccessibilityService.getInstance()
         if (accessibilityService == null) {
             Log.e(TAG, "Accessibility service not available")
             Toast.makeText(this, "Accessibility service not enabled", Toast.LENGTH_SHORT).show()
