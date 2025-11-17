@@ -391,7 +391,20 @@ class OverlayService : Service() {
 
     private fun toggleChatOverlay() {
         Log.d(TAG, "toggleChatOverlay: Toggling chat overlay")
+
+        // Check if we're about to show the overlay (not hide it)
+        val wasVisible = chatOverlayManager?.isShowing() == true
+
         chatOverlayManager?.toggle()
+
+        // If we just showed the overlay (it wasn't visible before), auto-capture screenshot
+        if (!wasVisible) {
+            Log.d(TAG, "Chat overlay shown, auto-capturing screenshot")
+            // Small delay to ensure overlay is fully shown
+            updateHandler.postDelayed({
+                requestScreenshot()
+            }, 150)
+        }
     }
 
     private fun hideChatOverlay() {

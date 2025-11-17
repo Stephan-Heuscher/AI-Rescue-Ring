@@ -59,6 +59,9 @@ class ChatOverlayManager(
     private var screenshotButton: Button? = null
     private var hideButton: Button? = null
     private var loadingIndicator: ProgressBar? = null
+    private var screenshotPreviewContainer: View? = null
+    private var screenshotPreviewImage: android.widget.ImageView? = null
+    private var deleteScreenshotButton: Button? = null
 
     // Chat state
     private val messages = mutableListOf<AIMessage>()
@@ -150,6 +153,9 @@ class ChatOverlayManager(
             screenshotButton = null
             hideButton = null
             loadingIndicator = null
+            screenshotPreviewContainer = null
+            screenshotPreviewImage = null
+            deleteScreenshotButton = null
             adapter = null
 
             Log.d(TAG, "Chat overlay hidden successfully")
@@ -186,6 +192,9 @@ class ChatOverlayManager(
             screenshotButton = view.findViewById(R.id.chatScreenshotButton)
             hideButton = view.findViewById(R.id.hideButton)
             loadingIndicator = view.findViewById(R.id.chatLoadingIndicator)
+            screenshotPreviewContainer = view.findViewById(R.id.screenshotPreviewContainer)
+            screenshotPreviewImage = view.findViewById(R.id.screenshotPreviewImage)
+            deleteScreenshotButton = view.findViewById(R.id.deleteScreenshotButton)
         }
     }
 
@@ -213,6 +222,10 @@ class ChatOverlayManager(
         screenshotButton?.setOnClickListener {
             onScreenshotRequest?.invoke()
             // The screenshot will be taken by the service and passed back via processScreenshot()
+        }
+
+        deleteScreenshotButton?.setOnClickListener {
+            clearScreenshot()
         }
     }
 
@@ -245,6 +258,9 @@ class ChatOverlayManager(
      * Send a message to the AI
      */
     private fun sendMessage(text: String, screenshotBase64: String? = null) {
+        // Check if we have a current screenshot to include
+        val screenshot = screenshotBase64 ?: currentScreenshotBitmap?.let { bitmapToBase64(it) }
+
         // Add user message
         val userMessage = AIMessage(
             id = UUID.randomUUID().toString(),
@@ -252,6 +268,11 @@ class ChatOverlayManager(
             role = MessageRole.USER
         )
         addMessage(userMessage)
+
+        // Clear screenshot after sending
+        if (screenshot != null) {
+            clearScreenshot()
+        }
 
         // Show loading
         loadingIndicator?.visibility = View.VISIBLE
@@ -268,11 +289,11 @@ class ChatOverlayManager(
                     return@launch
                 }
 
-                val result = if (screenshotBase64 != null) {
+                val result = if (screenshot != null) {
                     // Send with screenshot
                     service.generateAssistanceWithImage(
                         userRequest = text,
-                        imageBase64 = screenshotBase64,
+                        imageBase64 = screenshot,
                         context = "The user needs help with their Android device. Guide them step-by-step."
                     )
                 } else {
@@ -312,26 +333,34 @@ class ChatOverlayManager(
     }
 
     /**
-     * Process a screenshot and send it with a message
+     * Process a screenshot and display it as a deletable preview
      */
     fun processScreenshot(bitmap: Bitmap) {
         currentScreenshotBitmap = bitmap
 
-        // Convert to base64
-        val base64 = bitmapToBase64(bitmap)
-
         // Show message that screenshot was captured
         Handler(Looper.getMainLooper()).post {
-            Toast.makeText(context, "📸 Screenshot captured! Now tell me what you need help with.", Toast.LENGTH_SHORT).show()
+            // Display screenshot preview
+            screenshotPreviewImage?.setImageBitmap(bitmap)
+            screenshotPreviewContainer?.visibility = View.VISIBLE
 
-            // Auto-fill a message prompt
-            messageInput?.setText("I need help with this screen. What should I do?")
+            Toast.makeText(context, "Screenshot captured! It will be sent with your next message.", Toast.LENGTH_SHORT).show()
+
+            // Focus the message input so user can type
             messageInput?.requestFocus()
+        }
+    }
 
-            // Auto-send with screenshot
-            val text = messageInput?.text?.toString()?.trim() ?: "What should I do here?"
-            sendMessage(text, base64)
-            messageInput?.text?.clear()
+    /**
+     * Clear the current screenshot preview
+     */
+    private fun clearScreenshot() {
+        Handler(Looper.getMainLooper()).post {
+            currentScreenshotBitmap?.recycle()
+            currentScreenshotBitmap = null
+            screenshotPreviewContainer?.visibility = View.GONE
+            screenshotPreviewImage?.setImageBitmap(null)
+            Toast.makeText(context, "Screenshot removed", Toast.LENGTH_SHORT).show()
         }
     }
 

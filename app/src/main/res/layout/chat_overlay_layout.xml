@@ -42,6 +42,46 @@
                 style="?android:attr/buttonBarButtonStyle" />
         </LinearLayout>
 
+        <!-- Screenshot Preview Area -->
+        <FrameLayout
+            android:id="@+id/screenshotPreviewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_margin="8dp"
+            android:visibility="gone"
+            android:background="#F0F0F0">
+
+            <ImageView
+                android:id="@+id/screenshotPreviewImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:contentDescription="Screenshot preview" />
+
+            <Button
+                android:id="@+id/deleteScreenshotButton"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="8dp"
+                android:text="✕"
+                android:textSize="16sp"
+                android:textColor="#FFFFFF"
+                android:background="#CC000000"
+                style="?android:attr/borderlessButtonStyle" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:layout_margin="8dp"
+                android:text="Screenshot attached"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:background="#CC000000"
+                android:padding="4dp" />
+        </FrameLayout>
+
         <!-- Chat Messages RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/chatMessagesRecyclerView"
