@@ -5,8 +5,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
+import ch.heuscher.airescuering.AIRescueRingAccessibilityService
 import ch.heuscher.airescuering.data.api.FunctionCall
-import ch.heuscher.airescuering.service.accessibility.AIAssistantAccessibilityService
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
 
@@ -49,8 +49,8 @@ class UIActionExecutor(private val context: Context) {
         private const val TAG = "UIActionExecutor"
     }
 
-    private val accessibilityService: AIAssistantAccessibilityService?
-        get() = AIAssistantAccessibilityService.getInstance()
+    private val accessibilityService: AIRescueRingAccessibilityService?
+        get() = AIRescueRingAccessibilityService.instance
 
     /**
      * Execute a function call from the model
@@ -256,11 +256,13 @@ class UIActionExecutor(private val context: Context) {
     }
 
     private fun performBack(): Boolean {
-        return accessibilityService?.performBack() ?: false
+        accessibilityService?.performBackAction()
+        return true
     }
 
     private fun performHome(): Boolean {
-        return accessibilityService?.performHome() ?: false
+        accessibilityService?.performHomeAction()
+        return true
     }
 
     private suspend fun performLongPress(x: Int, y: Int, screenWidth: Int, screenHeight: Int): Boolean {

@@ -10,7 +10,7 @@
 -renamesourcefileattribute SourceFile
 
 # Keep AccessibilityService
--keep class ch.heuscher.airescuering.BackHomeAccessibilityService { *; }
+-keep class ch.heuscher.airescuering.AIRescueRingAccessibilityService { *; }
 
 # Keep Services
 -keep class ch.heuscher.airescuering.service.overlay.OverlayService { *; }

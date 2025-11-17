@@ -20,7 +20,7 @@ import androidx.cardview.widget.CardView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import ch.heuscher.airescuering.BackHomeAccessibilityService
+import ch.heuscher.airescuering.AIRescueRingAccessibilityService
 import ch.heuscher.airescuering.service.overlay.OverlayService
 import ch.heuscher.airescuering.SettingsActivity
 import ch.heuscher.airescuering.di.ServiceLocator
@@ -323,7 +323,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun hasAccessibilityPermission(): Boolean {
         val enabledServices = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
-        val serviceComponent = ComponentName(this, BackHomeAccessibilityService::class.java).flattenToString()
+        val serviceComponent = ComponentName(this, AIRescueRingAccessibilityService::class.java).flattenToString()
         return enabledServices?.split(":")?.contains(serviceComponent) == true
     }
 
