@@ -34,7 +34,7 @@ import kotlin.coroutines.resume
  * - Keyboard detection
  * - AI automation (tap, swipe, text typing, gestures)
  */
-class BackHomeAccessibilityService : AccessibilityService() {
+class AIRescueRingAccessibilityService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var repository: SettingsRepository
@@ -462,8 +462,8 @@ class BackHomeAccessibilityService : AccessibilityService() {
         }
 
     companion object {
-        private const val TAG = "BackHomeAccessibilityService"
-        var instance: BackHomeAccessibilityService? = null
+        private const val TAG = "AIRescueRingAccessibilityService"
+        var instance: AIRescueRingAccessibilityService? = null
             private set
 
         fun isServiceEnabled(): Boolean = instance != null
@@ -471,7 +471,7 @@ class BackHomeAccessibilityService : AccessibilityService() {
         /**
          * Get the current instance of the accessibility service (for compatibility)
          */
-        fun getInstance(): BackHomeAccessibilityService? = instance
+        fun getInstance(): AIRescueRingAccessibilityService? = instance
 
         /**
          * Check if the accessibility service is enabled (for compatibility)

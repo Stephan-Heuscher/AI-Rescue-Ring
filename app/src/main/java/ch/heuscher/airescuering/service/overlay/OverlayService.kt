@@ -12,7 +12,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.view.View
-import ch.heuscher.airescuering.BackHomeAccessibilityService
+import ch.heuscher.airescuering.AIRescueRingAccessibilityService
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.model.DotPosition
 import ch.heuscher.airescuering.domain.model.Gesture
@@ -338,7 +338,7 @@ class OverlayService : Service() {
                 }
 
                 // Set up screenshot callback in accessibility service
-                BackHomeAccessibilityService.instance?.let { accessibilityService ->
+                AIRescueRingAccessibilityService.instance?.let { accessibilityService ->
                     accessibilityService.onScreenshotCaptured = { bitmap ->
                         Log.d(TAG, "Screenshot captured, passing to chat overlay")
                         chatOverlayManager?.processScreenshot(bitmap)
@@ -357,7 +357,7 @@ class OverlayService : Service() {
 
     private fun requestScreenshot() {
         Log.d(TAG, "Screenshot requested")
-        val accessibilityService = BackHomeAccessibilityService.instance
+        val accessibilityService = AIRescueRingAccessibilityService.instance
         if (accessibilityService != null) {
             // Hide chat overlay before taking screenshot so it's not included in the image
             val wasVisible = chatOverlayManager?.isShowing() == true
@@ -401,7 +401,7 @@ class OverlayService : Service() {
 
     private fun isOnHomeScreen(): Boolean {
         // Use AccessibilityService to detect home screen (more reliable than getRunningTasks)
-        val accessibilityService = BackHomeAccessibilityService.instance
+        val accessibilityService = AIRescueRingAccessibilityService.instance
         if (accessibilityService != null) {
             return accessibilityService.isOnHomeScreen()
         }

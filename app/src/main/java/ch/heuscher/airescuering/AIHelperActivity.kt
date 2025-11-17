@@ -611,7 +611,7 @@ class AIHelperActivity : AppCompatActivity() {
      * Perform the action specified by the function call
      */
     private suspend fun performAction(functionCall: ch.heuscher.airescuering.data.api.FunctionCall): Boolean {
-        val accessibilityService = BackHomeAccessibilityService.getInstance()
+        val accessibilityService = AIRescueRingAccessibilityService.getInstance()
         if (accessibilityService == null) {
             Log.e(TAG, "Accessibility service not available")
             Toast.makeText(this, "Accessibility service not enabled", Toast.LENGTH_SHORT).show()
@@ -662,7 +662,7 @@ class AIHelperActivity : AppCompatActivity() {
      */
     private suspend fun captureScreenshotSync(): Bitmap? = suspendCoroutine { continuation ->
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val service = BackHomeAccessibilityService.instance
+            val service = AIRescueRingAccessibilityService.instance
             if (service != null) {
                 service.onScreenshotCaptured = { bitmap ->
                     continuation.resume(bitmap)
@@ -670,7 +670,7 @@ class AIHelperActivity : AppCompatActivity() {
                 }
                 service.takeScreenshot()
             } else {
-                Log.w(TAG, "BackHomeAccessibilityService not available")
+                Log.w(TAG, "AIRescueRingAccessibilityService not available")
                 continuation.resume(null)
             }
         } else {

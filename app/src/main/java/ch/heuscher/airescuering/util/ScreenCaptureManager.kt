@@ -7,7 +7,7 @@ import android.os.Build
 import android.util.Base64
 import android.util.Log
 import androidx.annotation.RequiresApi
-import ch.heuscher.airescuering.BackHomeAccessibilityService
+import ch.heuscher.airescuering.AIRescueRingAccessibilityService
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
@@ -16,7 +16,7 @@ import kotlin.coroutines.resume
  * Manager for capturing screenshots using the Accessibility Service
  *
  * This provides a permission-free way to capture the screen for AI assistance.
- * Uses the BackHomeAccessibilityService which must be enabled by the user.
+ * Uses the AIRescueRingAccessibilityService which must be enabled by the user.
  *
  * Used by:
  * - Rescue ring tap: Captures screenshot for AI chat/analysis
@@ -87,7 +87,7 @@ object ScreenCaptureManager {
         }
         Log.d(TAG, "captureScreenAsBase64Internal: Android version OK (${Build.VERSION.SDK_INT})")
 
-        val service = BackHomeAccessibilityService.instance
+        val service = AIRescueRingAccessibilityService.instance
         if (service == null) {
             Log.e(TAG, "captureScreenAsBase64Internal: FAIL - Accessibility service is NULL")
             return null

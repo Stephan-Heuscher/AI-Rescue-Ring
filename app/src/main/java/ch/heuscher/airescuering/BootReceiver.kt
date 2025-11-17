@@ -62,7 +62,7 @@ class BootReceiver : BroadcastReceiver() {
                 Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
             ) ?: return false
 
-            return serviceString.contains(context.packageName + "/" + BackHomeAccessibilityService::class.java.name)
+            return serviceString.contains(context.packageName + "/" + AIRescueRingAccessibilityService::class.java.name)
         }
 
         return false

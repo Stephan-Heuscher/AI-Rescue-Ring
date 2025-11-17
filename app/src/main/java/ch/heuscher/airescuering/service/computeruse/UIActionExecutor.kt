@@ -5,7 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
-import ch.heuscher.airescuering.BackHomeAccessibilityService
+import ch.heuscher.airescuering.AIRescueRingAccessibilityService
 import ch.heuscher.airescuering.data.api.FunctionCall
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
@@ -49,8 +49,8 @@ class UIActionExecutor(private val context: Context) {
         private const val TAG = "UIActionExecutor"
     }
 
-    private val accessibilityService: BackHomeAccessibilityService?
-        get() = BackHomeAccessibilityService.getInstance()
+    private val accessibilityService: AIRescueRingAccessibilityService?
+        get() = AIRescueRingAccessibilityService.getInstance()
 
     /**
      * Execute a function call from the model

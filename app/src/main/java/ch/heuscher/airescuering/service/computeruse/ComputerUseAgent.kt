@@ -2,7 +2,7 @@ package ch.heuscher.airescuering.service.computeruse
 
 import android.content.Context
 import android.util.Log
-import ch.heuscher.airescuering.BackHomeAccessibilityService
+import ch.heuscher.airescuering.AIRescueRingAccessibilityService
 import ch.heuscher.airescuering.data.api.*
 import ch.heuscher.airescuering.service.screencapture.ScreenCaptureManager
 import kotlinx.coroutines.delay
@@ -51,7 +51,7 @@ class ComputerUseAgent(
         callback: AgentCallback
     ) {
         // Check prerequisites
-        if (!BackHomeAccessibilityService.isEnabled()) {
+        if (!AIRescueRingAccessibilityService.isEnabled()) {
             callback.onError("Accessibility service is not enabled. Please enable it in Settings.")
             return
         }

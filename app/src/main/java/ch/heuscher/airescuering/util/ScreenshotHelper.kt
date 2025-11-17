@@ -3,7 +3,7 @@ package ch.heuscher.airescuering.util
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import ch.heuscher.airescuering.BackHomeAccessibilityService
+import ch.heuscher.airescuering.AIRescueRingAccessibilityService
 
 /**
  * Helper class for taking screenshots using the accessibility service.
@@ -30,7 +30,7 @@ object ScreenshotHelper {
         onFailure: (String) -> Unit = {},
         showToast: Boolean = true
     ) {
-        val service = BackHomeAccessibilityService.instance
+        val service = AIRescueRingAccessibilityService.instance
 
         if (service == null) {
             val errorMsg = "Accessibility service is not enabled. Please enable it in Settings."
@@ -63,7 +63,7 @@ object ScreenshotHelper {
      * Check if screenshot functionality is available (i.e., accessibility service is enabled)
      */
     fun isAvailable(): Boolean {
-        return BackHomeAccessibilityService.isServiceEnabled()
+        return AIRescueRingAccessibilityService.isServiceEnabled()
     }
 
     /**

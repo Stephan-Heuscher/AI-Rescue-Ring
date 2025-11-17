@@ -56,7 +56,7 @@
             android:exported="false" />
 
         <service
-            android:name=".BackHomeAccessibilityService"
+            android:name=".AIRescueRingAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">
             <intent-filter>
