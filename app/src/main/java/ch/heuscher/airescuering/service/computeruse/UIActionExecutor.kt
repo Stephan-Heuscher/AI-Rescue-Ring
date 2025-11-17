@@ -50,7 +50,7 @@ class UIActionExecutor(private val context: Context) {
     }
 
     private val accessibilityService: AIRescueRingAccessibilityService?
-        get() = AIRescueRingAccessibilityService.getInstance()
+        get() = AIRescueRingAccessibilityService.instance
 
     /**
      * Execute a function call from the model
@@ -256,11 +256,13 @@ class UIActionExecutor(private val context: Context) {
     }
 
     private fun performBack(): Boolean {
-        return accessibilityService?.performBack() ?: false
+        accessibilityService?.performBackAction()
+        return true
     }
 
     private fun performHome(): Boolean {
-        return accessibilityService?.performHome() ?: false
+        accessibilityService?.performHomeAction()
+        return true
     }
 
     private suspend fun performLongPress(x: Int, y: Int, screenWidth: Int, screenHeight: Int): Boolean {

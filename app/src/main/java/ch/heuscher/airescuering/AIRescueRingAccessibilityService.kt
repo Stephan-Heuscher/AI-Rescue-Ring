@@ -463,19 +463,12 @@ class AIRescueRingAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val TAG = "AIRescueRingAccessibilityService"
+        
         var instance: AIRescueRingAccessibilityService? = null
             private set
 
         fun isServiceEnabled(): Boolean = instance != null
 
-        /**
-         * Get the current instance of the accessibility service (for compatibility)
-         */
-        fun getInstance(): AIRescueRingAccessibilityService? = instance
-
-        /**
-         * Check if the accessibility service is enabled (for compatibility)
-         */
         fun isEnabled(): Boolean = instance != null
     }
 }
