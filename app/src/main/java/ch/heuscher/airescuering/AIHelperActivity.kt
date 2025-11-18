@@ -101,7 +101,12 @@ class AIHelperActivity : AppCompatActivity() {
         setContentView(R.layout.activity_ai_helper)
 
         initViews()
-        setDynamicWindowSize()
+
+        // Set dynamic window size after views are initialized
+        chatCard.post {
+            setDynamicWindowSize()
+        }
+
         initMarkwon()
         setupRecyclerView()
         setupListeners()
@@ -277,32 +282,66 @@ class AIHelperActivity : AppCompatActivity() {
      * Set dynamic window size to 1/3 of screen height
      */
     private fun setDynamicWindowSize() {
+        Log.d(TAG, "=== setDynamicWindowSize: START ===")
+
         val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
+        val density = displayMetrics.density
+
+        Log.d(TAG, "Screen dimensions: ${screenWidth}x${screenHeight}px (density=$density)")
+
         val targetHeight = (screenHeight / 3.0).toInt()
+        Log.d(TAG, "Target window height: ${targetHeight}px (1/3 of screen)")
+
+        // Log current ChatCard dimensions
+        Log.d(TAG, "ChatCard current size: ${chatCard.width}x${chatCard.height}px")
+        Log.d(TAG, "ChatCard layoutParams: ${chatCard.layoutParams}")
 
         // Get the main LinearLayout inside the CardView
         val mainLayout = chatCard.getChildAt(0) as? LinearLayout
-        mainLayout?.let {
-            val params = it.layoutParams
-            params.height = targetHeight
-            it.layoutParams = params
-            Log.d(TAG, "Window size set to ${targetHeight}px (~1/3 of ${screenHeight}px screen)")
+        if (mainLayout == null) {
+            Log.e(TAG, "ERROR: Could not get LinearLayout from ChatCard!")
+            return
         }
+
+        Log.d(TAG, "MainLayout current size: ${mainLayout.width}x${mainLayout.height}px")
+        Log.d(TAG, "MainLayout current layoutParams: ${mainLayout.layoutParams}")
+
+        val params = mainLayout.layoutParams
+        val oldHeight = params.height
+        params.height = targetHeight
+        mainLayout.layoutParams = params
+
+        Log.d(TAG, "MainLayout height changed: $oldHeight -> $targetHeight px")
+
+        // Verify the change
+        mainLayout.post {
+            Log.d(TAG, "MainLayout after resize: ${mainLayout.width}x${mainLayout.height}px")
+            Log.d(TAG, "ChatCard after resize: ${chatCard.width}x${chatCard.height}px")
+        }
+
+        Log.d(TAG, "=== setDynamicWindowSize: END ===")
     }
 
     /**
      * Position the chat window at top or bottom of screen
      */
     private fun positionWindowAt(isTop: Boolean) {
+        Log.d(TAG, "=== positionWindowAt: ${if (isTop) "TOP" else "BOTTOM"} ===")
+
         val params = chatCard.layoutParams as FrameLayout.LayoutParams
+        val oldGravity = params.gravity
+
         params.gravity = if (isTop) {
             android.view.Gravity.TOP
         } else {
             android.view.Gravity.BOTTOM
         }
         chatCard.layoutParams = params
-        Log.d(TAG, "Window positioned at ${if (isTop) "top" else "bottom"}")
+
+        Log.d(TAG, "Gravity changed from $oldGravity to ${params.gravity}")
+        Toast.makeText(this, "Window positioned ${if (isTop) "top" else "bottom"}", Toast.LENGTH_SHORT).show()
     }
 
     /**
@@ -555,16 +594,19 @@ class AIHelperActivity : AppCompatActivity() {
 
                     // Parse steps from plan
                     val steps = parseSteps(plan)
+                    Log.d(TAG, "Parsed ${steps.size} steps from plan")
 
                     if (steps.isNotEmpty()) {
                         // Show step navigation for step-based responses
                         currentSteps = steps
                         currentStepIndex = 0
                         stepNavigationContainer.visibility = View.VISIBLE
+                        Log.d(TAG, "Step navigation visible - showing ${steps.size} steps")
                         displayCurrentStep()
                     } else {
                         // Show full plan if no steps found
                         stepNavigationContainer.visibility = View.GONE
+                        Log.d(TAG, "No steps found, showing full plan")
                         val planMessage = AIMessage(
                             id = UUID.randomUUID().toString(),
                             content = plan,
