@@ -250,7 +250,7 @@ Did that work? If you're stuck on any step, just tell me which one! 😊"
                 )
             )
 
-            val url = "$BASE_URL/gemini-2.0-flash-latest:generateContent?key=$apiKey"
+            val url = "$BASE_URL/gemini-flash-latest:generateContent?key=$apiKey"
             val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
                 .toRequestBody("application/json".toMediaType())
 
@@ -368,7 +368,7 @@ RESPONSE FORMAT:
                 )
             )
 
-            val url = "$BASE_URL/gemini-2.0-flash-latest:generateContent?key=$apiKey"
+            val url = "$BASE_URL/gemini-flash-latest:generateContent?key=$apiKey"
             val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
                 .toRequestBody("application/json".toMediaType())
 
@@ -378,7 +378,7 @@ RESPONSE FORMAT:
                 .build()
 
             if (debug) {
-                Log.d(TAG, "Request with image: model=gemini-2.0-flash-latest")
+                Log.d(TAG, "Request with image: model=gemini-flash-latest")
             }
 
             client.newCall(httpRequest).execute().use { response ->
