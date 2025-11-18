@@ -30,6 +30,7 @@ import ch.heuscher.airescuering.domain.model.ActionData
 import ch.heuscher.airescuering.domain.model.MessageRole
 import ch.heuscher.airescuering.domain.model.MessageType
 import ch.heuscher.airescuering.util.ScreenshotHelper
+import io.noties.markwon.Markwon
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
@@ -53,6 +54,7 @@ class AIHelperActivity : AppCompatActivity() {
 
     private val messages = mutableListOf<AIMessage>()
     private lateinit var adapter: ChatAdapter
+    private lateinit var markwon: Markwon
 
     private var geminiService: GeminiApiService? = null
     private var currentScreenshot: Bitmap? = null
@@ -79,6 +81,7 @@ class AIHelperActivity : AppCompatActivity() {
         setContentView(R.layout.activity_ai_helper)
 
         initViews()
+        initMarkwon()
         setupRecyclerView()
         setupListeners()
         initGeminiService()
@@ -163,6 +166,10 @@ class AIHelperActivity : AppCompatActivity() {
         screenshotButton = findViewById(R.id.screenshotButton)
         closeButton = findViewById(R.id.closeButton)
         loadingIndicator = findViewById(R.id.loadingIndicator)
+    }
+
+    private fun initMarkwon() {
+        markwon = Markwon.create(this)
     }
 
     private fun setupRecyclerView() {
@@ -998,7 +1005,12 @@ class AIHelperActivity : AppCompatActivity() {
                 MessageRole.SYSTEM -> "System"
             }
 
-            holder.messageText.text = message.content
+            // Render markdown for assistant messages, plain text for others
+            if (message.role == MessageRole.ASSISTANT) {
+                markwon.setMarkdown(holder.messageText, message.content)
+            } else {
+                holder.messageText.text = message.content
+            }
             holder.timeText.text = timeFormat.format(Date(message.timestamp))
 
             // Handle action buttons
