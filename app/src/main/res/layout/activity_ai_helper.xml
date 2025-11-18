@@ -40,7 +40,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#FFFFFF">
+    android:background="#FFFFFF"
+    android:maxHeight="280dp">
 
     <!-- Top Bar -->
     <LinearLayout
@@ -143,9 +144,10 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messagesRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:padding="12dp"
-        android:paddingBottom="16dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:paddingBottom="8dp"
         android:clipToPadding="false"
         android:scrollbarStyle="outsideOverlay"
         tools:listitem="@layout/item_chat_message" />
