@@ -40,8 +40,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#FFFFFF"
-    android:maxHeight="280dp">
+    android:background="#FFFFFF">
 
     <!-- Top Bar -->
     <LinearLayout
@@ -68,6 +67,7 @@
             android:layout_height="40dp"
             android:text="⬆"
             android:textSize="16sp"
+            android:textColor="#FFFFFF"
             android:minHeight="40dp"
             style="?android:attr/buttonBarButtonStyle" />
 
@@ -77,6 +77,7 @@
             android:layout_height="40dp"
             android:text="⬇"
             android:textSize="16sp"
+            android:textColor="#FFFFFF"
             android:minHeight="40dp"
             style="?android:attr/buttonBarButtonStyle" />
 
@@ -86,6 +87,7 @@
             android:layout_height="40dp"
             android:text="New"
             android:textSize="12sp"
+            android:textColor="#FFFFFF"
             android:minHeight="40dp"
             style="?android:attr/buttonBarButtonStyle" />
 
@@ -95,6 +97,7 @@
             android:layout_height="40dp"
             android:text="Close"
             android:textSize="12sp"
+            android:textColor="#FFFFFF"
             android:minHeight="40dp"
             style="?android:attr/buttonBarButtonStyle" />
     </LinearLayout>

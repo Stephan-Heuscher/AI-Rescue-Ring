@@ -101,6 +101,7 @@ class AIHelperActivity : AppCompatActivity() {
         setContentView(R.layout.activity_ai_helper)
 
         initViews()
+        setDynamicWindowSize()
         initMarkwon()
         setupRecyclerView()
         setupListeners()
@@ -269,6 +270,24 @@ class AIHelperActivity : AppCompatActivity() {
 
         stepForwardButton.setOnClickListener {
             navigateStep(forward = true)
+        }
+    }
+
+    /**
+     * Set dynamic window size to 1/3 of screen height
+     */
+    private fun setDynamicWindowSize() {
+        val displayMetrics = resources.displayMetrics
+        val screenHeight = displayMetrics.heightPixels
+        val targetHeight = (screenHeight / 3.0).toInt()
+
+        // Get the main LinearLayout inside the CardView
+        val mainLayout = chatCard.getChildAt(0) as? LinearLayout
+        mainLayout?.let {
+            val params = it.layoutParams
+            params.height = targetHeight
+            it.layoutParams = params
+            Log.d(TAG, "Window size set to ${targetHeight}px (~1/3 of ${screenHeight}px screen)")
         }
     }
 
