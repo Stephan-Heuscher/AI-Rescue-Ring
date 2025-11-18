@@ -1,9 +1,9 @@
 #!/bin/bash
 # AI Rescue Ring - Log Viewer Script
-# This script shows logs for the AIHelperActivity with filtering
+# This script shows logs for the ChatOverlayManager (the ACTUAL overlay window)
 
 echo "=== AI Rescue Ring - Debug Logs ==="
-echo "Showing logs for: AIHelperActivity"
+echo "Showing logs for: ChatOverlayManager (the actual floating window)"
 echo "Press Ctrl+C to stop"
 echo "=================================="
 echo ""
@@ -12,6 +12,5 @@ echo ""
 adb logcat -c
 
 # Show logs with filtering for our app
-# -s = silent mode (only show specified tags)
-# AIHelperActivity:D = Debug level and above for our activity
-adb logcat -s AIHelperActivity:D
+# ChatOverlayManager is the actual window being shown
+adb logcat -s ChatOverlayManager:D
