@@ -49,6 +49,7 @@ class AIHelperActivity : AppCompatActivity() {
     private lateinit var sendButton: Button
     private lateinit var voiceButton: Button
     private lateinit var screenshotButton: Button
+    private lateinit var newChatButton: Button
     private lateinit var closeButton: Button
     private lateinit var loadingIndicator: ProgressBar
 
@@ -86,40 +87,45 @@ class AIHelperActivity : AppCompatActivity() {
         setupListeners()
         initGeminiService()
 
-        // Check for screenshot from Intent first (captured before activity launch)
-        val screenshotBase64 = intent.getStringExtra("screenshot_base64")
-        Log.d(TAG, "onCreate: screenshotBase64 is ${if (screenshotBase64 == null) "NULL" else "present (${screenshotBase64.length} chars)"}")
+        // Only take screenshot if there's no active chat
+        if (chatHistory.isEmpty()) {
+            // Check for screenshot from Intent first (captured before activity launch)
+            val screenshotBase64 = intent.getStringExtra("screenshot_base64")
+            Log.d(TAG, "onCreate: screenshotBase64 is ${if (screenshotBase64 == null) "NULL" else "present (${screenshotBase64.length} chars)"}")
 
-        if (screenshotBase64 != null) {
-            // Convert base64 to bitmap and set as background
-            try {
-                val decodedBytes = android.util.Base64.decode(screenshotBase64, android.util.Base64.NO_WRAP)
-                val bitmap = android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-                if (bitmap != null) {
-                    currentScreenshot = bitmap
-                    setScreenshotBackground(bitmap)
-                    Log.d(TAG, "Screenshot set as background from intent: ${bitmap.width}x${bitmap.height}")
+            if (screenshotBase64 != null) {
+                // Convert base64 to bitmap and set as background
+                try {
+                    val decodedBytes = android.util.Base64.decode(screenshotBase64, android.util.Base64.NO_WRAP)
+                    val bitmap = android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                    if (bitmap != null) {
+                        currentScreenshot = bitmap
+                        setScreenshotBackground(bitmap)
+                        Log.d(TAG, "Screenshot set as background from intent: ${bitmap.width}x${bitmap.height}")
 
-                    // Add welcome message
-                    addMessage(AIMessage(
-                        id = UUID.randomUUID().toString(),
-                        content = "Hello! I'm your AI assistant. I can see what's on your screen and help you with it. What would you like to do?",
-                        role = MessageRole.ASSISTANT
-                    ))
-                } else {
-                    Log.e(TAG, "Failed to decode bitmap from base64")
+                        // Add welcome message
+                        addMessage(AIMessage(
+                            id = UUID.randomUUID().toString(),
+                            content = "Hello! I'm your AI assistant. I can see what's on your screen and help you with it. What would you like to do?",
+                            role = MessageRole.ASSISTANT
+                        ))
+                    } else {
+                        Log.e(TAG, "Failed to decode bitmap from base64")
+                        // Fall back to taking screenshot
+                        takeInitialScreenshot()
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to decode screenshot from Intent", e)
                     // Fall back to taking screenshot
                     takeInitialScreenshot()
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to decode screenshot from Intent", e)
-                // Fall back to taking screenshot
+            } else {
+                Log.w(TAG, "No screenshot provided in Intent, taking initial screenshot")
+                // Take screenshot first, then show welcome message
                 takeInitialScreenshot()
             }
         } else {
-            Log.w(TAG, "No screenshot provided in Intent, taking initial screenshot")
-            // Take screenshot first, then show welcome message
-            takeInitialScreenshot()
+            Log.d(TAG, "Active chat exists (${chatHistory.size} messages), skipping initial screenshot")
         }
     }
 
@@ -164,6 +170,7 @@ class AIHelperActivity : AppCompatActivity() {
         sendButton = findViewById(R.id.sendButton)
         voiceButton = findViewById(R.id.voiceButton)
         screenshotButton = findViewById(R.id.screenshotButton)
+        newChatButton = findViewById(R.id.newChatButton)
         closeButton = findViewById(R.id.closeButton)
         loadingIndicator = findViewById(R.id.loadingIndicator)
     }
@@ -197,9 +204,52 @@ class AIHelperActivity : AppCompatActivity() {
             takeScreenshot()
         }
 
+        newChatButton.setOnClickListener {
+            startNewChat()
+        }
+
         closeButton.setOnClickListener {
             finish()
         }
+    }
+
+    /**
+     * Start a new chat session
+     * Clears all chat history and takes a fresh screenshot
+     */
+    private fun startNewChat() {
+        AlertDialog.Builder(this)
+            .setTitle("Start New Chat?")
+            .setMessage("This will clear your current conversation and take a new screenshot. Are you sure?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                dialog.dismiss()
+
+                // Clear all chat state
+                chatHistory.clear()
+                executionHistory.clear()
+                messages.clear()
+                adapter.notifyDataSetChanged()
+                currentScreenshot = null
+                currentScreenshotPath = null
+                currentUserRequest = null
+                currentPlan = null
+                isExecuting = false
+
+                // Clear screenshot background
+                val screenshotBackground = findViewById<android.widget.ImageView>(R.id.screenshotBackground)
+                val dimmingOverlay = findViewById<View>(R.id.dimmingOverlay)
+                screenshotBackground?.visibility = View.GONE
+                dimmingOverlay?.visibility = View.GONE
+
+                // Take new screenshot to start fresh chat
+                takeInitialScreenshot()
+
+                Log.d(TAG, "New chat started, all state cleared")
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun initGeminiService() {
