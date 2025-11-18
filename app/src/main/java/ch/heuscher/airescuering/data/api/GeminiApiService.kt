@@ -161,14 +161,17 @@ class GeminiApiService(
      * @param userRequest The user's request description
      * @param screenshot Optional screenshot of the current screen
      * @param context Additional context about the device state
+     * @param conversationHistory Previous conversation messages for context
      * @return A detailed plan as text
      */
     suspend fun generateSolutionPlan(
         userRequest: String,
         screenshot: Bitmap? = null,
-        context: String = ""
-    ): Result<String> {
-        val systemPrompt = """
+        context: String = "",
+        conversationHistory: List<Content> = emptyList()
+    ): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val systemPrompt = """
 You are a patient, friendly AI rescue assistant helping technically challenged users with their Android device. Your goal is to guide them step-by-step through tasks in the simplest way possible.
 
 IMPORTANT GUIDELINES:
@@ -199,21 +202,106 @@ EXAMPLE:
 Did that work? If you're stuck on any step, just tell me which one! 😊"
         """.trimIndent()
 
-        val userMessage = buildString {
-            if (screenshot != null) {
-                append("I'm looking at my Android screen. ")
+            val userMessage = buildString {
+                if (screenshot != null) {
+                    append("I'm looking at my Android screen. ")
+                }
+                append("User request: $userRequest")
+                if (context.isNotEmpty()) {
+                    append("\n\nDevice context: $context")
+                }
             }
-            append("User request: $userRequest")
-            if (context.isNotEmpty()) {
-                append("\n\nDevice context: $context")
-            }
-        }
 
-        return generateContent(
-            model = "gemini-2.5-pro",
-            messages = listOf("user" to userMessage),
-            systemPrompt = systemPrompt
-        )
+            // Build contents list with conversation history
+            val contents = mutableListOf<Content>()
+
+            // Add conversation history (excluding the last user message which we'll re-add with potential screenshot)
+            if (conversationHistory.isNotEmpty()) {
+                // Take all but the last message (which is the current user request)
+                contents.addAll(conversationHistory.dropLast(1))
+            }
+
+            // Add current user message with optional screenshot
+            val userParts = mutableListOf<Part>()
+            userParts.add(Part(text = userMessage))
+
+            if (screenshot != null) {
+                val base64Image = bitmapToBase64(screenshot)
+                userParts.add(Part(inlineData = InlineData(
+                    mimeType = "image/jpeg",
+                    data = base64Image
+                )))
+            }
+
+            contents.add(Content(
+                role = "user",
+                parts = userParts
+            ))
+
+            val request = GeminiRequest(
+                contents = contents,
+                generationConfig = GenerationConfig(
+                    temperature = 1.0,
+                    maxOutputTokens = 8192
+                ),
+                systemInstruction = Content(
+                    role = "system",
+                    parts = listOf(Part(text = systemPrompt))
+                )
+            )
+
+            val url = "$BASE_URL/gemini-2.5-pro:generateContent?key=$apiKey"
+            val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
+                .toRequestBody("application/json".toMediaType())
+
+            val httpRequest = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build()
+
+            if (debug) {
+                Log.d(TAG, "Solution plan request: ${contents.size} messages in conversation")
+            }
+
+            client.newCall(httpRequest).execute().use { response ->
+                val responseBody = response.body?.string() ?: ""
+
+                if (debug) {
+                    Log.d(TAG, "Response code: ${response.code}")
+                    Log.d(TAG, "Response body: $responseBody")
+                }
+
+                if (!response.isSuccessful) {
+                    val errorResponse = try {
+                        json.decodeFromString<GeminiErrorResponse>(responseBody)
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    val errorMessage = errorResponse?.error?.message
+                        ?: "API request failed with code ${response.code}"
+
+                    Log.e(TAG, "API error: $errorMessage")
+                    return@withContext Result.failure(Exception(errorMessage))
+                }
+
+                val geminiResponse = json.decodeFromString<GeminiResponse>(responseBody)
+                val text = geminiResponse.candidates.firstOrNull()
+                    ?.content
+                    ?.parts
+                    ?.firstOrNull()
+                    ?.text
+
+                if (text != null) {
+                    Result.success(text)
+                } else {
+                    Result.failure(Exception("No text in response"))
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating solution plan", e)
+            Result.failure(e)
+        }
     }
 
     /**

@@ -58,6 +58,9 @@ class AIHelperActivity : AppCompatActivity() {
     private var currentScreenshot: Bitmap? = null
     private var currentScreenshotPath: String? = null
 
+    // Chat history for maintaining conversation context with the AI model
+    private val chatHistory = mutableListOf<ch.heuscher.airescuering.data.api.Content>()
+
     // Two-stage flow: planning and execution
     private var currentUserRequest: String? = null
     private var currentPlan: String? = null
@@ -276,6 +279,12 @@ class AIHelperActivity : AppCompatActivity() {
         )
         addMessage(userMessage)
 
+        // Add user message to chat history
+        chatHistory.add(ch.heuscher.airescuering.data.api.Content(
+            role = "user",
+            parts = listOf(ch.heuscher.airescuering.data.api.Part(text = text))
+        ))
+
         // Store current request for two-stage flow
         currentUserRequest = text
 
@@ -297,15 +306,22 @@ class AIHelperActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                Log.d(TAG, "Stage 1: Generating solution plan...")
+                Log.d(TAG, "Stage 1: Generating solution plan with chat history (${chatHistory.size} messages)...")
                 val planResult = service.generateSolutionPlan(
                     userRequest = text,
                     screenshot = currentScreenshot,
-                    context = "The user is on their Android device"
+                    context = "The user is on their Android device",
+                    conversationHistory = chatHistory.toList()
                 )
 
                 planResult.onSuccess { plan ->
                     Log.d(TAG, "Stage 1: Plan generated successfully")
+
+                    // Add assistant response to chat history
+                    chatHistory.add(ch.heuscher.airescuering.data.api.Content(
+                        role = "model",
+                        parts = listOf(ch.heuscher.airescuering.data.api.Part(text = plan))
+                    ))
 
                     // Show plan to user
                     val planMessage = AIMessage(
