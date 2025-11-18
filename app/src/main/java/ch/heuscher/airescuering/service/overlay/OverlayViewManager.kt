@@ -295,7 +295,28 @@ class OverlayViewManager(
         return Pair(constrainedX, constrainedY)
     }
 
+    /**
+     * Sets the initial position before the view is created.
+     * This ensures the overlay appears at the correct position immediately.
+     */
+    fun setInitialPosition(position: DotPosition) {
+        // Create layout params if they don't exist yet
+        if (layoutParams == null) {
+            setupLayoutParams()
+        }
+        layoutParams?.let { params ->
+            params.x = position.x
+            params.y = position.y
+            Log.d(TAG, "setInitialPosition: Initial position set to (${position.x}, ${position.y})")
+        }
+    }
+
     private fun setupLayoutParams() {
+        // Only create layoutParams if they don't already exist
+        if (layoutParams != null) {
+            return
+        }
+
         val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {

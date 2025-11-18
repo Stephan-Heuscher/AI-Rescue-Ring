@@ -120,6 +120,9 @@ class OverlayService : Service() {
             onAnimationComplete = { position -> onAnimationComplete(position) }
         )
 
+        // Restore saved position before creating the overlay view
+        restoreInitialPosition()
+
         // Create overlay view
         viewManager.createOverlayView()
 
@@ -229,6 +232,34 @@ class OverlayService : Service() {
         val requiresLongPress = (tapBehavior == "SAFE_HOME")
         gestureDetector.setRequiresLongPressToDrag(requiresLongPress)
         Log.d(TAG, "updateGestureMode: tapBehavior=$tapBehavior, requiresLongPress=$requiresLongPress")
+    }
+
+    private fun restoreInitialPosition() {
+        // Use runBlocking to ensure position is set before view is created
+        kotlinx.coroutines.runBlocking {
+            try {
+                // Get saved position percentages and screen dimensions
+                val positionPercent = settingsRepository.getPositionPercent().first()
+                val screenSize = orientationHandler.getUsableScreenSize()
+                val rotation = orientationHandler.getCurrentRotation()
+
+                // Convert percentages to absolute position for current screen
+                val restoredPosition = DotPosition.fromPercentages(
+                    positionPercent,
+                    screenSize.x,
+                    screenSize.y,
+                    rotation
+                )
+
+                Log.d(TAG, "restoreInitialPosition: Restored position from percentages (${positionPercent.xPercent}, ${positionPercent.yPercent}) to pixels (${restoredPosition.x}, ${restoredPosition.y}) for screen ${screenSize.x}x${screenSize.y}")
+
+                // Set the initial position in the view manager
+                viewManager.setInitialPosition(restoredPosition)
+            } catch (e: Exception) {
+                Log.e(TAG, "restoreInitialPosition: Error restoring position", e)
+                // If restoration fails, view will use default position
+            }
+        }
     }
 
     private fun initializeScreenDimensions() {
