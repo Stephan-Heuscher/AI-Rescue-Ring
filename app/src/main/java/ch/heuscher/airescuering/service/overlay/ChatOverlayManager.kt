@@ -88,14 +88,25 @@ class ChatOverlayManager(
         }
 
         try {
+            Log.d(TAG, "=== show: Creating chat overlay ===")
+
             // Inflate the chat overlay layout
             val inflater = LayoutInflater.from(context)
             chatOverlayView = inflater.inflate(R.layout.chat_overlay_layout, null)
 
-            // Set up the window layout parameters
+            // Get screen dimensions
+            val displayMetrics = context.resources.displayMetrics
+            val screenWidth = displayMetrics.widthPixels
+            val screenHeight = displayMetrics.heightPixels
+            val targetHeight = (screenHeight / 3.0).toInt()
+
+            Log.d(TAG, "Screen dimensions: ${screenWidth}x${screenHeight}px")
+            Log.d(TAG, "Target overlay height: ${targetHeight}px (1/3 of screen)")
+
+            // Set up the window layout parameters with dynamic height
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.MATCH_PARENT,
+                targetHeight,  // Use 1/3 of screen height instead of MATCH_PARENT
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                 } else {
@@ -106,10 +117,12 @@ class ChatOverlayManager(
                         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 PixelFormat.TRANSLUCENT
             ).apply {
-                gravity = Gravity.CENTER
+                gravity = Gravity.BOTTOM  // Position at bottom by default
                 // Make it focusable when shown to allow text input
                 flags = flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
             }
+
+            Log.d(TAG, "WindowManager params: width=${params.width}, height=${params.height}, gravity=${params.gravity}")
 
             // Add view to window manager
             windowManager.addView(chatOverlayView, params)
@@ -130,7 +143,7 @@ class ChatOverlayManager(
                 pendingScreenshot = null
             }
 
-            Log.d(TAG, "Chat overlay shown successfully")
+            Log.d(TAG, "=== show: Chat overlay shown successfully at height ${targetHeight}px ===")
         } catch (e: Exception) {
             Log.e(TAG, "Error showing chat overlay", e)
             Toast.makeText(context, "Error showing chat: ${e.message}", Toast.LENGTH_SHORT).show()
