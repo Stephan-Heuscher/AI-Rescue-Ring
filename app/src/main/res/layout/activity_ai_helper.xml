@@ -8,13 +8,14 @@
     android:background="#80000000"
     tools:context=".AIHelperActivity">
 
-<!-- Screenshot Background (dimmed) -->
+<!-- Screenshot Background (smaller, fully visible) -->
 <ImageView
     android:id="@+id/screenshotBackground"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:scaleType="centerCrop"
-    android:alpha="0.3"
+    android:layout_height="200dp"
+    android:layout_gravity="top"
+    android:scaleType="fitCenter"
+    android:alpha="0.5"
     android:visibility="gone" />
 
 <!-- Dimming overlay on top of screenshot -->
@@ -26,9 +27,10 @@
     android:visibility="gone" />
 
 <androidx.cardview.widget.CardView
+    android:id="@+id/chatCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_gravity="center"
+    android:layout_gravity="bottom"
     android:layout_margin="16dp"
     app:cardCornerRadius="16dp"
     app:cardElevation="8dp"
@@ -38,8 +40,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#FFFFFF"
-    android:maxHeight="600dp">
+    android:background="#FFFFFF">
 
     <!-- Top Bar -->
     <LinearLayout
@@ -47,7 +48,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="#D91976D2"
-        android:padding="16dp"
+        android:padding="8dp"
         android:gravity="center_vertical"
         android:elevation="4dp">
 
@@ -56,24 +57,85 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="AI Helper"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF" />
 
         <Button
+            android:id="@+id/positionTopButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="⬆"
+            android:textSize="16sp"
+            android:minHeight="40dp"
+            style="?android:attr/buttonBarButtonStyle" />
+
+        <Button
+            android:id="@+id/positionBottomButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="⬇"
+            android:textSize="16sp"
+            android:minHeight="40dp"
+            style="?android:attr/buttonBarButtonStyle" />
+
+        <Button
             android:id="@+id/newChatButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="New Chat"
-            android:minHeight="48dp"
+            android:layout_height="40dp"
+            android:text="New"
+            android:textSize="12sp"
+            android:minHeight="40dp"
             style="?android:attr/buttonBarButtonStyle" />
 
         <Button
             android:id="@+id/closeButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:text="Close"
-            android:minHeight="48dp"
+            android:textSize="12sp"
+            android:minHeight="40dp"
+            style="?android:attr/buttonBarButtonStyle" />
+    </LinearLayout>
+
+    <!-- Step Navigation -->
+    <LinearLayout
+        android:id="@+id/stepNavigationContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center"
+        android:background="#E3F2FD"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/stepBackButton"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="◀ Back"
+            android:textSize="14sp"
+            android:minHeight="40dp"
+            style="?android:attr/buttonBarButtonStyle" />
+
+        <TextView
+            android:id="@+id/stepIndicator"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Step 1 of 5"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:textColor="#1976D2" />
+
+        <Button
+            android:id="@+id/stepForwardButton"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="Next ▶"
+            android:textSize="14sp"
+            android:minHeight="40dp"
             style="?android:attr/buttonBarButtonStyle" />
     </LinearLayout>
 
@@ -81,9 +143,9 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messagesRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="400dp"
-        android:padding="16dp"
-        android:paddingBottom="24dp"
+        android:layout_height="200dp"
+        android:padding="12dp"
+        android:paddingBottom="16dp"
         android:clipToPadding="false"
         android:scrollbarStyle="outsideOverlay"
         tools:listitem="@layout/item_chat_message" />
@@ -94,7 +156,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginVertical="8dp"
+        android:layout_marginVertical="4dp"
         android:visibility="gone" />
 
     <!-- Input Area -->
@@ -102,10 +164,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="32dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         android:gravity="center_vertical"
         android:background="#F5F5F5"
         android:elevation="8dp">
@@ -116,39 +178,40 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="Ask me anything..."
-            android:minHeight="56dp"
+            android:minHeight="48dp"
             android:background="@android:drawable/edit_text"
-            android:padding="18dp"
+            android:padding="12dp"
             android:inputType="textCapSentences|textMultiLine"
-            android:maxLines="4"
-            android:textSize="17sp"
-            android:lineSpacingExtra="2dp" />
+            android:maxLines="3"
+            android:textSize="15sp"
+            android:lineSpacingExtra="2dp"
+            android:imeOptions="actionSend" />
 
         <Button
             android:id="@+id/screenshotButton"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:text="📸"
-            android:textSize="20sp"
-            android:layout_marginStart="8dp"
+            android:textSize="18sp"
+            android:layout_marginStart="6dp"
             style="?android:attr/borderlessButtonStyle" />
 
         <Button
             android:id="@+id/voiceButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:text="🎤"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:layout_marginStart="4dp"
             style="?android:attr/borderlessButtonStyle" />
 
         <Button
             android:id="@+id/sendButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:text="➤"
-            android:textSize="24sp"
-            android:layout_marginStart="2dp"
+            android:textSize="20sp"
+            android:layout_marginStart="4dp"
             android:background="#2196F3"
             android:textColor="#FFFFFF"
             style="?android:attr/borderlessButtonStyle" />

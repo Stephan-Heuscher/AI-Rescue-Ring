@@ -9,11 +9,15 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.text.InputType
 import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -52,6 +56,13 @@ class AIHelperActivity : AppCompatActivity() {
     private lateinit var newChatButton: Button
     private lateinit var closeButton: Button
     private lateinit var loadingIndicator: ProgressBar
+    private lateinit var chatCard: CardView
+    private lateinit var positionTopButton: Button
+    private lateinit var positionBottomButton: Button
+    private lateinit var stepNavigationContainer: LinearLayout
+    private lateinit var stepBackButton: Button
+    private lateinit var stepForwardButton: Button
+    private lateinit var stepIndicator: TextView
 
     private val messages = mutableListOf<AIMessage>()
     private lateinit var adapter: ChatAdapter
@@ -71,6 +82,10 @@ class AIHelperActivity : AppCompatActivity() {
     private var isExecuting = false
     private var stopButton: Button? = null
 
+    // Step navigation
+    private var currentSteps: List<String> = emptyList()
+    private var currentStepIndex: Int = 0
+
     companion object {
         private const val TAG = "AIHelperActivity"
         private const val VOICE_RECOGNITION_REQUEST_CODE = 1001
@@ -79,6 +94,10 @@ class AIHelperActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "=== onCreate: START ===")
+
+        // Make input visible when keyboard shows
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+
         setContentView(R.layout.activity_ai_helper)
 
         initViews()
@@ -173,6 +192,13 @@ class AIHelperActivity : AppCompatActivity() {
         newChatButton = findViewById(R.id.newChatButton)
         closeButton = findViewById(R.id.closeButton)
         loadingIndicator = findViewById(R.id.loadingIndicator)
+        chatCard = findViewById(R.id.chatCard)
+        positionTopButton = findViewById(R.id.positionTopButton)
+        positionBottomButton = findViewById(R.id.positionBottomButton)
+        stepNavigationContainer = findViewById(R.id.stepNavigationContainer)
+        stepBackButton = findViewById(R.id.stepBackButton)
+        stepForwardButton = findViewById(R.id.stepForwardButton)
+        stepIndicator = findViewById(R.id.stepIndicator)
     }
 
     private fun initMarkwon() {
@@ -196,6 +222,21 @@ class AIHelperActivity : AppCompatActivity() {
             }
         }
 
+        // Submit on Enter key
+        messageInput.setOnEditorActionListener { _, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEND ||
+                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)) {
+                val text = messageInput.text.toString().trim()
+                if (text.isNotEmpty()) {
+                    sendMessage(text)
+                    messageInput.text.clear()
+                }
+                true
+            } else {
+                false
+            }
+        }
+
         voiceButton.setOnClickListener {
             startVoiceRecognition()
         }
@@ -210,6 +251,119 @@ class AIHelperActivity : AppCompatActivity() {
 
         closeButton.setOnClickListener {
             finish()
+        }
+
+        // Position buttons
+        positionTopButton.setOnClickListener {
+            positionWindowAt(isTop = true)
+        }
+
+        positionBottomButton.setOnClickListener {
+            positionWindowAt(isTop = false)
+        }
+
+        // Step navigation buttons
+        stepBackButton.setOnClickListener {
+            navigateStep(forward = false)
+        }
+
+        stepForwardButton.setOnClickListener {
+            navigateStep(forward = true)
+        }
+    }
+
+    /**
+     * Position the chat window at top or bottom of screen
+     */
+    private fun positionWindowAt(isTop: Boolean) {
+        val params = chatCard.layoutParams as FrameLayout.LayoutParams
+        params.gravity = if (isTop) {
+            android.view.Gravity.TOP
+        } else {
+            android.view.Gravity.BOTTOM
+        }
+        chatCard.layoutParams = params
+        Log.d(TAG, "Window positioned at ${if (isTop) "top" else "bottom"}")
+    }
+
+    /**
+     * Parse steps from AI response that start with ###
+     */
+    private fun parseSteps(content: String): List<String> {
+        val steps = mutableListOf<String>()
+        val lines = content.lines()
+        var currentStep = StringBuilder()
+
+        for (line in lines) {
+            if (line.trim().startsWith("###")) {
+                // Save previous step if exists
+                if (currentStep.isNotEmpty()) {
+                    steps.add(currentStep.toString().trim())
+                    currentStep = StringBuilder()
+                }
+                // Start new step (remove ###)
+                currentStep.append(line.trim().removePrefix("###").trim()).append("\n")
+            } else if (currentStep.isNotEmpty()) {
+                // Continue current step
+                currentStep.append(line).append("\n")
+            }
+        }
+
+        // Add last step
+        if (currentStep.isNotEmpty()) {
+            steps.add(currentStep.toString().trim())
+        }
+
+        return steps
+    }
+
+    /**
+     * Display current step in the message list
+     */
+    private fun displayCurrentStep() {
+        if (currentSteps.isEmpty() || currentStepIndex !in currentSteps.indices) {
+            return
+        }
+
+        // Update step indicator
+        stepIndicator.text = "Step ${currentStepIndex + 1} of ${currentSteps.size}"
+
+        // Update button states
+        stepBackButton.isEnabled = currentStepIndex > 0
+        stepForwardButton.isEnabled = currentStepIndex < currentSteps.size - 1
+
+        // Add or update step message
+        val stepContent = "### Step ${currentStepIndex + 1}\n\n${currentSteps[currentStepIndex]}"
+        val stepMessage = AIMessage(
+            id = "step_${currentStepIndex}",
+            content = stepContent,
+            role = MessageRole.ASSISTANT
+        )
+
+        // Remove last message if it's a step message, then add new one
+        if (messages.isNotEmpty() && messages.last().id.startsWith("step_")) {
+            messages.removeAt(messages.size - 1)
+            adapter.notifyItemRemoved(messages.size)
+        }
+
+        addMessage(stepMessage)
+    }
+
+    /**
+     * Navigate to next or previous step
+     */
+    private fun navigateStep(forward: Boolean) {
+        if (currentSteps.isEmpty()) return
+
+        val newIndex = if (forward) {
+            (currentStepIndex + 1).coerceIn(0, currentSteps.size - 1)
+        } else {
+            (currentStepIndex - 1).coerceIn(0, currentSteps.size - 1)
+        }
+
+        if (newIndex != currentStepIndex) {
+            currentStepIndex = newIndex
+            displayCurrentStep()
         }
     }
 
@@ -380,13 +534,25 @@ class AIHelperActivity : AppCompatActivity() {
                         parts = listOf(ch.heuscher.airescuering.data.api.Part(text = plan))
                     ))
 
-                    // Show plan to user
-                    val planMessage = AIMessage(
-                        id = UUID.randomUUID().toString(),
-                        content = "📋 Here's my plan to help you:\n\n$plan",
-                        role = MessageRole.ASSISTANT
-                    )
-                    addMessage(planMessage)
+                    // Parse steps from plan
+                    val steps = parseSteps(plan)
+
+                    if (steps.isNotEmpty()) {
+                        // Show step navigation for step-based responses
+                        currentSteps = steps
+                        currentStepIndex = 0
+                        stepNavigationContainer.visibility = View.VISIBLE
+                        displayCurrentStep()
+                    } else {
+                        // Show full plan if no steps found
+                        stepNavigationContainer.visibility = View.GONE
+                        val planMessage = AIMessage(
+                            id = UUID.randomUUID().toString(),
+                            content = plan,
+                            role = MessageRole.ASSISTANT
+                        )
+                        addMessage(planMessage)
+                    }
 
                     // Store the plan
                     currentPlan = plan
