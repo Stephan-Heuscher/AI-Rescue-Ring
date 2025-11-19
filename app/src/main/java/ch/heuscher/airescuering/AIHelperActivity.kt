@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
 import android.text.InputType
 import android.util.Log
 import android.view.KeyEvent
@@ -46,7 +47,7 @@ import java.util.*
  * Activity for AI-powered assistance using Gemini API.
  * Provides chat interface with voice input support.
  */
-class AIHelperActivity : AppCompatActivity() {
+class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private lateinit var messagesRecyclerView: RecyclerView
     private lateinit var messageInput: EditText
@@ -71,6 +72,7 @@ class AIHelperActivity : AppCompatActivity() {
     private var geminiService: GeminiApiService? = null
     private var currentScreenshot: Bitmap? = null
     private var currentScreenshotPath: String? = null
+    private var tts: TextToSpeech? = null
 
     // Chat history for maintaining conversation context with the AI model
     private val chatHistory = mutableListOf<ch.heuscher.airescuering.data.api.Content>()
@@ -94,6 +96,9 @@ class AIHelperActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "=== onCreate: START ===")
+
+        // Initialize TTS
+        tts = TextToSpeech(this, this)
 
         // Make input visible when keyboard shows
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
@@ -1023,6 +1028,16 @@ class AIHelperActivity : AppCompatActivity() {
         messages.add(message)
         adapter.notifyItemInserted(messages.size - 1)
         messagesRecyclerView.scrollToPosition(messages.size - 1)
+
+        if (message.role == MessageRole.ASSISTANT) {
+            // Strip markdown symbols for speech if needed, but TTS usually handles basic text well.
+            // Simple cleanup for better speech
+            val speechText = message.content
+                .replace("*", "")
+                .replace("#", "")
+                .replace("`", "")
+            speakResponse(speechText)
+        }
     }
 
     private fun startVoiceRecognition() {
@@ -1362,5 +1377,28 @@ class AIHelperActivity : AppCompatActivity() {
         }
 
         override fun getItemCount() = messages.size
+    }
+
+    override fun onDestroy() {
+        if (tts != null) {
+            tts?.stop()
+            tts?.shutdown()
+        }
+        super.onDestroy()
+    }
+
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            val result = tts?.setLanguage(Locale.getDefault())
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.e(TAG, "TTS: Language not supported")
+            }
+        } else {
+            Log.e(TAG, "TTS: Initialization failed")
+        }
+    }
+
+    private fun speakResponse(text: String) {
+        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
     }
 }

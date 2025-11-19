@@ -57,48 +57,48 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="AI Helper"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF" />
 
         <Button
             android:id="@+id/positionTopButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:text="⬆"
-            android:textSize="16sp"
+            android:textSize="20sp"
             android:textColor="#FFFFFF"
-            android:minHeight="40dp"
+            android:minHeight="48dp"
             style="?android:attr/buttonBarButtonStyle" />
 
         <Button
             android:id="@+id/positionBottomButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:text="⬇"
-            android:textSize="16sp"
+            android:textSize="20sp"
             android:textColor="#FFFFFF"
-            android:minHeight="40dp"
+            android:minHeight="48dp"
             style="?android:attr/buttonBarButtonStyle" />
 
         <Button
             android:id="@+id/newChatButton"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="48dp"
             android:text="New"
-            android:textSize="12sp"
+            android:textSize="14sp"
             android:textColor="#FFFFFF"
-            android:minHeight="40dp"
+            android:minHeight="48dp"
             style="?android:attr/buttonBarButtonStyle" />
 
         <Button
             android:id="@+id/closeButton"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="48dp"
             android:text="Close"
-            android:textSize="12sp"
+            android:textSize="14sp"
             android:textColor="#FFFFFF"
-            android:minHeight="40dp"
+            android:minHeight="48dp"
             style="?android:attr/buttonBarButtonStyle" />
     </LinearLayout>
 
@@ -116,10 +116,10 @@
         <Button
             android:id="@+id/stepBackButton"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="48dp"
             android:text="◀ Back"
-            android:textSize="14sp"
-            android:minHeight="40dp"
+            android:textSize="16sp"
+            android:minHeight="48dp"
             style="?android:attr/buttonBarButtonStyle" />
 
         <TextView
@@ -128,7 +128,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Step 1 of 5"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:gravity="center"
             android:textColor="#1976D2" />
@@ -136,10 +136,10 @@
         <Button
             android:id="@+id/stepForwardButton"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="48dp"
             android:text="Next ▶"
-            android:textSize="14sp"
-            android:minHeight="40dp"
+            android:textSize="16sp"
+            android:minHeight="48dp"
             style="?android:attr/buttonBarButtonStyle" />
     </LinearLayout>
 
@@ -183,39 +183,39 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="Ask me anything..."
-            android:minHeight="48dp"
+            android:minHeight="56dp"
             android:background="@android:drawable/edit_text"
             android:padding="12dp"
             android:inputType="textCapSentences|textMultiLine"
             android:maxLines="3"
-            android:textSize="15sp"
+            android:textSize="18sp"
             android:lineSpacingExtra="2dp"
             android:imeOptions="actionSend" />
 
         <Button
             android:id="@+id/screenshotButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:text="📸"
-            android:textSize="18sp"
+            android:textSize="24sp"
             android:layout_marginStart="6dp"
             style="?android:attr/borderlessButtonStyle" />
 
         <Button
             android:id="@+id/voiceButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:text="🎤"
-            android:textSize="18sp"
+            android:textSize="24sp"
             android:layout_marginStart="4dp"
             style="?android:attr/borderlessButtonStyle" />
 
         <Button
             android:id="@+id/sendButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:text="➤"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:layout_marginStart="4dp"
             android:background="#2196F3"
             android:textColor="#FFFFFF"
