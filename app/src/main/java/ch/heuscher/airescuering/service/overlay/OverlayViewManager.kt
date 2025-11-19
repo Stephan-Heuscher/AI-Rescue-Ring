@@ -7,6 +7,7 @@ import android.content.Context
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.InsetDrawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -139,7 +140,16 @@ class OverlayViewManager(
             val background = GradientDrawable()
             background.shape = GradientDrawable.OVAL
             background.setColor(settings.color)
-            view.background = background
+            
+            // Create an InsetDrawable to make the colored circle smaller (interior)
+            // Inset by 25% of the size on all sides (halving the diameter effectively)
+            val inset = (sizePx * 0.25f).toInt()
+            val insetBackground = InsetDrawable(background, inset, inset, inset, inset)
+            
+            view.background = insetBackground
+            
+            // Ensure bottom padding is sufficient so emoji isn't cut off
+            view.setPadding(0, 0, 0, (sizePx * 0.1f).toInt())
         }
     }
 

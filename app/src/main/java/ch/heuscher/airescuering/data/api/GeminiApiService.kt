@@ -354,14 +354,16 @@ IMPORTANT GUIDELINES:
 - Give specific instructions based on what you see in the image
 - Point out exact buttons, icons, or text they should look for
 - Break down tasks into small, clear steps
+- Start each step with ### followed by a brief title
 - Use emojis to make instructions friendly and visual
 - Be encouraging and supportive
 - Reference specific things you see on their screen (e.g., "I can see the Settings icon in the top right")
 
 RESPONSE FORMAT:
-1. Acknowledge what you see on their screen
-2. Specific step-by-step instructions based on the screenshot
-3. Encouraging message
+- Start each step with ### followed by a brief title
+- Follow with the detailed instructions for that step
+- Keep each step separate and focused
+- Users will navigate through steps one at a time using forward/back buttons
         """.trimIndent()
 
             val userMessage = buildString {
@@ -468,6 +470,12 @@ When provided with a screenshot and user request:
 1. Analyze the screenshot to understand what's on screen
 2. Understand what the user wants to do
 3. Provide clear, actionable steps they can take
+
+RESPONSE FORMAT:
+- Start each step with ### followed by a brief title
+- Follow with the detailed instructions for that step
+- Keep each step separate and focused
+- Users will navigate through steps one at a time using forward/back buttons
 
 Your response should be concise and focus on what can be done right now on their device.
 Be helpful and specific about which UI elements to interact with if visible in the screenshot.

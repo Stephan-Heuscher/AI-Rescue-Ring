@@ -18,7 +18,9 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -54,14 +56,20 @@ class ChatOverlayManager(
     // UI Components
     private var messagesRecyclerView: RecyclerView? = null
     private var messageInput: EditText? = null
-    private var sendButton: Button? = null
-    private var voiceButton: Button? = null
-    private var screenshotButton: Button? = null
-    private var hideButton: Button? = null
+    private var sendButton: ImageButton? = null
+    private var voiceButton: ImageButton? = null
+    private var screenshotButton: ImageButton? = null
+    private var hideButton: ImageButton? = null
     private var loadingIndicator: ProgressBar? = null
     private var screenshotPreviewContainer: View? = null
     private var screenshotPreviewImage: android.widget.ImageView? = null
     private var deleteScreenshotButton: Button? = null
+    private var moveTopButton: ImageButton? = null
+    private var moveBottomButton: ImageButton? = null
+    private var stepForwardButton: Button? = null
+    private var stepBackwardButton: Button? = null
+    private var stepIndicator: TextView? = null
+    private var stepsContainer: View? = null
 
     // Chat state
     private val messages = mutableListOf<AIMessage>()
@@ -69,6 +77,10 @@ class ChatOverlayManager(
     private var geminiService: GeminiApiService? = null
     private var currentScreenshotBitmap: Bitmap? = null
     private var pendingScreenshot: Bitmap? = null
+    
+    // Step navigation state
+    private var currentSteps = listOf<String>()
+    private var currentStepIndex = 0
 
     // Callbacks
     var onHideRequest: (() -> Unit)? = null
@@ -98,28 +110,27 @@ class ChatOverlayManager(
             val displayMetrics = context.resources.displayMetrics
             val screenWidth = displayMetrics.widthPixels
             val screenHeight = displayMetrics.heightPixels
-            val targetHeight = (screenHeight / 3.0).toInt()
+            val maxHeight = (screenHeight * 0.5).toInt()
 
             Log.d(TAG, "Screen dimensions: ${screenWidth}x${screenHeight}px")
-            Log.d(TAG, "Target overlay height: ${targetHeight}px (1/3 of screen)")
+            Log.d(TAG, "Max overlay height: ${maxHeight}px (50% of screen)")
 
             // Set up the window layout parameters with dynamic height
             val params = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
-                targetHeight,  // Use 1/3 of screen height instead of MATCH_PARENT
+                WindowManager.LayoutParams.WRAP_CONTENT,
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
                 } else {
                     @Suppress("DEPRECATION")
                     WindowManager.LayoutParams.TYPE_PHONE
                 },
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH, // Allow interaction with outside window
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.BOTTOM  // Position at bottom by default
-                // Make it focusable when shown to allow text input
-                flags = flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
+                softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE // Resize for keyboard
             }
 
             Log.d(TAG, "WindowManager params: width=${params.width}, height=${params.height}, gravity=${params.gravity}")
@@ -130,6 +141,29 @@ class ChatOverlayManager(
 
             // Initialize UI components
             initializeViews()
+            
+            // Set max height for RecyclerView to prevent overlay from taking too much space
+            messagesRecyclerView?.let { recyclerView ->
+                val layoutParams = recyclerView.layoutParams
+                // We can't set maxHeight directly on LayoutParams, but we can use a constraint
+                // or just rely on the fact that WRAP_CONTENT will grow.
+                // To strictly limit it, we would need a custom view or ConstraintLayout.
+                // For now, let's set a fixed height if it gets too big, or just let it be.
+                // A better approach is to set the height of the RecyclerView to a specific value
+                // when it has content, or use a custom MaxHeightRecyclerView.
+                
+                // Let's try to set a max height on the root view if possible, 
+                // but WindowManager handles the root.
+                // We can set a max height on the RecyclerView programmatically.
+                recyclerView.viewTreeObserver.addOnGlobalLayoutListener {
+                    if (recyclerView.height > maxHeight) {
+                        val params = recyclerView.layoutParams
+                        params.height = maxHeight
+                        recyclerView.layoutParams = params
+                    }
+                }
+            }
+
             setupListeners()
             setupRecyclerView()
 
@@ -143,7 +177,7 @@ class ChatOverlayManager(
                 pendingScreenshot = null
             }
 
-            Log.d(TAG, "=== show: Chat overlay shown successfully at height ${targetHeight}px ===")
+            Log.d(TAG, "=== show: Chat overlay shown successfully ===")
         } catch (e: Exception) {
             Log.e(TAG, "Error showing chat overlay", e)
             Toast.makeText(context, "Error showing chat: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -216,6 +250,12 @@ class ChatOverlayManager(
             screenshotPreviewContainer = view.findViewById(R.id.screenshotPreviewContainer)
             screenshotPreviewImage = view.findViewById(R.id.screenshotPreviewImage)
             deleteScreenshotButton = view.findViewById(R.id.deleteScreenshotButton)
+            moveTopButton = view.findViewById(R.id.moveTopButton)
+            moveBottomButton = view.findViewById(R.id.moveBottomButton)
+            stepForwardButton = view.findViewById(R.id.stepForwardButton)
+            stepBackwardButton = view.findViewById(R.id.stepBackwardButton)
+            stepIndicator = view.findViewById(R.id.stepIndicator)
+            stepsContainer = view.findViewById(R.id.stepsContainer)
         }
     }
 
@@ -227,11 +267,48 @@ class ChatOverlayManager(
             onHideRequest?.invoke()
         }
 
+        moveTopButton?.setOnClickListener {
+            updateWindowPosition(Gravity.TOP)
+        }
+
+        moveBottomButton?.setOnClickListener {
+            updateWindowPosition(Gravity.BOTTOM)
+        }
+
+        stepForwardButton?.setOnClickListener {
+            if (currentStepIndex < currentSteps.size - 1) {
+                currentStepIndex++
+                updateStepUI()
+            }
+        }
+
+        stepBackwardButton?.setOnClickListener {
+            if (currentStepIndex > 0) {
+                currentStepIndex--
+                updateStepUI()
+            }
+        }
+
         sendButton?.setOnClickListener {
             val text = messageInput?.text?.toString()?.trim()
             if (!text.isNullOrEmpty()) {
                 sendMessage(text)
                 messageInput?.text?.clear()
+            }
+        }
+
+        // Send on Enter
+        messageInput?.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEND ||
+                (event != null && event.keyCode == android.view.KeyEvent.KEYCODE_ENTER && event.action == android.view.KeyEvent.ACTION_DOWN)) {
+                val text = messageInput?.text?.toString()?.trim()
+                if (!text.isNullOrEmpty()) {
+                    sendMessage(text)
+                    messageInput?.text?.clear()
+                }
+                true
+            } else {
+                false
             }
         }
 
@@ -279,6 +356,12 @@ class ChatOverlayManager(
      * Send a message to the AI
      */
     private fun sendMessage(text: String, screenshotBase64: String? = null) {
+        // Reset steps for new request
+        Handler(Looper.getMainLooper()).post {
+            currentSteps = emptyList()
+            updateStepUI()
+        }
+
         // Check if we have a current screenshot to include
         val screenshot = screenshotBase64 ?: currentScreenshotBitmap?.let { bitmapToBase64(it) }
 
@@ -326,6 +409,21 @@ class ChatOverlayManager(
                 }
 
                 result.onSuccess { response ->
+                    // Parse steps if present
+                    if (response.contains("###")) {
+                        val rawSteps = response.split("###")
+                        // Filter out empty strings and trim
+                        val steps = rawSteps.filter { it.isNotBlank() }.map { it.trim() }
+                        
+                        if (steps.isNotEmpty()) {
+                            Handler(Looper.getMainLooper()).post {
+                                currentSteps = steps
+                                currentStepIndex = 0
+                                updateStepUI()
+                            }
+                        }
+                    }
+
                     val assistantMessage = AIMessage(
                         id = UUID.randomUUID().toString(),
                         content = response,
@@ -431,6 +529,40 @@ class ChatOverlayManager(
         Handler(Looper.getMainLooper()).post {
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    /**
+     * Update the window position (Top or Bottom)
+     */
+    private fun updateWindowPosition(gravity: Int) {
+        chatOverlayView?.let { view ->
+            val params = view.layoutParams as WindowManager.LayoutParams
+            params.gravity = gravity
+            windowManager.updateViewLayout(view, params)
+        }
+    }
+
+    /**
+     * Update the step navigation UI
+     */
+    private fun updateStepUI() {
+        if (currentSteps.isEmpty()) {
+            stepsContainer?.visibility = View.GONE
+            return
+        }
+
+        stepsContainer?.visibility = View.VISIBLE
+        
+        // Update step indicator
+        stepIndicator?.text = "Step ${currentStepIndex + 1} of ${currentSteps.size}"
+        
+        // Update step text
+        val currentStepText = chatOverlayView?.findViewById<android.widget.TextView>(R.id.currentStepText)
+        currentStepText?.text = currentSteps[currentStepIndex].trim()
+        
+        // Update buttons
+        stepBackwardButton?.isEnabled = currentStepIndex > 0
+        stepForwardButton?.isEnabled = currentStepIndex < currentSteps.size - 1
     }
 
     /**
