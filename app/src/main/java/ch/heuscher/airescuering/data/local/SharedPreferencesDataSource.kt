@@ -71,6 +71,15 @@ class SharedPreferencesDataSource(
         prefs.edit().putInt(AppConstants.KEY_ALPHA, alpha).apply()
     }
 
+    override fun getSize(): Flow<Int> =
+        getPreferenceFlow(AppConstants.KEY_SIZE, AppConstants.DEFAULT_SIZE) { prefs, key, default ->
+            prefs.getInt(key, default)
+        }
+
+    override suspend fun setSize(size: Int) {
+        prefs.edit().putInt(AppConstants.KEY_SIZE, size).apply()
+    }
+
     override fun getPositionX(): Flow<Int> =
         getPreferenceFlow(AppConstants.KEY_POSITION_X, AppConstants.DEFAULT_POSITION_X_PX) { prefs, key, default ->
             prefs.getInt(key, default)

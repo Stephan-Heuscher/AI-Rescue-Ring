@@ -34,6 +34,12 @@ class SettingsRepositoryImpl(
         dataSource.setAlpha(alpha)
     }
 
+    override fun getSize(): Flow<Int> = dataSource.getSize()
+
+    override suspend fun setSize(size: Int) {
+        dataSource.setSize(size)
+    }
+
     override fun getPosition(): Flow<DotPosition> = combine(
         dataSource.getPositionX(),
         dataSource.getPositionY(),
@@ -106,6 +112,7 @@ class SettingsRepositoryImpl(
         isOverlayEnabled(),
         getColor(),
         getAlpha(),
+        getSize(),
         getPosition(),
         getPositionPercent(),
         getRecentsTimeout(),
@@ -119,14 +126,15 @@ class SettingsRepositoryImpl(
             isEnabled = values[0] as Boolean,
             color = values[1] as Int,
             alpha = values[2] as Int,
-            position = values[3] as DotPosition,
-            positionPercent = values[4] as DotPositionPercent,
-            recentsTimeout = values[5] as Long,
-            keyboardAvoidanceEnabled = values[6] as Boolean,
-            tapBehavior = values[7] as String,
-            screenWidth = values[8] as Int,
-            screenHeight = values[9] as Int,
-            rotation = values[10] as Int
+            size = values[3] as Int,
+            position = values[4] as DotPosition,
+            positionPercent = values[5] as DotPositionPercent,
+            recentsTimeout = values[6] as Long,
+            keyboardAvoidanceEnabled = values[7] as Boolean,
+            tapBehavior = values[8] as String,
+            screenWidth = values[9] as Int,
+            screenHeight = values[10] as Int,
+            rotation = values[11] as Int
         )
     }
 
@@ -134,6 +142,7 @@ class SettingsRepositoryImpl(
         setOverlayEnabled(settings.isEnabled)
         setColor(settings.color)
         setAlpha(settings.alpha)
+        setSize(settings.size)
         setPosition(settings.position)
         setPositionPercent(settings.positionPercent)
         setRecentsTimeout(settings.recentsTimeout)

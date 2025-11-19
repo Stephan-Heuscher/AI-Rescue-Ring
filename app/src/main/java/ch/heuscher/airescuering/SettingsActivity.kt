@@ -17,6 +17,14 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var keyboardAvoidanceSwitch: androidx.appcompat.widget.SwitchCompat
 
+    // Appearance fields
+    private lateinit var sizeSeekBar: android.widget.SeekBar
+    private lateinit var alphaSeekBar: android.widget.SeekBar
+    private lateinit var colorBlue: Button
+    private lateinit var colorRed: Button
+    private lateinit var colorGreen: Button
+    private lateinit var colorBlack: Button
+
     // AI Helper fields
     private lateinit var apiKeyInput: EditText
     private lateinit var voiceInputSwitch: androidx.appcompat.widget.SwitchCompat
@@ -40,12 +48,60 @@ class SettingsActivity : AppCompatActivity() {
         observeAIHelperSettings()
         setupBackButton()
         setupImpressumButton()
+        setupAppearanceControls()
         setupKeyboardAvoidanceSwitch()
         setupAIHelperControls()
     }
 
+    private fun setupAppearanceControls() {
+        sizeSeekBar.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    lifecycleScope.launch {
+                        // Map 0-100 to 32dp-96dp
+                        val size = 32 + (progress * 64 / 100)
+                        settingsRepository.setSize(size)
+                    }
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) {}
+        })
+
+        alphaSeekBar.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    lifecycleScope.launch {
+                        settingsRepository.setAlpha(progress)
+                    }
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) {}
+        })
+
+        colorBlue.setOnClickListener { updateColor(0xFF2196F3.toInt()) }
+        colorRed.setOnClickListener { updateColor(0xFFF44336.toInt()) }
+        colorGreen.setOnClickListener { updateColor(0xFF4CAF50.toInt()) }
+        colorBlack.setOnClickListener { updateColor(0xFF000000.toInt()) }
+    }
+
+    private fun updateColor(color: Int) {
+        lifecycleScope.launch {
+            settingsRepository.setColor(color)
+        }
+    }
+
     private fun initializeViews() {
         keyboardAvoidanceSwitch = findViewById(R.id.keyboard_avoidance_switch)
+
+        // Appearance views
+        sizeSeekBar = findViewById(R.id.size_seekbar)
+        alphaSeekBar = findViewById(R.id.alpha_seekbar)
+        colorBlue = findViewById(R.id.color_blue)
+        colorRed = findViewById(R.id.color_red)
+        colorGreen = findViewById(R.id.color_green)
+        colorBlack = findViewById(R.id.color_black)
 
         // AI Helper views
         apiKeyInput = findViewById(R.id.api_key_input)
@@ -75,6 +131,24 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun observeSettings() {
+        lifecycleScope.launch {
+            settingsRepository.getSize().collect { size ->
+                // Reverse mapping: progress = (size - 32) * 100 / 64
+                val progress = ((size - 32) * 100 / 64).coerceIn(0, 100)
+                if (sizeSeekBar.progress != progress) {
+                    sizeSeekBar.progress = progress
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            settingsRepository.getAlpha().collect { alpha ->
+                if (alphaSeekBar.progress != alpha) {
+                    alphaSeekBar.progress = alpha
+                }
+            }
+        }
+
         lifecycleScope.launch {
             settingsRepository.isKeyboardAvoidanceEnabled().collect { enabled ->
                 keyboardAvoidanceEnabled = enabled

@@ -10,6 +10,7 @@ data class OverlaySettings(
     val isEnabled: Boolean = false,
     val color: Int = AppConstants.DEFAULT_COLOR,
     val alpha: Int = AppConstants.ALPHA_DEFAULT,
+    val size: Int = AppConstants.DEFAULT_SIZE,
     val position: DotPosition = DotPosition(
         AppConstants.DEFAULT_POSITION_X_PX,
         AppConstants.DEFAULT_POSITION_Y_PX

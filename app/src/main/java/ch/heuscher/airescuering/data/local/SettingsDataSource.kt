@@ -21,6 +21,9 @@ interface SettingsDataSource {
     fun getAlpha(): Flow<Int>
     suspend fun setAlpha(alpha: Int)
 
+    fun getSize(): Flow<Int>
+    suspend fun setSize(size: Int)
+
     // Position settings
     fun getPositionX(): Flow<Int>
     suspend fun setPositionX(x: Int)

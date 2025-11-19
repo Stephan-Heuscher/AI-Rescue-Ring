@@ -22,6 +22,9 @@ interface SettingsRepository {
     fun getAlpha(): Flow<Int>
     suspend fun setAlpha(alpha: Int)
 
+    fun getSize(): Flow<Int>
+    suspend fun setSize(size: Int)
+
     // Position settings
     fun getPosition(): Flow<DotPosition>
     suspend fun setPosition(position: DotPosition)

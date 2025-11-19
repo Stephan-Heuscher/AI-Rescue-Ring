@@ -56,6 +56,8 @@ class OverlayViewManager(
     private var cachedNavBarPosition: NavBarPosition = NavBarPosition.NONE
     private var hasLoggedNavBar = false
 
+    private var currentSizePx: Int = 0
+
     /**
      * Creates and adds the overlay view to the window.
      */
@@ -105,7 +107,40 @@ class OverlayViewManager(
      * Updates the overlay appearance based on settings.
      */
     fun updateAppearance(settings: OverlaySettings) {
-        showNormalDot(settings)
+        // Update Alpha
+        floatingView?.alpha = settings.alpha / 255f
+
+        // Update Size
+        val density = context.resources.displayMetrics.density
+        val sizePx = (settings.size * density).toInt()
+        currentSizePx = sizePx
+        
+        // Update LayoutParams
+        layoutParams?.let { params ->
+            if (params.width != sizePx || params.height != sizePx) {
+                params.width = sizePx
+                params.height = sizePx
+                windowManager.updateViewLayout(floatingView, params)
+            }
+        }
+
+        // Update Dot View
+        floatingDot?.let { view ->
+            val params = view.layoutParams
+            params.width = sizePx
+            params.height = sizePx
+            view.layoutParams = params
+            
+            if (view is TextView) {
+                view.textSize = settings.size * 0.6f
+            }
+            
+            // Update Color (Background)
+            val background = GradientDrawable()
+            background.shape = GradientDrawable.OVAL
+            background.setColor(settings.color)
+            view.background = background
+        }
     }
 
     /**
@@ -240,9 +275,11 @@ class OverlayViewManager(
      */
     fun constrainPositionToBounds(x: Int, y: Int): Pair<Int, Int> {
         val screenSize = getScreenSize()
-        val layoutSize = (AppConstants.OVERLAY_LAYOUT_SIZE_DP * context.resources.displayMetrics.density).toInt()
-        val buttonSize = (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
-        val offset = (layoutSize - buttonSize) / 2
+        // Use current size if available, otherwise fallback to default
+        val sizePx = if (currentSizePx > 0) currentSizePx else (AppConstants.DOT_SIZE_DP * context.resources.displayMetrics.density).toInt()
+        
+        // Since layout size equals button size now (no halo), offset is 0
+        val offset = 0
 
         // Get navigation bar margin (actual height + safety margin)
         val navBarMargin = getNavigationBarMargin()
@@ -256,31 +293,31 @@ class OverlayViewManager(
         when (cachedNavBarPosition) {
             NavBarPosition.BOTTOM -> {
                 // Nav bar at bottom - constrain bottom edge
-                minX = -offset
-                maxX = screenSize.x - buttonSize - offset
-                minY = -offset
-                maxY = screenSize.y - buttonSize - offset - navBarMargin
+                minX = 0
+                maxX = screenSize.x - sizePx
+                minY = 0
+                maxY = screenSize.y - sizePx - navBarMargin
             }
             NavBarPosition.LEFT -> {
                 // Nav bar on left - constrain left edge
-                minX = -offset + navBarMargin
-                maxX = screenSize.x - buttonSize - offset
-                minY = -offset
-                maxY = screenSize.y - buttonSize - offset
+                minX = navBarMargin
+                maxX = screenSize.x - sizePx
+                minY = 0
+                maxY = screenSize.y - sizePx
             }
             NavBarPosition.RIGHT -> {
                 // Nav bar on right - constrain right edge
-                minX = -offset
-                maxX = screenSize.x - buttonSize - offset - navBarMargin
-                minY = -offset
-                maxY = screenSize.y - buttonSize - offset
+                minX = 0
+                maxX = screenSize.x - sizePx - navBarMargin
+                minY = 0
+                maxY = screenSize.y - sizePx
             }
             NavBarPosition.NONE -> {
                 // Should not happen (we guess from rotation now), but fallback to bottom
-                minX = -offset
-                maxX = screenSize.x - buttonSize - offset
-                minY = -offset
-                maxY = screenSize.y - buttonSize - offset - navBarMargin
+                minX = 0
+                maxX = screenSize.x - sizePx
+                minY = 0
+                maxY = screenSize.y - sizePx - navBarMargin
             }
         }
 
