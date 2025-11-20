@@ -179,10 +179,24 @@ class OverlayService : Service() {
         }
 
         val listener = View.OnTouchListener { _, event ->
+            if (event.action == android.view.MotionEvent.ACTION_DOWN || 
+                event.action == android.view.MotionEvent.ACTION_UP) {
+                vibrate()
+            }
             gestureDetector.onTouch(event)
         }
 
         viewManager.setTouchListener(listener)
+    }
+
+    private fun vibrate() {
+        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(android.os.VibrationEffect.createOneShot(20, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(20)
+        }
     }
 
     private fun registerBroadcastReceivers() {
