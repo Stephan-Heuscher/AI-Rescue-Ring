@@ -57,6 +57,7 @@ class OverlayService : Service() {
     // State tracking
     private var isUserDragging = false
     private var isOrientationChanging = false
+    private var vibrationEnabled = true
 
     // Handler for delayed updates
     private val updateHandler = Handler(Looper.getMainLooper())
@@ -190,6 +191,9 @@ class OverlayService : Service() {
     }
 
     private fun vibrate() {
+        if (!vibrationEnabled) {
+            return
+        }
         val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator.vibrate(android.os.VibrationEffect.createOneShot(20, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
@@ -221,7 +225,13 @@ class OverlayService : Service() {
     private fun observeSettings() {
         serviceScope.launch {
             settingsRepository.getAllSettings().collectLatest { settings ->
-                Log.d(TAG, "observeSettings: Settings changed, tapBehavior=${settings.tapBehavior}")
+                Log.d(TAG, "observeSettings: Settings changed, tapBehavior=${settings.tapBehavior}, vibrationEnabled=${settings.vibrationEnabled}, positionLocked=${settings.positionLocked}")
+
+                // Update vibration state
+                vibrationEnabled = settings.vibrationEnabled
+
+                // Update position locked state
+                gestureDetector.setPositionLocked(settings.positionLocked)
 
                 // Get current position before updating appearance
                 val currentPosition = viewManager.getCurrentPosition()
@@ -332,6 +342,7 @@ class OverlayService : Service() {
         serviceScope.launch {
             when (gesture) {
                 Gesture.TAP -> handleTap()
+                Gesture.QUADRUPLE_TAP -> handleQuadrupleTap()
                 Gesture.LONG_PRESS -> handleLongPress()
                 else -> { /* No-op */ }
             }
@@ -348,6 +359,15 @@ class OverlayService : Service() {
         // Long press + drag repositions the button
         // The drag mode is already activated by GestureDetector's onDragModeChanged callback
         Log.d(TAG, "Long press detected - drag mode activated (repositioning rescue ring)")
+    }
+
+    private fun handleQuadrupleTap() {
+        Log.d(TAG, "handleQuadrupleTap: Quadruple tap detected - opening settings")
+        // Open settings activity
+        val intent = Intent(this, ch.heuscher.airescuering.SettingsActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        startActivity(intent)
     }
 
     private fun initializeChatOverlay() {

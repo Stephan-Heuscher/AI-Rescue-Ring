@@ -71,6 +71,8 @@ object AppConstants {
     const val KEY_KEYBOARD_AVOIDANCE = "keyboard_avoidance"
     const val KEY_TAP_BEHAVIOR = "tap_behavior"
     const val KEY_SIZE = "overlay_size"
+    const val KEY_VIBRATION_ENABLED = "vibration_enabled"
+    const val KEY_POSITION_LOCKED = "position_locked"
 
     // Default values
     const val DEFAULT_COLOR = 0xFF2196F3.toInt() // Blue
@@ -78,4 +80,6 @@ object AppConstants {
     const val DEFAULT_KEYBOARD_AVOIDANCE = true
     const val DEFAULT_TAP_BEHAVIOR = "STANDARD"
     const val DEFAULT_SIZE = 64
+    const val DEFAULT_VIBRATION_ENABLED = true
+    const val DEFAULT_POSITION_LOCKED = false
 }

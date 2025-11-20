@@ -16,6 +16,9 @@ import kotlinx.coroutines.launch
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var keyboardAvoidanceSwitch: androidx.appcompat.widget.SwitchCompat
+    private lateinit var vibrationSwitch: androidx.appcompat.widget.SwitchCompat
+    private lateinit var longPressDragSwitch: androidx.appcompat.widget.SwitchCompat
+    private lateinit var lockPositionSwitch: androidx.appcompat.widget.SwitchCompat
 
     // Appearance fields
     private lateinit var sizeSeekBar: android.widget.SeekBar
@@ -50,6 +53,10 @@ class SettingsActivity : AppCompatActivity() {
         setupImpressumButton()
         setupAppearanceControls()
         setupKeyboardAvoidanceSwitch()
+        setupVibrationSwitch()
+        setupLongPressDragSwitch()
+        setupLockPositionSwitch()
+        setupAdvancedFeatures()
         setupAIHelperControls()
     }
 
@@ -94,6 +101,9 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun initializeViews() {
         keyboardAvoidanceSwitch = findViewById(R.id.keyboard_avoidance_switch)
+        vibrationSwitch = findViewById(R.id.vibration_switch)
+        longPressDragSwitch = findViewById(R.id.long_press_drag_switch)
+        lockPositionSwitch = findViewById(R.id.lock_position_switch)
 
         // Appearance views
         sizeSeekBar = findViewById(R.id.size_seekbar)
@@ -130,6 +140,48 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupVibrationSwitch() {
+        vibrationSwitch.setOnCheckedChangeListener { _, isChecked ->
+            lifecycleScope.launch {
+                settingsRepository.setVibrationEnabled(isChecked)
+            }
+        }
+    }
+
+    private fun setupLongPressDragSwitch() {
+        longPressDragSwitch.setOnCheckedChangeListener { _, isChecked ->
+            lifecycleScope.launch {
+                // When checked, use SAFE_HOME mode (requires long-press to drag)
+                // When unchecked, use STANDARD mode (immediate drag)
+                settingsRepository.setTapBehavior(if (isChecked) "SAFE_HOME" else "STANDARD")
+            }
+        }
+    }
+
+    private fun setupLockPositionSwitch() {
+        lockPositionSwitch.setOnCheckedChangeListener { _, isChecked ->
+            lifecycleScope.launch {
+                settingsRepository.setPositionLocked(isChecked)
+            }
+        }
+    }
+
+    private fun setupAdvancedFeatures() {
+        val header = findViewById<android.widget.LinearLayout>(R.id.advanced_features_header)
+        val content = findViewById<android.widget.LinearLayout>(R.id.advanced_features_content)
+        val arrow = findViewById<android.widget.TextView>(R.id.advanced_features_arrow)
+
+        header.setOnClickListener {
+            if (content.visibility == android.view.View.GONE) {
+                content.visibility = android.view.View.VISIBLE
+                arrow.text = "▲"
+            } else {
+                content.visibility = android.view.View.GONE
+                arrow.text = "▼"
+            }
+        }
+    }
+
     private fun observeSettings() {
         lifecycleScope.launch {
             settingsRepository.getSize().collect { size ->
@@ -153,6 +205,31 @@ class SettingsActivity : AppCompatActivity() {
             settingsRepository.isKeyboardAvoidanceEnabled().collect { enabled ->
                 keyboardAvoidanceEnabled = enabled
                 keyboardAvoidanceSwitch.isChecked = enabled
+            }
+        }
+
+        lifecycleScope.launch {
+            settingsRepository.isVibrationEnabled().collect { enabled ->
+                if (vibrationSwitch.isChecked != enabled) {
+                    vibrationSwitch.isChecked = enabled
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            settingsRepository.getTapBehavior().collect { behavior ->
+                val requiresLongPress = behavior == "SAFE_HOME"
+                if (longPressDragSwitch.isChecked != requiresLongPress) {
+                    longPressDragSwitch.isChecked = requiresLongPress
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            settingsRepository.isPositionLocked().collect { locked ->
+                if (lockPositionSwitch.isChecked != locked) {
+                    lockPositionSwitch.isChecked = locked
+                }
             }
         }
     }

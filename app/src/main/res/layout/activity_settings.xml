@@ -87,23 +87,6 @@
                     android:progress="50"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Transparency -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Transparency"
-                    android:textSize="16sp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:layout_marginBottom="8dp" />
-
-                <SeekBar
-                    android:id="@+id/alpha_seekbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:max="255"
-                    android:progress="255"
-                    android:layout_marginBottom="16dp" />
-
                 <!-- Color -->
                 <TextView
                     android:layout_width="match_parent"
@@ -191,6 +174,64 @@
                     android:text="@string/avoid_keyboard"
                     android:textSize="16sp"
                     android:checked="false"
+                    android:minHeight="48dp"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Vibration Feedback -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Vibration Feedback"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="4dp"
+                    android:importantForAccessibility="yes" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Haptic feedback when touching the rescue ring button"
+                    android:textSize="14sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:layout_marginBottom="8dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/vibration_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Enable vibration"
+                    android:textSize="16sp"
+                    android:checked="true"
+                    android:minHeight="48dp"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Long-press to Drag -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Drag Behavior"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_marginBottom="4dp"
+                    android:importantForAccessibility="yes" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Require long-press before dragging button. Prevents accidental repositioning."
+                    android:textSize="14sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:layout_marginBottom="8dp" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/long_press_drag_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Require long-press to drag"
+                    android:textSize="16sp"
+                    android:checked="false"
                     android:minHeight="48dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -226,35 +267,6 @@
                     android:textColor="?android:attr/textColorSecondary"
                     android:layout_marginBottom="16dp" />
 
-                <!-- API Key Input -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Gemini API Key"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:layout_marginBottom="8dp" />
-
-                <EditText
-                    android:id="@+id/api_key_input"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Enter your Gemini API key"
-                    android:inputType="textPassword"
-                    android:minHeight="48dp"
-                    android:background="@android:drawable/edit_text"
-                    android:padding="12dp"
-                    android:layout_marginBottom="8dp" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Get your API key from Google AI Studio (ai.google.dev)"
-                    android:textSize="12sp"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:layout_marginBottom="16dp" />
-
                 <!-- Voice Input Toggle -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -278,6 +290,135 @@
                         android:checked="true"
                         android:minHeight="48dp"
                         android:minWidth="48dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Section: Advanced Features -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:contentPadding="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Expandable Header -->
+                <LinearLayout
+                    android:id="@+id/advanced_features_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:minHeight="48dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?android:attr/selectableItemBackground">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Advanced Features"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorPrimary" />
+
+                    <TextView
+                        android:id="@+id/advanced_features_arrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="▼"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorSecondary" />
+                </LinearLayout>
+
+                <!-- Collapsible Content -->
+                <LinearLayout
+                    android:id="@+id/advanced_features_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:layout_marginTop="16dp">
+
+                    <!-- Transparency -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Transparency"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_marginBottom="8dp" />
+
+                    <SeekBar
+                        android:id="@+id/alpha_seekbar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="255"
+                        android:progress="255"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- API Key Input -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Gemini API Key"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_marginBottom="8dp" />
+
+                    <EditText
+                        android:id="@+id/api_key_input"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter your Gemini API key"
+                        android:inputType="textPassword"
+                        android:minHeight="48dp"
+                        android:background="@android:drawable/edit_text"
+                        android:padding="12dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Get your API key from Google AI Studio (ai.google.dev)"
+                        android:textSize="12sp"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- Lock Position -->
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Lock Button Position"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Prevent button from being moved. Keyboard avoidance will still work."
+                        android:textSize="12sp"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:layout_marginBottom="8dp" />
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/lock_position_switch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Lock position"
+                        android:textSize="16sp"
+                        android:checked="false"
+                        android:minHeight="48dp" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>

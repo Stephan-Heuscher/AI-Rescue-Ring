@@ -39,6 +39,7 @@ class GestureDetector(
 
     // Mode configuration - set by OverlayService
     private var requiresLongPressToDrag = false
+    private var positionLocked = false
 
     // Callbacks
     var onGesture: ((Gesture) -> Unit)? = null
@@ -51,6 +52,13 @@ class GestureDetector(
      */
     fun setRequiresLongPressToDrag(required: Boolean) {
         requiresLongPressToDrag = required
+    }
+
+    /**
+     * Sets whether the position is locked (no dragging allowed at all).
+     */
+    fun setPositionLocked(locked: Boolean) {
+        positionLocked = locked
     }
 
     // Runnables
@@ -106,6 +114,11 @@ class GestureDetector(
     private fun handleActionMove(event: MotionEvent): Boolean {
         val totalDeltaX = event.rawX - initialX
         val totalDeltaY = event.rawY - initialY
+
+        // If position is locked, don't allow any dragging
+        if (positionLocked) {
+            return true
+        }
 
         if (!hasMoved) {
             android.util.Log.d(TAG, "ACTION_MOVE: delta=(${totalDeltaX}, ${totalDeltaY}), touchSlop=$touchSlop, requiresLongPress=$requiresLongPressToDrag, isDragMode=$isDragMode")
