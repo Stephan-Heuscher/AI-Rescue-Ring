@@ -90,6 +90,12 @@ class SettingsRepositoryImpl(
         dataSource.setTapBehavior(behavior)
     }
 
+    override fun isVibrationEnabled(): Flow<Boolean> = dataSource.isVibrationEnabled()
+
+    override suspend fun setVibrationEnabled(enabled: Boolean) {
+        dataSource.setVibrationEnabled(enabled)
+    }
+
     override fun getScreenWidth(): Flow<Int> = dataSource.getScreenWidth()
 
     override suspend fun setScreenWidth(width: Int) {
@@ -118,6 +124,7 @@ class SettingsRepositoryImpl(
         getRecentsTimeout(),
         isKeyboardAvoidanceEnabled(),
         getTapBehavior(),
+        isVibrationEnabled(),
         getScreenWidth(),
         getScreenHeight(),
         getRotation()
@@ -132,9 +139,10 @@ class SettingsRepositoryImpl(
             recentsTimeout = values[6] as Long,
             keyboardAvoidanceEnabled = values[7] as Boolean,
             tapBehavior = values[8] as String,
-            screenWidth = values[9] as Int,
-            screenHeight = values[10] as Int,
-            rotation = values[11] as Int
+            vibrationEnabled = values[9] as Boolean,
+            screenWidth = values[10] as Int,
+            screenHeight = values[11] as Int,
+            rotation = values[12] as Int
         )
     }
 
@@ -148,6 +156,7 @@ class SettingsRepositoryImpl(
         setRecentsTimeout(settings.recentsTimeout)
         setKeyboardAvoidanceEnabled(settings.keyboardAvoidanceEnabled)
         setTapBehavior(settings.tapBehavior)
+        setVibrationEnabled(settings.vibrationEnabled)
         setScreenWidth(settings.screenWidth)
         setScreenHeight(settings.screenHeight)
         setRotation(settings.rotation)

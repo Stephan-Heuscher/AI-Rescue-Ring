@@ -143,6 +143,15 @@ class SharedPreferencesDataSource(
         prefs.edit().putString(AppConstants.KEY_TAP_BEHAVIOR, behavior).apply()
     }
 
+    override fun isVibrationEnabled(): Flow<Boolean> =
+        getPreferenceFlow(AppConstants.KEY_VIBRATION_ENABLED, AppConstants.DEFAULT_VIBRATION_ENABLED) { prefs, key, default ->
+            prefs.getBoolean(key, default)
+        }
+
+    override suspend fun setVibrationEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(AppConstants.KEY_VIBRATION_ENABLED, enabled).apply()
+    }
+
     override fun getScreenWidth(): Flow<Int> =
         getPreferenceFlow(AppConstants.KEY_SCREEN_WIDTH, AppConstants.DEFAULT_SCREEN_WIDTH) { prefs, key, default ->
             prefs.getInt(key, default)

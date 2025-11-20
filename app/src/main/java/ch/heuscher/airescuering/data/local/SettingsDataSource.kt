@@ -48,6 +48,9 @@ interface SettingsDataSource {
     fun getTapBehavior(): Flow<String>
     suspend fun setTapBehavior(behavior: String)
 
+    fun isVibrationEnabled(): Flow<Boolean>
+    suspend fun setVibrationEnabled(enabled: Boolean)
+
     // Screen information
     fun getScreenWidth(): Flow<Int>
     suspend fun setScreenWidth(width: Int)
