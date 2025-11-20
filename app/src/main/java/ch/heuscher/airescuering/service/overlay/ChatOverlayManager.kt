@@ -80,10 +80,13 @@ class ChatOverlayManager(
     private var currentScreenshotBitmap: Bitmap? = null
     private var pendingScreenshot: Bitmap? = null
     private var markwon: Markwon? = null
-    
-    // Step navigation state
+
+    // Step navigation state (legacy inline - now using PiP)
     private var currentSteps = listOf<String>()
     private var currentStepIndex = 0
+
+    // PiP step window
+    private var stepPipManager: StepPipManager? = null
 
     // Callbacks
     var onHideRequest: (() -> Unit)? = null
@@ -91,6 +94,12 @@ class ChatOverlayManager(
 
     init {
         geminiService = GeminiApiService(geminiApiKey, debug = true)
+        stepPipManager = StepPipManager(context)
+        stepPipManager?.onClose = {
+            // When PiP is closed, clear the steps
+            currentSteps = listOf()
+            currentStepIndex = 0
+        }
     }
 
     /**
@@ -416,17 +425,18 @@ class ChatOverlayManager(
                 }
 
                 result.onSuccess { response ->
-                    // Parse steps if present
+                    // Parse steps if present and show in PiP window
                     if (response.contains("###")) {
                         val rawSteps = response.split("###")
                         // Filter out empty strings and trim
                         val steps = rawSteps.filter { it.isNotBlank() }.map { it.trim() }
-                        
+
                         if (steps.isNotEmpty()) {
                             Handler(Looper.getMainLooper()).post {
                                 currentSteps = steps
                                 currentStepIndex = 0
-                                updateStepUI()
+                                // Show steps in PiP window instead of inline
+                                stepPipManager?.show(steps, 0)
                             }
                         }
                     }
@@ -608,6 +618,8 @@ class ChatOverlayManager(
      */
     fun destroy() {
         hide()
+        stepPipManager?.destroy()
+        stepPipManager = null
         currentScreenshotBitmap?.recycle()
         currentScreenshotBitmap = null
     }
