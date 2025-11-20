@@ -28,6 +28,7 @@ import ch.heuscher.airescuering.R
 import ch.heuscher.airescuering.data.api.GeminiApiService
 import ch.heuscher.airescuering.domain.model.AIMessage
 import ch.heuscher.airescuering.domain.model.MessageRole
+import io.noties.markwon.Markwon
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -69,6 +70,7 @@ class ChatOverlayManager(
     private var stepForwardButton: Button? = null
     private var stepBackwardButton: Button? = null
     private var stepIndicator: TextView? = null
+    private var stepTitle: TextView? = null
     private var stepsContainer: View? = null
 
     // Chat state
@@ -77,6 +79,7 @@ class ChatOverlayManager(
     private var geminiService: GeminiApiService? = null
     private var currentScreenshotBitmap: Bitmap? = null
     private var pendingScreenshot: Bitmap? = null
+    private var markwon: Markwon? = null
     
     // Step navigation state
     private var currentSteps = listOf<String>()
@@ -130,7 +133,7 @@ class ChatOverlayManager(
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.BOTTOM  // Position at bottom by default
-                softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE // Resize for keyboard
+                softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN // Pan for keyboard visibility
             }
 
             Log.d(TAG, "WindowManager params: width=${params.width}, height=${params.height}, gravity=${params.gravity}")
@@ -255,7 +258,11 @@ class ChatOverlayManager(
             stepForwardButton = view.findViewById(R.id.stepForwardButton)
             stepBackwardButton = view.findViewById(R.id.stepBackwardButton)
             stepIndicator = view.findViewById(R.id.stepIndicator)
+            stepTitle = view.findViewById(R.id.stepTitle)
             stepsContainer = view.findViewById(R.id.stepsContainer)
+
+            // Initialize Markwon for markdown rendering
+            markwon = Markwon.create(context)
         }
     }
 
@@ -552,14 +559,45 @@ class ChatOverlayManager(
         }
 
         stepsContainer?.visibility = View.VISIBLE
-        
+
         // Update step indicator
         stepIndicator?.text = "Step ${currentStepIndex + 1} of ${currentSteps.size}"
-        
-        // Update step text
-        val currentStepText = chatOverlayView?.findViewById<android.widget.TextView>(R.id.currentStepText)
-        currentStepText?.text = currentSteps[currentStepIndex].trim()
-        
+
+        // Parse step to extract title and content
+        val stepText = currentSteps[currentStepIndex].trim()
+        val lines = stepText.lines()
+
+        // Extract title (first line, often a heading)
+        var title = ""
+        var contentStartIndex = 0
+
+        if (lines.isNotEmpty()) {
+            val firstLine = lines[0].trim()
+            // Check if first line is a markdown heading
+            if (firstLine.startsWith("#")) {
+                title = firstLine.replace(Regex("^#+\\s*"), "") // Remove heading markers
+                contentStartIndex = 1
+            } else {
+                // Use first line as title if it's short, otherwise use generic title
+                title = if (firstLine.length <= 50) firstLine else "Step ${currentStepIndex + 1}"
+                contentStartIndex = if (firstLine.length <= 50) 1 else 0
+            }
+        }
+
+        // Get content (everything after title)
+        val content = lines.drop(contentStartIndex).joinToString("\n").trim()
+
+        // Update step title
+        stepTitle?.text = title
+
+        // Update step text with markdown rendering
+        val currentStepTextView = chatOverlayView?.findViewById<android.widget.TextView>(R.id.currentStepText)
+        if (content.isNotEmpty()) {
+            markwon?.setMarkdown(currentStepTextView!!, content)
+        } else {
+            currentStepTextView?.text = ""
+        }
+
         // Update buttons
         stepBackwardButton?.isEnabled = currentStepIndex > 0
         stepForwardButton?.isEnabled = currentStepIndex < currentSteps.size - 1

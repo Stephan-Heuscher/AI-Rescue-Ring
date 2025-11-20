@@ -139,7 +139,20 @@
                 android:textAlignment="center"
                 android:textStyle="bold"
                 android:textColor="#333333"
+                android:textSize="12sp"
                 android:layout_marginBottom="4dp"/>
+
+            <TextView
+                android:id="@+id/stepTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Step Title"
+                android:textAlignment="center"
+                android:textStyle="bold"
+                android:textColor="#1976D2"
+                android:textSize="18sp"
+                android:layout_marginBottom="8dp"
+                android:paddingHorizontal="8dp"/>
 
             <ScrollView
                 android:layout_width="match_parent"
