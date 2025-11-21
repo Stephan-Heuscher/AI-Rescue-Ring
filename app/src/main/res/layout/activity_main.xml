@@ -17,6 +17,15 @@
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
+        <!-- App Icon -->
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@mipmap/ic_launcher_round"
+            android:contentDescription="@string/app_title"
+            android:layout_marginBottom="16dp"
+            android:elevation="4dp" />
+
         <!-- App Titel -->
         <TextView
             android:layout_width="match_parent"
