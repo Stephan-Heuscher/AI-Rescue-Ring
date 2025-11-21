@@ -33,6 +33,7 @@ class StepPipManager(
     companion object {
         private const val TAG = "StepPipManager"
         private const val DOUBLE_TAP_DELTA = 300L // milliseconds
+        private const val MOVE_THRESHOLD = 10 // pixels - distinguish tap from drag
     }
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -67,6 +68,7 @@ class StepPipManager(
     private var initialTouchX = 0f
     private var initialTouchY = 0f
     private var lastTapTime = 0L
+    private var hasMoved = false
 
     // Callbacks
     var onClose: (() -> Unit)? = null
@@ -211,13 +213,14 @@ class StepPipManager(
      * Set up touch listener for dragging and double-tap detection
      */
     private fun setupTouchListener(params: WindowManager.LayoutParams) {
-        pipView?.setOnTouchListener { view, event ->
+        val touchListener = View.OnTouchListener { view, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     initialX = params.x
                     initialY = params.y
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
+                    hasMoved = false
 
                     // Check for double-tap
                     val currentTime = System.currentTimeMillis()
@@ -225,31 +228,47 @@ class StepPipManager(
                         // Double-tap detected - toggle expanded/compact
                         toggleExpanded()
                         lastTapTime = 0L // Reset to prevent triple-tap
+                        true // Consume the event
                     } else {
                         lastTapTime = currentTime
+                        false // Don't consume yet - allow click events
                     }
-                    true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    // Calculate new position
-                    val deltaX = initialTouchX - event.rawX
-                    val deltaY = event.rawY - initialTouchY
+                    // Calculate movement distance
+                    val deltaX = abs(initialTouchX - event.rawX)
+                    val deltaY = abs(initialTouchY - event.rawY)
 
-                    params.x = (initialX + deltaX).toInt()
-                    params.y = (initialY + deltaY).toInt()
+                    // Only start dragging if moved beyond threshold
+                    if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
+                        hasMoved = true
 
-                    // Update window position
-                    windowManager.updateViewLayout(pipView, params)
-                    true
+                        // Calculate new position
+                        val positionDeltaX = initialTouchX - event.rawX
+                        val positionDeltaY = event.rawY - initialTouchY
+
+                        params.x = (initialX + positionDeltaX).toInt()
+                        params.y = (initialY + positionDeltaY).toInt()
+
+                        // Update window position
+                        windowManager.updateViewLayout(pipView, params)
+                        true // Consume the event during drag
+                    } else {
+                        false // Small movement - might be a tap
+                    }
                 }
                 MotionEvent.ACTION_UP -> {
-                    // Snap to nearest corner or edge if desired
-                    // For now, keep it where user dropped it
-                    true
+                    // If we moved, consume the event to prevent click
+                    // If we didn't move, allow click events to process
+                    hasMoved
                 }
                 else -> false
             }
         }
+
+        // Set touch listener on both CardViews so it works regardless of which is visible
+        compactView?.setOnTouchListener(touchListener)
+        expandedView?.setOnTouchListener(touchListener)
     }
 
     /**
