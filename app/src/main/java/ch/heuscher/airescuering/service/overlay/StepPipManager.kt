@@ -34,6 +34,7 @@ class StepPipManager(
         private const val TAG = "StepPipManager"
         private const val DOUBLE_TAP_DELTA = 300L // milliseconds
         private const val MOVE_THRESHOLD = 10 // pixels - distinguish tap from drag
+        private const val EDGE_THRESHOLD = 20 // pixels - edge detection for resizing
     }
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -54,7 +55,6 @@ class StepPipManager(
     private var pipPreviousButton: Button? = null
     private var pipNextButton: Button? = null
     private var pipCloseButton: ImageButton? = null
-    private var resizeHandle: View? = null
 
     // Step data
     private var currentSteps = listOf<String>()
@@ -75,6 +75,11 @@ class StepPipManager(
     private var initialWidth = 0
     private var initialHeight = 0
     private var isResizing = false
+    private var resizeMode = ResizeMode.NONE
+
+    private enum class ResizeMode {
+        NONE, RIGHT, BOTTOM, BOTTOM_RIGHT
+    }
 
     // Callbacks
     var onClose: (() -> Unit)? = null
@@ -136,11 +141,8 @@ class StepPipManager(
             // Initialize views
             initializeViews()
 
-            // Set up touch listener for dragging and double-tap
+            // Set up touch listener for dragging, double-tap, and edge resizing
             setupTouchListener(params)
-
-            // Set up resize listener
-            setupResizeListener(params)
 
             // Display initial step
             updateStepDisplay()
@@ -195,7 +197,6 @@ class StepPipManager(
             pipPreviousButton = view.findViewById(R.id.pipPreviousButton)
             pipNextButton = view.findViewById(R.id.pipNextButton)
             pipCloseButton = view.findViewById(R.id.pipCloseButton)
-            resizeHandle = view.findViewById(R.id.resizeHandle)
 
             // Set up button listeners
             pipPreviousButton?.setOnClickListener {
@@ -222,7 +223,7 @@ class StepPipManager(
     }
 
     /**
-     * Set up touch listener for dragging and double-tap detection
+     * Set up touch listener for dragging, double-tap detection, and edge resizing
      */
     private fun setupTouchListener(params: WindowManager.LayoutParams) {
         val touchListener = View.OnTouchListener { view, event ->
@@ -233,6 +234,21 @@ class StepPipManager(
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
                     hasMoved = false
+
+                    // Store initial dimensions for resizing
+                    view.let {
+                        initialWidth = it.width
+                        initialHeight = it.height
+                    }
+
+                    // Determine if touch is on edge (for expanded mode only)
+                    if (isExpanded && view == expandedView) {
+                        resizeMode = detectEdge(event.x, event.y, view.width, view.height)
+                        if (resizeMode != ResizeMode.NONE) {
+                            isResizing = true
+                            return@OnTouchListener true
+                        }
+                    }
 
                     // Check for double-tap
                     val currentTime = System.currentTimeMillis()
@@ -247,6 +263,12 @@ class StepPipManager(
                     }
                 }
                 MotionEvent.ACTION_MOVE -> {
+                    // Handle resizing if in resize mode
+                    if (isResizing && resizeMode != ResizeMode.NONE) {
+                        handleResize(event, params)
+                        return@OnTouchListener true
+                    }
+
                     // Calculate movement distance
                     val deltaX = abs(initialTouchX - event.rawX)
                     val deltaY = abs(initialTouchY - event.rawY)
@@ -270,6 +292,9 @@ class StepPipManager(
                     }
                 }
                 MotionEvent.ACTION_UP -> {
+                    isResizing = false
+                    resizeMode = ResizeMode.NONE
+
                     // If we moved, consume the event to prevent click
                     // If we didn't move, allow click events to process
                     hasMoved
@@ -284,49 +309,53 @@ class StepPipManager(
     }
 
     /**
-     * Set up resize listener for the expanded window
+     * Detect if touch is on an edge for resizing
      */
-    private fun setupResizeListener(params: WindowManager.LayoutParams) {
-        resizeHandle?.setOnTouchListener { view, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    isResizing = true
-                    initialTouchX = event.rawX
-                    initialTouchY = event.rawY
-                    expandedView?.let {
-                        initialWidth = it.layoutParams.width
-                        initialHeight = it.layoutParams.height
-                    }
-                    true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    if (isResizing) {
-                        expandedView?.let { card ->
-                            val deltaX = event.rawX - initialTouchX
-                            val deltaY = event.rawY - initialTouchY
+    private fun detectEdge(x: Float, y: Float, width: Int, height: Int): ResizeMode {
+        val onRightEdge = x > width - EDGE_THRESHOLD
+        val onBottomEdge = y > height - EDGE_THRESHOLD
 
-                            // Calculate new dimensions (minimum 200dp, maximum 400dp)
-                            val minWidth = (200 * context.resources.displayMetrics.density).toInt()
-                            val maxWidth = (400 * context.resources.displayMetrics.density).toInt()
-                            val newWidth = (initialWidth + deltaX).toInt().coerceIn(minWidth, maxWidth)
+        return when {
+            onRightEdge && onBottomEdge -> ResizeMode.BOTTOM_RIGHT
+            onRightEdge -> ResizeMode.RIGHT
+            onBottomEdge -> ResizeMode.BOTTOM
+            else -> ResizeMode.NONE
+        }
+    }
 
-                            // Update the CardView layout params
-                            val layoutParams = card.layoutParams
-                            layoutParams.width = newWidth
-                            card.layoutParams = layoutParams
+    /**
+     * Handle window resizing based on touch movement
+     */
+    private fun handleResize(event: MotionEvent, params: WindowManager.LayoutParams) {
+        expandedView?.let { card ->
+            val deltaX = event.rawX - initialTouchX
+            val deltaY = event.rawY - initialTouchY
 
-                            // Force window update
-                            windowManager.updateViewLayout(pipView, params)
-                        }
-                    }
-                    true
+            // Calculate new dimensions with constraints
+            val density = context.resources.displayMetrics.density
+            val minWidth = (200 * density).toInt()
+            val maxWidth = (500 * density).toInt()
+            val minHeight = (250 * density).toInt()
+            val maxHeight = (600 * density).toInt()
+
+            val layoutParams = card.layoutParams
+
+            when (resizeMode) {
+                ResizeMode.RIGHT -> {
+                    layoutParams.width = (initialWidth + deltaX).toInt().coerceIn(minWidth, maxWidth)
                 }
-                MotionEvent.ACTION_UP -> {
-                    isResizing = false
-                    true
+                ResizeMode.BOTTOM -> {
+                    layoutParams.height = (initialHeight + deltaY).toInt().coerceIn(minHeight, maxHeight)
                 }
-                else -> false
+                ResizeMode.BOTTOM_RIGHT -> {
+                    layoutParams.width = (initialWidth + deltaX).toInt().coerceIn(minWidth, maxWidth)
+                    layoutParams.height = (initialHeight + deltaY).toInt().coerceIn(minHeight, maxHeight)
+                }
+                ResizeMode.NONE -> {}
             }
+
+            card.layoutParams = layoutParams
+            windowManager.updateViewLayout(pipView, params)
         }
     }
 
