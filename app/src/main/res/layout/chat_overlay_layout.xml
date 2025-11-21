@@ -7,54 +7,98 @@
     android:orientation="vertical"
     android:background="#F2FFFFFF">
 
-    <!-- Minimal Top Bar -->
+    <!-- Top Bar with Chat Selector -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:background="#F02196F3"
-        android:padding="8dp"
-        android:gravity="center_vertical"
         android:elevation="2dp">
 
-        <TextView
-            android:layout_width="0dp"
+        <!-- Title and Controls Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="AI Rescue"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:layout_marginStart="4dp"/>
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:gravity="center_vertical">
 
-        <ImageButton
-            android:id="@+id/moveTopButton"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginEnd="8dp"
-            android:background="?android:attr/selectableItemBackground"
-            android:src="@android:drawable/arrow_up_float"
-            android:contentDescription="Move to Top"
-            app:tint="#FFFFFF" />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="AI Rescue"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:layout_marginStart="4dp"/>
 
-        <ImageButton
-            android:id="@+id/moveBottomButton"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginEnd="8dp"
-            android:background="?android:attr/selectableItemBackground"
-            android:src="@android:drawable/arrow_down_float"
-            android:contentDescription="Move to Bottom"
-            app:tint="#FFFFFF" />
+            <ImageButton
+                android:id="@+id/newChatButton"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="8dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:src="@android:drawable/ic_menu_add"
+                android:contentDescription="New Chat"
+                app:tint="#FFFFFF" />
 
-        <ImageButton
-            android:id="@+id/hideButton"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:background="?android:attr/selectableItemBackground"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:contentDescription="Hide"
-            app:tint="#FFFFFF" />
+            <ImageButton
+                android:id="@+id/moveTopButton"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="8dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:src="@android:drawable/arrow_up_float"
+                android:contentDescription="Move to Top"
+                app:tint="#FFFFFF" />
+
+            <ImageButton
+                android:id="@+id/moveBottomButton"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="8dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:src="@android:drawable/arrow_down_float"
+                android:contentDescription="Move to Bottom"
+                app:tint="#FFFFFF" />
+
+            <ImageButton
+                android:id="@+id/hideButton"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="?android:attr/selectableItemBackground"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:contentDescription="Hide"
+                app:tint="#FFFFFF" />
+        </LinearLayout>
+
+        <!-- Chat History Selector Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp"
+            android:paddingBottom="8dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Chat: "
+                android:textSize="12sp"
+                android:textColor="#CCFFFFFF"
+                android:layout_marginEnd="4dp"/>
+
+            <Spinner
+                android:id="@+id/chatHistorySpinner"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@android:drawable/btn_dropdown"
+                android:spinnerMode="dropdown"
+                android:minHeight="32dp"/>
+        </LinearLayout>
     </LinearLayout>
 
     <!-- Screenshot Preview Area (Compact) -->

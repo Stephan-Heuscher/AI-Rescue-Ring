@@ -16,17 +16,22 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ProgressBar
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ch.heuscher.airescuering.R
 import ch.heuscher.airescuering.data.api.GeminiApiService
+import ch.heuscher.airescuering.data.local.ChatPersistenceManager
 import ch.heuscher.airescuering.domain.model.AIMessage
+import ch.heuscher.airescuering.domain.model.ChatSession
 import ch.heuscher.airescuering.domain.model.MessageRole
 import io.noties.markwon.Markwon
 import kotlinx.coroutines.CoroutineScope
@@ -72,6 +77,8 @@ class ChatOverlayManager(
     private var stepIndicator: TextView? = null
     private var stepTitle: TextView? = null
     private var stepsContainer: View? = null
+    private var newChatButton: ImageButton? = null
+    private var chatHistorySpinner: Spinner? = null
 
     // Chat state
     private val messages = mutableListOf<AIMessage>()
@@ -80,6 +87,11 @@ class ChatOverlayManager(
     private var currentScreenshotBitmap: Bitmap? = null
     private var pendingScreenshot: Bitmap? = null
     private var markwon: Markwon? = null
+
+    // Chat session management
+    private var currentSession: ChatSession? = null
+    private var chatSessions = mutableListOf<ChatSession>()
+    private val persistenceManager = ChatPersistenceManager(context)
 
     // Step navigation state (legacy inline - now using PiP)
     private var currentSteps = listOf<String>()
@@ -100,6 +112,9 @@ class ChatOverlayManager(
             currentSteps = listOf()
             currentStepIndex = 0
         }
+
+        // Load chat history
+        loadChatHistory()
     }
 
     /**
@@ -179,8 +194,10 @@ class ChatOverlayManager(
             setupListeners()
             setupRecyclerView()
 
-            // Add welcome message
-            addWelcomeMessage()
+            // Add welcome message only if chat is empty
+            if (messages.isEmpty()) {
+                addWelcomeMessage()
+            }
 
             // Process any pending screenshot now that views are initialized
             pendingScreenshot?.let { bitmap ->
@@ -269,9 +286,14 @@ class ChatOverlayManager(
             stepIndicator = view.findViewById(R.id.stepIndicator)
             stepTitle = view.findViewById(R.id.stepTitle)
             stepsContainer = view.findViewById(R.id.stepsContainer)
+            newChatButton = view.findViewById(R.id.newChatButton)
+            chatHistorySpinner = view.findViewById(R.id.chatHistorySpinner)
 
             // Initialize Markwon for markdown rendering
             markwon = Markwon.create(context)
+
+            // Setup chat history spinner
+            setupChatHistorySpinner()
         }
     }
 
@@ -281,6 +303,10 @@ class ChatOverlayManager(
     private fun setupListeners() {
         hideButton?.setOnClickListener {
             onHideRequest?.invoke()
+        }
+
+        newChatButton?.setOnClickListener {
+            startNewChat()
         }
 
         moveTopButton?.setOnClickListener {
@@ -435,8 +461,9 @@ class ChatOverlayManager(
                             Handler(Looper.getMainLooper()).post {
                                 currentSteps = steps
                                 currentStepIndex = 0
-                                // Show steps in PiP window instead of inline
+                                // Show steps in PiP window and hide chat
                                 stepPipManager?.show(steps, 0)
+                                hide()
                             }
                         }
                     }
@@ -446,7 +473,7 @@ class ChatOverlayManager(
                         content = response,
                         role = MessageRole.ASSISTANT
                     )
-                    addMessage(assistantMessage)
+                    addMessage(assistantMessage, scrollToEnd = false)
                 }.onFailure { error ->
                     showError("Error: ${error.message}")
 
@@ -531,11 +558,16 @@ class ChatOverlayManager(
     /**
      * Add a message to the chat
      */
-    private fun addMessage(message: AIMessage) {
+    private fun addMessage(message: AIMessage, scrollToEnd: Boolean = true) {
         Handler(Looper.getMainLooper()).post {
             messages.add(message)
             adapter?.notifyItemInserted(messages.size - 1)
-            messagesRecyclerView?.scrollToPosition(messages.size - 1)
+            if (scrollToEnd) {
+                messagesRecyclerView?.scrollToPosition(messages.size - 1)
+            }
+
+            // Auto-save session
+            saveCurrentSession()
         }
     }
 
@@ -614,9 +646,137 @@ class ChatOverlayManager(
     }
 
     /**
+     * Load chat history from persistence
+     */
+    private fun loadChatHistory() {
+        chatSessions.clear()
+        chatSessions.addAll(persistenceManager.loadAllSessions())
+
+        // Load current session or create new one
+        val currentSessionId = persistenceManager.loadCurrentSessionId()
+        currentSession = if (currentSessionId != null) {
+            chatSessions.find { it.id == currentSessionId }
+        } else {
+            null
+        }
+
+        // If no current session, create a new one
+        if (currentSession == null) {
+            currentSession = ChatSession()
+            chatSessions.add(0, currentSession!!)
+            persistenceManager.saveCurrentSessionId(currentSession!!.id)
+        }
+
+        // Load messages from current session
+        messages.clear()
+        messages.addAll(currentSession!!.messages)
+
+        Log.d(TAG, "Loaded ${chatSessions.size} sessions, current: ${currentSession?.id}")
+    }
+
+    /**
+     * Setup the chat history spinner
+     */
+    private fun setupChatHistorySpinner() {
+        val displayNames = chatSessions.map { it.getDisplayName() }
+        val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, displayNames)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+        chatHistorySpinner?.adapter = adapter
+
+        // Set current session as selected
+        val currentIndex = chatSessions.indexOfFirst { it.id == currentSession?.id }
+        if (currentIndex >= 0) {
+            chatHistorySpinner?.setSelection(currentIndex)
+        }
+
+        // Handle session selection
+        chatHistorySpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedSession = chatSessions[position]
+                if (selectedSession.id != currentSession?.id) {
+                    switchToSession(selectedSession)
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Do nothing
+            }
+        }
+    }
+
+    /**
+     * Start a new chat session
+     */
+    private fun startNewChat() {
+        // Save current session
+        saveCurrentSession()
+
+        // Create new session
+        val newSession = ChatSession()
+        currentSession = newSession
+        chatSessions.add(0, newSession)
+        persistenceManager.saveCurrentSessionId(newSession.id)
+
+        // Clear messages and UI
+        messages.clear()
+        adapter?.notifyDataSetChanged()
+
+        // Update spinner
+        setupChatHistorySpinner()
+
+        // Add welcome message
+        addWelcomeMessage()
+
+        Log.d(TAG, "Started new chat session: ${newSession.id}")
+        Toast.makeText(context, "New chat started", Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * Switch to a different chat session
+     */
+    private fun switchToSession(session: ChatSession) {
+        // Save current session
+        saveCurrentSession()
+
+        // Switch to new session
+        currentSession = session
+        persistenceManager.saveCurrentSessionId(session.id)
+
+        // Load messages
+        messages.clear()
+        messages.addAll(session.messages)
+        adapter?.notifyDataSetChanged()
+
+        // Scroll to bottom
+        messagesRecyclerView?.scrollToPosition(messages.size - 1)
+
+        Log.d(TAG, "Switched to session: ${session.id} with ${messages.size} messages")
+    }
+
+    /**
+     * Save the current session to persistence
+     */
+    private fun saveCurrentSession() {
+        currentSession?.let { session ->
+            // Update session messages
+            session.messages.clear()
+            session.messages.addAll(messages)
+
+            // Save to persistence
+            persistenceManager.saveSession(session)
+
+            Log.d(TAG, "Saved session ${session.id} with ${messages.size} messages")
+        }
+    }
+
+    /**
      * Clean up resources
      */
     fun destroy() {
+        // Save current session before cleanup
+        saveCurrentSession()
+
         hide()
         stepPipManager?.destroy()
         stepPipManager = null
