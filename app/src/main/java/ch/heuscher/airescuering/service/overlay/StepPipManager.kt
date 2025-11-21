@@ -40,14 +40,8 @@ class StepPipManager(
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private var pipView: View? = null
     private var isVisible = false
-    private var isExpanded = false
 
-    // UI Components - Compact Mode
-    private var compactView: CardView? = null
-    private var pipStepIndicator: TextView? = null
-    private var pipStepTitle: TextView? = null
-
-    // UI Components - Expanded Mode
+    // UI Components
     private var expandedView: CardView? = null
     private var pipDragHandle: View? = null
     private var pipStepIndicatorExpanded: TextView? = null
@@ -187,12 +181,7 @@ class StepPipManager(
      */
     private fun initializeViews() {
         pipView?.let { view ->
-            // Compact mode views
-            compactView = view.findViewById(R.id.stepPipCompact)
-            pipStepIndicator = view.findViewById(R.id.pipStepIndicator)
-            pipStepTitle = view.findViewById(R.id.pipStepTitle)
-
-            // Expanded mode views
+            // Get UI components
             expandedView = view.findViewById(R.id.stepPipExpanded)
             pipDragHandle = view.findViewById(R.id.pipDragHandle)
             pipStepIndicatorExpanded = view.findViewById(R.id.pipStepIndicatorExpanded)
@@ -220,19 +209,18 @@ class StepPipManager(
             }
 
             pipCloseButton?.setOnClickListener {
-                // Close button should only collapse to compact mode
-                if (isExpanded) {
-                    toggleExpanded()
-                }
+                // Close button hides the step window
+                hide()
+                onClose?.invoke()
             }
         }
     }
 
     /**
-     * Set up touch listener for dragging, double-tap detection, and edge resizing
+     * Set up touch listener for dragging and edge resizing
      */
     private fun setupTouchListener(params: WindowManager.LayoutParams) {
-        // Drag listener for header and compact view
+        // Drag listener for header
         val dragTouchListener = View.OnTouchListener { view, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -241,18 +229,7 @@ class StepPipManager(
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
                     hasMoved = false
-
-                    // Check for double-tap
-                    val currentTime = System.currentTimeMillis()
-                    if (currentTime - lastTapTime < DOUBLE_TAP_DELTA) {
-                        // Double-tap detected - toggle expanded/compact
-                        toggleExpanded()
-                        lastTapTime = 0L // Reset to prevent triple-tap
-                        return@OnTouchListener true // Consume the event
-                    } else {
-                        lastTapTime = currentTime
-                    }
-                    false // Don't consume yet - allow other handlers
+                    false // Don't consume - allow other handlers
                 }
                 MotionEvent.ACTION_MOVE -> {
                     // Calculate movement distance
@@ -347,8 +324,7 @@ class StepPipManager(
             }
         }
 
-        // Set drag listener on compact view and drag handle
-        compactView?.setOnTouchListener(dragTouchListener)
+        // Set drag listener on drag handle only
         pipDragHandle?.setOnTouchListener(dragTouchListener)
 
         // Set resize listener on edge indicators only
@@ -418,22 +394,6 @@ class StepPipManager(
         }
     }
 
-    /**
-     * Toggle between compact and expanded modes
-     */
-    private fun toggleExpanded() {
-        isExpanded = !isExpanded
-
-        if (isExpanded) {
-            compactView?.visibility = View.GONE
-            expandedView?.visibility = View.VISIBLE
-        } else {
-            compactView?.visibility = View.VISIBLE
-            expandedView?.visibility = View.GONE
-        }
-
-        Log.d(TAG, "PiP mode: ${if (isExpanded) "expanded" else "compact"}")
-    }
 
     /**
      * Update the step display with current step data
