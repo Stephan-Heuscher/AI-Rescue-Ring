@@ -34,7 +34,7 @@ class StepPipManager(
         private const val TAG = "StepPipManager"
         private const val DOUBLE_TAP_DELTA = 300L // milliseconds
         private const val MOVE_THRESHOLD = 10 // pixels - distinguish tap from drag
-        private const val EDGE_THRESHOLD = 40 // pixels - edge detection for resizing (larger for elderly)
+        private const val EDGE_THRESHOLD = 60 // pixels - edge detection for resizing (larger for elderly)
     }
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -344,10 +344,10 @@ class StepPipManager(
 
             // Calculate new dimensions with constraints
             val density = context.resources.displayMetrics.density
-            val minWidth = (200 * density).toInt()
-            val maxWidth = (500 * density).toInt()
-            val minHeight = (250 * density).toInt()
-            val maxHeight = (600 * density).toInt()
+            val minWidth = (280 * density).toInt()
+            val maxWidth = (600 * density).toInt()
+            val minHeight = (350 * density).toInt()
+            val maxHeight = (800 * density).toInt()
 
             val layoutParams = card.layoutParams
             val oldWidth = layoutParams.width
@@ -423,10 +423,6 @@ class StepPipManager(
 
         val content = lines.drop(contentStartIndex).joinToString("\n").trim()
         val stepIndicatorText = "Step ${currentStepIndex + 1} of ${currentSteps.size}"
-
-        // Update compact mode
-        pipStepIndicator?.text = stepIndicatorText
-        pipStepTitle?.text = title
 
         // Update expanded mode
         pipStepIndicatorExpanded?.text = stepIndicatorText
