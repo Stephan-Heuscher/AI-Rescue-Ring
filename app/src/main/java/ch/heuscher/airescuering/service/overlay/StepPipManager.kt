@@ -34,7 +34,7 @@ class StepPipManager(
         private const val TAG = "StepPipManager"
         private const val DOUBLE_TAP_DELTA = 300L // milliseconds
         private const val MOVE_THRESHOLD = 10 // pixels - distinguish tap from drag
-        private const val EDGE_THRESHOLD = 20 // pixels - edge detection for resizing
+        private const val EDGE_THRESHOLD = 30 // pixels - edge detection for resizing (larger for elderly)
     }
 
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -49,12 +49,15 @@ class StepPipManager(
 
     // UI Components - Expanded Mode
     private var expandedView: CardView? = null
+    private var pipDragHandle: View? = null
     private var pipStepIndicatorExpanded: TextView? = null
     private var pipStepTitleExpanded: TextView? = null
     private var pipStepContent: TextView? = null
     private var pipPreviousButton: Button? = null
     private var pipNextButton: Button? = null
     private var pipCloseButton: ImageButton? = null
+    private var rightEdgeIndicator: View? = null
+    private var bottomEdgeIndicator: View? = null
 
     // Step data
     private var currentSteps = listOf<String>()
@@ -191,12 +194,15 @@ class StepPipManager(
 
             // Expanded mode views
             expandedView = view.findViewById(R.id.stepPipExpanded)
+            pipDragHandle = view.findViewById(R.id.pipDragHandle)
             pipStepIndicatorExpanded = view.findViewById(R.id.pipStepIndicatorExpanded)
             pipStepTitleExpanded = view.findViewById(R.id.pipStepTitleExpanded)
             pipStepContent = view.findViewById(R.id.pipStepContent)
             pipPreviousButton = view.findViewById(R.id.pipPreviousButton)
             pipNextButton = view.findViewById(R.id.pipNextButton)
             pipCloseButton = view.findViewById(R.id.pipCloseButton)
+            rightEdgeIndicator = view.findViewById(R.id.rightEdgeIndicator)
+            bottomEdgeIndicator = view.findViewById(R.id.bottomEdgeIndicator)
 
             // Set up button listeners
             pipPreviousButton?.setOnClickListener {
@@ -226,7 +232,8 @@ class StepPipManager(
      * Set up touch listener for dragging, double-tap detection, and edge resizing
      */
     private fun setupTouchListener(params: WindowManager.LayoutParams) {
-        val touchListener = View.OnTouchListener { view, event ->
+        // Drag listener for header and compact view
+        val dragTouchListener = View.OnTouchListener { view, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     initialX = params.x
@@ -235,40 +242,19 @@ class StepPipManager(
                     initialTouchY = event.rawY
                     hasMoved = false
 
-                    // Store initial dimensions for resizing
-                    view.let {
-                        initialWidth = it.width
-                        initialHeight = it.height
-                    }
-
-                    // Determine if touch is on edge (for expanded mode only)
-                    if (isExpanded && view == expandedView) {
-                        resizeMode = detectEdge(event.x, event.y, view.width, view.height)
-                        if (resizeMode != ResizeMode.NONE) {
-                            isResizing = true
-                            return@OnTouchListener true
-                        }
-                    }
-
                     // Check for double-tap
                     val currentTime = System.currentTimeMillis()
                     if (currentTime - lastTapTime < DOUBLE_TAP_DELTA) {
                         // Double-tap detected - toggle expanded/compact
                         toggleExpanded()
                         lastTapTime = 0L // Reset to prevent triple-tap
-                        true // Consume the event
+                        return@OnTouchListener true // Consume the event
                     } else {
                         lastTapTime = currentTime
-                        false // Don't consume yet - allow click events
                     }
+                    false // Don't consume yet - allow other handlers
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    // Handle resizing if in resize mode
-                    if (isResizing && resizeMode != ResizeMode.NONE) {
-                        handleResize(event, params)
-                        return@OnTouchListener true
-                    }
-
                     // Calculate movement distance
                     val deltaX = abs(initialTouchX - event.rawX)
                     val deltaY = abs(initialTouchY - event.rawY)
@@ -292,35 +278,81 @@ class StepPipManager(
                     }
                 }
                 MotionEvent.ACTION_UP -> {
-                    isResizing = false
-                    resizeMode = ResizeMode.NONE
-
-                    // If we moved, consume the event to prevent click
-                    // If we didn't move, allow click events to process
                     hasMoved
                 }
                 else -> false
             }
         }
 
-        // Set touch listener on both CardViews so it works regardless of which is visible
-        compactView?.setOnTouchListener(touchListener)
-        expandedView?.setOnTouchListener(touchListener)
+        // Resize listener for expanded view edges
+        val resizeTouchListener = View.OnTouchListener { view, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    // Store initial dimensions and position
+                    expandedView?.let {
+                        initialWidth = it.width
+                        initialHeight = it.height
+                    }
+                    initialX = params.x
+                    initialY = params.y
+                    initialTouchX = event.rawX
+                    initialTouchY = event.rawY
+
+                    // Detect if touch is on edge
+                    resizeMode = detectEdge(event.x, event.y, view.width, view.height)
+                    if (resizeMode != ResizeMode.NONE) {
+                        isResizing = true
+                        Log.d(TAG, "Resize mode: $resizeMode")
+                        true
+                    } else {
+                        false
+                    }
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    if (isResizing && resizeMode != ResizeMode.NONE) {
+                        handleResize(event, params)
+                        true
+                    } else {
+                        false
+                    }
+                }
+                MotionEvent.ACTION_UP -> {
+                    val wasResizing = isResizing
+                    isResizing = false
+                    resizeMode = ResizeMode.NONE
+                    wasResizing
+                }
+                else -> false
+            }
+        }
+
+        // Set drag listener on compact view and drag handle
+        compactView?.setOnTouchListener(dragTouchListener)
+        pipDragHandle?.setOnTouchListener(dragTouchListener)
+
+        // Set resize listener on expanded view for edge resizing
+        expandedView?.setOnTouchListener(resizeTouchListener)
     }
 
     /**
      * Detect if touch is on an edge for resizing
      */
     private fun detectEdge(x: Float, y: Float, width: Int, height: Int): ResizeMode {
-        val onRightEdge = x > width - EDGE_THRESHOLD
-        val onBottomEdge = y > height - EDGE_THRESHOLD
+        val density = context.resources.displayMetrics.density
+        val edgeThreshold = (EDGE_THRESHOLD * density).toInt()
 
-        return when {
+        val onRightEdge = x > width - edgeThreshold
+        val onBottomEdge = y > height - edgeThreshold
+
+        val mode = when {
             onRightEdge && onBottomEdge -> ResizeMode.BOTTOM_RIGHT
             onRightEdge -> ResizeMode.RIGHT
             onBottomEdge -> ResizeMode.BOTTOM
             else -> ResizeMode.NONE
         }
+
+        Log.d(TAG, "Edge detection: x=$x, y=$y, width=$width, height=$height, threshold=$edgeThreshold, mode=$mode")
+        return mode
     }
 
     /**
@@ -339,23 +371,38 @@ class StepPipManager(
             val maxHeight = (600 * density).toInt()
 
             val layoutParams = card.layoutParams
+            val oldWidth = layoutParams.width
+            val oldHeight = layoutParams.height
 
             when (resizeMode) {
                 ResizeMode.RIGHT -> {
-                    layoutParams.width = (initialWidth + deltaX).toInt().coerceIn(minWidth, maxWidth)
+                    // For right edge, delta X is positive when dragging right
+                    val newWidth = (initialWidth + deltaX).toInt().coerceIn(minWidth, maxWidth)
+                    layoutParams.width = newWidth
+                    Log.d(TAG, "Resize RIGHT: deltaX=$deltaX, initialWidth=$initialWidth, newWidth=$newWidth")
                 }
                 ResizeMode.BOTTOM -> {
-                    layoutParams.height = (initialHeight + deltaY).toInt().coerceIn(minHeight, maxHeight)
+                    // For bottom edge, delta Y is positive when dragging down
+                    val newHeight = (initialHeight + deltaY).toInt().coerceIn(minHeight, maxHeight)
+                    layoutParams.height = newHeight
+                    Log.d(TAG, "Resize BOTTOM: deltaY=$deltaY, initialHeight=$initialHeight, newHeight=$newHeight")
                 }
                 ResizeMode.BOTTOM_RIGHT -> {
-                    layoutParams.width = (initialWidth + deltaX).toInt().coerceIn(minWidth, maxWidth)
-                    layoutParams.height = (initialHeight + deltaY).toInt().coerceIn(minHeight, maxHeight)
+                    val newWidth = (initialWidth + deltaX).toInt().coerceIn(minWidth, maxWidth)
+                    val newHeight = (initialHeight + deltaY).toInt().coerceIn(minHeight, maxHeight)
+                    layoutParams.width = newWidth
+                    layoutParams.height = newHeight
+                    Log.d(TAG, "Resize BOTH: deltaX=$deltaX, deltaY=$deltaY, newWidth=$newWidth, newHeight=$newHeight")
                 }
                 ResizeMode.NONE -> {}
             }
 
-            card.layoutParams = layoutParams
-            windowManager.updateViewLayout(pipView, params)
+            if (layoutParams.width != oldWidth || layoutParams.height != oldHeight) {
+                card.layoutParams = layoutParams
+                card.requestLayout()
+                pipView?.requestLayout()
+                windowManager.updateViewLayout(pipView, params)
+            }
         }
     }
 
