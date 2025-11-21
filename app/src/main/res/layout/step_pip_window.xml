@@ -9,8 +9,8 @@
     <!-- Step Window (Always Expanded) -->
     <androidx.cardview.widget.CardView
         android:id="@+id/stepPipExpanded"
-        android:layout_width="320dp"
-        android:layout_height="480dp"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
         android:layout_margin="8dp"
         android:elevation="8dp"
         app:cardCornerRadius="8dp">
@@ -49,7 +49,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Step 1 of 5"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"
                     android:gravity="center"
@@ -60,7 +60,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Step Title"
-                    android:textSize="22sp"
+                    android:textSize="20sp"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"
                     android:gravity="center"/>
@@ -88,7 +88,7 @@
                     android:id="@+id/pipStepContent"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:lineSpacingExtra="6dp"
                     android:textColor="#000000"
                     android:text="Step content goes here..."/>
@@ -109,7 +109,7 @@
                     android:layout_height="60dp"
                     android:layout_weight="1"
                     android:text="◀ Previous"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginEnd="8dp"
                     style="?android:attr/buttonBarButtonStyle"/>
@@ -120,7 +120,7 @@
                     android:layout_height="60dp"
                     android:layout_weight="1"
                     android:text="Next ▶"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_marginStart="8dp"
                     style="?android:attr/buttonBarButtonStyle"/>
@@ -139,10 +139,10 @@
         <!-- Left edge resize indicator -->
         <View
             android:id="@+id/leftEdgeIndicator"
-            android:layout_width="3dp"
+            android:layout_width="24dp"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:background="#80000000"
+            android:background="#00000000"
             android:layout_marginTop="60dp"
             android:layout_marginBottom="60dp"/>
 
@@ -150,9 +150,9 @@
         <View
             android:id="@+id/bottomEdgeIndicator"
             android:layout_width="match_parent"
-            android:layout_height="3dp"
+            android:layout_height="24dp"
             android:layout_gravity="bottom"
-            android:background="#80000000"
+            android:background="#00000000"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"/>
 

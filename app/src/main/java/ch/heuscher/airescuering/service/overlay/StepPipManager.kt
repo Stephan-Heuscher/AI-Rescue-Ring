@@ -229,7 +229,7 @@ class StepPipManager(
                     initialTouchX = event.rawX
                     initialTouchY = event.rawY
                     hasMoved = false
-                    false // Don't consume - allow other handlers
+                    true // Consume to receive further events
                 }
                 MotionEvent.ACTION_MOVE -> {
                     // Calculate movement distance
@@ -251,11 +251,14 @@ class StepPipManager(
                         windowManager.updateViewLayout(pipView, params)
                         true // Consume the event during drag
                     } else {
-                        false // Small movement - might be a tap
+                        true // Consume but don't move yet
                     }
                 }
                 MotionEvent.ACTION_UP -> {
-                    hasMoved
+                    if (!hasMoved) {
+                        view.performClick()
+                    }
+                    true
                 }
                 else -> false
             }
@@ -284,7 +287,7 @@ class StepPipManager(
                             // Check if also near bottom for corner resize
                             val viewHeight = expandedView?.height ?: 0
                             val bottomThreshold = viewHeight - edgeThreshold
-                            if (event.rawY > pipView!!.y + bottomThreshold) {
+                            if (event.rawY > params.y + bottomThreshold) {
                                 ResizeMode.BOTTOM_LEFT
                             } else {
                                 ResizeMode.LEFT
@@ -293,7 +296,7 @@ class StepPipManager(
                         bottomEdgeIndicator -> {
                             // Check if also near left for corner resize
                             val viewWidth = expandedView?.width ?: 0
-                            if (event.rawX < pipView!!.x + edgeThreshold) {
+                            if (event.rawX < params.x + edgeThreshold) {
                                 ResizeMode.BOTTOM_LEFT
                             } else {
                                 ResizeMode.BOTTOM
