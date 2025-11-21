@@ -362,9 +362,9 @@ class OverlayService : Service() {
     }
 
     private fun handleQuadrupleTap() {
-        Log.d(TAG, "handleQuadrupleTap: Quadruple tap detected - opening settings")
-        // Open settings activity
-        val intent = Intent(this, ch.heuscher.airescuering.SettingsActivity::class.java).apply {
+        Log.d(TAG, "handleQuadrupleTap: Quadruple tap detected - opening main app")
+        // Open main activity
+        val intent = Intent(this, ch.heuscher.airescuering.MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         startActivity(intent)

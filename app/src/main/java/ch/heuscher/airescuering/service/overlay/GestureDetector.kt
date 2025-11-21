@@ -26,7 +26,8 @@ class GestureDetector(
     private var lastClickTime = 0L
     private var isLongPress = false
     private var isDragMode = false
-    private var hasMoved = false
+    private var isDragging = false
+    private var touchSlopExceeded = false
     private var initialX = 0f
     private var initialY = 0f
     private var lastX = 0f
@@ -103,7 +104,8 @@ class GestureDetector(
         lastX = initialX
         lastY = initialY
         isLongPress = false
-        hasMoved = false
+        isDragging = false
+        touchSlopExceeded = false
 
         android.util.Log.d(TAG, "ACTION_DOWN at (${event.rawX}, ${event.rawY}), touchSlop=$touchSlop")
 
@@ -115,52 +117,37 @@ class GestureDetector(
         val totalDeltaX = event.rawX - initialX
         val totalDeltaY = event.rawY - initialY
 
-        // If position is locked, don't allow any dragging
-        if (positionLocked) {
-            return true
-        }
+        if (!touchSlopExceeded) {
+            if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
+                touchSlopExceeded = true
+                mainHandler.removeCallbacks(longPressRunnable)
 
-        if (!hasMoved) {
-            android.util.Log.d(TAG, "ACTION_MOVE: delta=(${totalDeltaX}, ${totalDeltaY}), touchSlop=$touchSlop, requiresLongPress=$requiresLongPressToDrag, isDragMode=$isDragMode")
-
-            if (requiresLongPressToDrag) {
-                // Safe-Home mode: Only allow dragging if in drag mode (long-press detected)
-                if (isDragMode) {
-                    if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
-                        hasMoved = true
-                        android.util.Log.d(TAG, "ACTION_MOVE: Drag started in Safe-Home mode")
-                        // Now show the halo when user starts moving
-                        onDragModeChanged?.invoke(true)
-                        onGesture?.invoke(Gesture.DRAG_START)
-                    } else {
-                        return true
-                    }
-                } else {
-                    // Not in drag mode yet, check if user moved too much (cancel long press)
-                    if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
-                        android.util.Log.d(TAG, "ACTION_MOVE: Movement exceeds touchSlop, canceling long press")
-                        mainHandler.removeCallbacks(longPressRunnable)
-                    }
+                // Check if we should start dragging
+                if (positionLocked) {
+                    android.util.Log.d(TAG, "ACTION_MOVE: Position locked, ignoring drag")
                     return true
                 }
-            } else {
-                // Standard/Navi mode: Allow immediate dragging
-                if (Math.abs(totalDeltaX) > touchSlop || Math.abs(totalDeltaY) > touchSlop) {
-                    hasMoved = true
-                    android.util.Log.d(TAG, "ACTION_MOVE: Drag started in STANDARD mode (delta exceeded touchSlop)")
-                    mainHandler.removeCallbacks(longPressRunnable) // Cancel long press
-                    onGesture?.invoke(Gesture.DRAG_START)
-                } else {
+
+                if (requiresLongPressToDrag && !isDragMode) {
+                    android.util.Log.d(TAG, "ACTION_MOVE: Moved too early for Safe-Home mode")
                     return true
                 }
+
+                // Start dragging
+                isDragging = true
+                android.util.Log.d(TAG, "ACTION_MOVE: Drag started")
+                onDragModeChanged?.invoke(true)
+                onGesture?.invoke(Gesture.DRAG_START)
             }
         }
 
-        val deltaX = event.rawX - lastX
-        val deltaY = event.rawY - lastY
+        if (isDragging) {
+            val deltaX = event.rawX - lastX
+            val deltaY = event.rawY - lastY
 
-        onPositionChanged?.invoke(deltaX.toInt(), deltaY.toInt())
-        onGesture?.invoke(Gesture.DRAG_MOVE)
+            onPositionChanged?.invoke(deltaX.toInt(), deltaY.toInt())
+            onGesture?.invoke(Gesture.DRAG_MOVE)
+        }
 
         lastX = event.rawX
         lastY = event.rawY
@@ -170,24 +157,19 @@ class GestureDetector(
     private fun handleActionUp(event: MotionEvent) {
         mainHandler.removeCallbacks(longPressRunnable)
 
-        android.util.Log.d(TAG, "ACTION_UP: hasMoved=$hasMoved, isLongPress=$isLongPress")
-
-        if (hasMoved) {
-            // Drag ended
+        if (isDragging) {
             android.util.Log.d(TAG, "ACTION_UP: Drag ended")
             onGesture?.invoke(Gesture.DRAG_END)
-        } else if (!isLongPress) {
-            // Handle click
-            android.util.Log.d(TAG, "ACTION_UP: Click detected, calling handleClick()")
+            isDragging = false
+            onDragModeChanged?.invoke(false)
+        } else if (!touchSlopExceeded && !isLongPress) {
+            android.util.Log.d(TAG, "ACTION_UP: Click detected")
             handleClick()
-        } else {
-            android.util.Log.d(TAG, "ACTION_UP: Long press detected, no click")
         }
 
-        // Reset drag mode
+        // Reset Safe-Home drag readiness
         if (isDragMode) {
             isDragMode = false
-            onDragModeChanged?.invoke(false)
         }
     }
 
@@ -206,11 +188,11 @@ class GestureDetector(
     }
 
     private fun processClicks() {
-        val gesture = when (clickCount) {
-            1 -> Gesture.TAP
-            2 -> Gesture.DOUBLE_TAP
-            3 -> Gesture.TRIPLE_TAP
-            4 -> Gesture.QUADRUPLE_TAP
+        val gesture = when {
+            clickCount == 1 -> Gesture.TAP
+            clickCount == 2 -> Gesture.DOUBLE_TAP
+            clickCount == 3 -> Gesture.TRIPLE_TAP
+            clickCount >= 4 -> Gesture.QUADRUPLE_TAP
             else -> return
         }
 
@@ -227,6 +209,7 @@ class GestureDetector(
         mainHandler.removeCallbacks(clickTimeoutRunnable)
         clickCount = 0
         isLongPress = false
-        hasMoved = false
+        isDragging = false
+        touchSlopExceeded = false
     }
 }
