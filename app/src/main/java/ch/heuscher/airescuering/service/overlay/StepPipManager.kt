@@ -425,7 +425,7 @@ class StepPipManager(
         }
 
         val content = lines.drop(contentStartIndex).joinToString("\n").trim()
-        val stepIndicatorText = "Step ${currentStepIndex + 1} of ${currentSteps.size}"
+        val stepIndicatorText = "${currentStepIndex + 1}/${currentSteps.size}"
 
         // Update expanded mode
         pipStepIndicatorExpanded?.text = stepIndicatorText
