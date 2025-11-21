@@ -54,6 +54,7 @@ class StepPipManager(
     private var pipPreviousButton: Button? = null
     private var pipNextButton: Button? = null
     private var pipCloseButton: ImageButton? = null
+    private var resizeHandle: View? = null
 
     // Step data
     private var currentSteps = listOf<String>()
@@ -69,6 +70,11 @@ class StepPipManager(
     private var initialTouchY = 0f
     private var lastTapTime = 0L
     private var hasMoved = false
+
+    // Resize handling
+    private var initialWidth = 0
+    private var initialHeight = 0
+    private var isResizing = false
 
     // Callbacks
     var onClose: (() -> Unit)? = null
@@ -133,6 +139,9 @@ class StepPipManager(
             // Set up touch listener for dragging and double-tap
             setupTouchListener(params)
 
+            // Set up resize listener
+            setupResizeListener(params)
+
             // Display initial step
             updateStepDisplay()
 
@@ -186,6 +195,7 @@ class StepPipManager(
             pipPreviousButton = view.findViewById(R.id.pipPreviousButton)
             pipNextButton = view.findViewById(R.id.pipNextButton)
             pipCloseButton = view.findViewById(R.id.pipCloseButton)
+            resizeHandle = view.findViewById(R.id.resizeHandle)
 
             // Set up button listeners
             pipPreviousButton?.setOnClickListener {
@@ -203,8 +213,10 @@ class StepPipManager(
             }
 
             pipCloseButton?.setOnClickListener {
-                hide()
-                onClose?.invoke()
+                // Close button should only collapse to compact mode
+                if (isExpanded) {
+                    toggleExpanded()
+                }
             }
         }
     }
@@ -269,6 +281,53 @@ class StepPipManager(
         // Set touch listener on both CardViews so it works regardless of which is visible
         compactView?.setOnTouchListener(touchListener)
         expandedView?.setOnTouchListener(touchListener)
+    }
+
+    /**
+     * Set up resize listener for the expanded window
+     */
+    private fun setupResizeListener(params: WindowManager.LayoutParams) {
+        resizeHandle?.setOnTouchListener { view, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    isResizing = true
+                    initialTouchX = event.rawX
+                    initialTouchY = event.rawY
+                    expandedView?.let {
+                        initialWidth = it.layoutParams.width
+                        initialHeight = it.layoutParams.height
+                    }
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    if (isResizing) {
+                        expandedView?.let { card ->
+                            val deltaX = event.rawX - initialTouchX
+                            val deltaY = event.rawY - initialTouchY
+
+                            // Calculate new dimensions (minimum 200dp, maximum 400dp)
+                            val minWidth = (200 * context.resources.displayMetrics.density).toInt()
+                            val maxWidth = (400 * context.resources.displayMetrics.density).toInt()
+                            val newWidth = (initialWidth + deltaX).toInt().coerceIn(minWidth, maxWidth)
+
+                            // Update the CardView layout params
+                            val layoutParams = card.layoutParams
+                            layoutParams.width = newWidth
+                            card.layoutParams = layoutParams
+
+                            // Force window update
+                            windowManager.updateViewLayout(pipView, params)
+                        }
+                    }
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    isResizing = false
+                    true
+                }
+                else -> false
+            }
+        }
     }
 
     /**

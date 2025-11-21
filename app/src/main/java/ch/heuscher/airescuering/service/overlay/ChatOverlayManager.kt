@@ -70,8 +70,6 @@ class ChatOverlayManager(
     private var screenshotPreviewContainer: View? = null
     private var screenshotPreviewImage: android.widget.ImageView? = null
     private var deleteScreenshotButton: Button? = null
-    private var moveTopButton: ImageButton? = null
-    private var moveBottomButton: ImageButton? = null
     private var stepForwardButton: Button? = null
     private var stepBackwardButton: Button? = null
     private var stepIndicator: TextView? = null
@@ -279,8 +277,6 @@ class ChatOverlayManager(
             screenshotPreviewContainer = view.findViewById(R.id.screenshotPreviewContainer)
             screenshotPreviewImage = view.findViewById(R.id.screenshotPreviewImage)
             deleteScreenshotButton = view.findViewById(R.id.deleteScreenshotButton)
-            moveTopButton = view.findViewById(R.id.moveTopButton)
-            moveBottomButton = view.findViewById(R.id.moveBottomButton)
             stepForwardButton = view.findViewById(R.id.stepForwardButton)
             stepBackwardButton = view.findViewById(R.id.stepBackwardButton)
             stepIndicator = view.findViewById(R.id.stepIndicator)
@@ -307,14 +303,6 @@ class ChatOverlayManager(
 
         newChatButton?.setOnClickListener {
             startNewChat()
-        }
-
-        moveTopButton?.setOnClickListener {
-            updateWindowPosition(Gravity.TOP)
-        }
-
-        moveBottomButton?.setOnClickListener {
-            updateWindowPosition(Gravity.BOTTOM)
         }
 
         stepForwardButton?.setOnClickListener {
@@ -583,13 +571,6 @@ class ChatOverlayManager(
     /**
      * Update the window position (Top or Bottom)
      */
-    private fun updateWindowPosition(gravity: Int) {
-        chatOverlayView?.let { view ->
-            val params = view.layoutParams as WindowManager.LayoutParams
-            params.gravity = gravity
-            windowManager.updateViewLayout(view, params)
-        }
-    }
 
     /**
      * Update the step navigation UI
