@@ -44,6 +44,7 @@ class StepPipManager(
     // UI Components
     private var expandedView: CardView? = null
     private var pipDragHandle: View? = null
+    private var pipFooter: View? = null
     private var pipStepIndicatorExpanded: TextView? = null
     private var pipStepTitleExpanded: TextView? = null
     private var pipStepContent: TextView? = null
@@ -184,6 +185,7 @@ class StepPipManager(
             // Get UI components
             expandedView = view.findViewById(R.id.stepPipExpanded)
             pipDragHandle = view.findViewById(R.id.pipDragHandle)
+            pipFooter = view.findViewById(R.id.pipFooter)
             pipStepIndicatorExpanded = view.findViewById(R.id.pipStepIndicatorExpanded)
             pipStepTitleExpanded = view.findViewById(R.id.pipStepTitleExpanded)
             pipStepContent = view.findViewById(R.id.pipStepContent)
@@ -302,6 +304,7 @@ class StepPipManager(
                                 ResizeMode.BOTTOM
                             }
                         }
+                        pipFooter -> ResizeMode.BOTTOM_LEFT // Footer acts as a general resize handle
                         else -> ResizeMode.NONE
                     }
 
@@ -330,9 +333,10 @@ class StepPipManager(
         // Set drag listener on drag handle only
         pipDragHandle?.setOnTouchListener(dragTouchListener)
 
-        // Set resize listener on edge indicators only
+        // Set resize listener on edge indicators and footer
         leftEdgeIndicator?.setOnTouchListener(resizeTouchListener)
         bottomEdgeIndicator?.setOnTouchListener(resizeTouchListener)
+        pipFooter?.setOnTouchListener(resizeTouchListener)
     }
 
 
