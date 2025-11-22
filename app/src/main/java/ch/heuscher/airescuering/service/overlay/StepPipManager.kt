@@ -351,9 +351,9 @@ class StepPipManager(
 
             // Calculate new dimensions with constraints
             val density = context.resources.displayMetrics.density
-            val minWidth = (280 * density).toInt()
+            val minWidth = (200 * density).toInt()
             val maxWidth = (600 * density).toInt()
-            val minHeight = (350 * density).toInt()
+            val minHeight = (150 * density).toInt()
             val maxHeight = (800 * density).toInt()
 
             val layoutParams = card.layoutParams
