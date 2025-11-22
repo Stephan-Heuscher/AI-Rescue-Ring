@@ -74,6 +74,8 @@ class StepPipManager(
     private var initialHeight = 0
     private var isResizing = false
     private var resizeMode = ResizeMode.NONE
+    private var screenWidth = 0
+    private var screenHeight = 0
 
     private enum class ResizeMode {
         NONE, LEFT, BOTTOM, BOTTOM_LEFT
@@ -109,8 +111,8 @@ class StepPipManager(
 
             // Get screen dimensions
             val displayMetrics = context.resources.displayMetrics
-            val screenWidth = displayMetrics.widthPixels
-            val screenHeight = displayMetrics.heightPixels
+            screenWidth = displayMetrics.widthPixels
+            screenHeight = displayMetrics.heightPixels
 
             // Set up window parameters
             val params = WindowManager.LayoutParams(
@@ -352,7 +354,7 @@ class StepPipManager(
             // Calculate new dimensions with constraints
             val density = context.resources.displayMetrics.density
             val minWidth = (200 * density).toInt()
-            val maxWidth = (600 * density).toInt()
+            val maxWidth = screenWidth // Limit to screen width
             val minHeight = (150 * density).toInt()
             val maxHeight = (800 * density).toInt()
 
