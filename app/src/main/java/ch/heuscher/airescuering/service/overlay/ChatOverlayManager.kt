@@ -69,7 +69,7 @@ class ChatOverlayManager(
     private var loadingIndicator: ProgressBar? = null
     private var screenshotPreviewContainer: View? = null
     private var screenshotPreviewImage: android.widget.ImageView? = null
-    private var deleteScreenshotButton: Button? = null
+    private var deleteScreenshotButton: ImageButton? = null
     private var stepForwardButton: Button? = null
     private var stepBackwardButton: Button? = null
     private var stepIndicator: TextView? = null
@@ -98,6 +98,11 @@ class ChatOverlayManager(
     // PiP step window
     private var stepPipManager: StepPipManager? = null
 
+    // Inactivity timer for auto-new-chat
+    private var inactivityHandler: Handler? = null
+    private var inactivityRunnable: Runnable? = null
+    private val INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000L // 5 minutes
+
     // Callbacks
     var onHideRequest: (() -> Unit)? = null
     var onScreenshotRequest: (() -> Unit)? = null
@@ -109,6 +114,15 @@ class ChatOverlayManager(
             // When PiP is closed, clear the steps
             currentSteps = listOf()
             currentStepIndex = 0
+        }
+
+        // Initialize inactivity handler
+        inactivityHandler = Handler(Looper.getMainLooper())
+        inactivityRunnable = Runnable {
+            Log.d(TAG, "Inactivity timeout reached, starting new chat")
+            if (messages.isNotEmpty() && messages.size > 1) {
+                startNewChat()
+            }
         }
 
         // Load chat history
@@ -123,6 +137,9 @@ class ChatOverlayManager(
             Log.d(TAG, "Chat overlay already visible")
             return
         }
+
+        // Check for inactivity timeout - start new chat if needed
+        checkAndResetForInactivity()
 
         try {
             Log.d(TAG, "=== show: Creating chat overlay ===")
@@ -386,6 +403,9 @@ class ChatOverlayManager(
      * Send a message to the AI
      */
     private fun sendMessage(text: String, screenshotBase64: String? = null) {
+        // Reset inactivity timer on user interaction
+        resetInactivityTimer()
+
         // Reset steps for new request
         Handler(Looper.getMainLooper()).post {
             currentSteps = emptyList()
@@ -758,10 +778,41 @@ class ChatOverlayManager(
         // Save current session before cleanup
         saveCurrentSession()
 
+        // Cancel inactivity timer
+        inactivityHandler?.removeCallbacks(inactivityRunnable!!)
+        inactivityHandler = null
+        inactivityRunnable = null
+
         hide()
         stepPipManager?.destroy()
         stepPipManager = null
         currentScreenshotBitmap?.recycle()
         currentScreenshotBitmap = null
+    }
+
+    /**
+     * Reset the inactivity timer - call this when user interacts with the chat
+     */
+    private fun resetInactivityTimer() {
+        inactivityHandler?.removeCallbacks(inactivityRunnable!!)
+        inactivityHandler?.postDelayed(inactivityRunnable!!, INACTIVITY_TIMEOUT_MS)
+        Log.d(TAG, "Inactivity timer reset - will trigger in ${INACTIVITY_TIMEOUT_MS / 1000 / 60} minutes")
+    }
+
+    /**
+     * Check if inactivity timer has expired and reset chat if needed
+     */
+    private fun checkAndResetForInactivity() {
+        // If we have messages and last interaction was more than 5 minutes ago, start new chat
+        currentSession?.let { session ->
+            val lastMessageTime = session.messages.lastOrNull()?.timestamp ?: session.startTime
+            val timeSinceLastMessage = System.currentTimeMillis() - lastMessageTime
+            if (timeSinceLastMessage > INACTIVITY_TIMEOUT_MS && session.messages.size > 1) {
+                Log.d(TAG, "Last message was ${timeSinceLastMessage / 1000 / 60} minutes ago, starting new chat")
+                startNewChat()
+            }
+        }
+        // Reset timer for new interaction
+        resetInactivityTimer()
     }
 }

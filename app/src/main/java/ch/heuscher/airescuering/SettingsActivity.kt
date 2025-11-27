@@ -1,6 +1,7 @@
 package ch.heuscher.airescuering
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -23,6 +24,7 @@ class SettingsActivity : AppCompatActivity() {
     // Appearance fields
     private lateinit var sizeSeekBar: android.widget.SeekBar
     private lateinit var alphaSeekBar: android.widget.SeekBar
+    private lateinit var transparencyValue: android.widget.TextView
     private lateinit var colorBlue: Button
     private lateinit var colorRed: Button
     private lateinit var colorGreen: Button
@@ -58,6 +60,14 @@ class SettingsActivity : AppCompatActivity() {
         setupLockPositionSwitch()
         setupAdvancedFeatures()
         setupAIHelperControls()
+        setupApiKeyHelpLink()
+    }
+
+    private fun setupApiKeyHelpLink() {
+        findViewById<android.widget.TextView>(R.id.api_key_help_link).setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://ai.google.dev"))
+            startActivity(intent)
+        }
     }
 
     private fun setupAppearanceControls() {
@@ -77,6 +87,9 @@ class SettingsActivity : AppCompatActivity() {
 
         alphaSeekBar.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+                // Update the percentage display (min 25% = 64, max 100% = 255)
+                val percentage = (progress * 100 / 255)
+                transparencyValue.text = "$percentage%"
                 if (fromUser) {
                     lifecycleScope.launch {
                         settingsRepository.setAlpha(progress)
@@ -108,6 +121,7 @@ class SettingsActivity : AppCompatActivity() {
         // Appearance views
         sizeSeekBar = findViewById(R.id.size_seekbar)
         alphaSeekBar = findViewById(R.id.alpha_seekbar)
+        transparencyValue = findViewById(R.id.transparency_value)
         colorBlue = findViewById(R.id.color_blue)
         colorRed = findViewById(R.id.color_red)
         colorGreen = findViewById(R.id.color_green)
@@ -119,7 +133,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun setupBackButton() {
-        findViewById<Button>(R.id.back_button).setOnClickListener {
+        findViewById<android.widget.ImageButton>(R.id.back_button).setOnClickListener {
             finish()
         }
     }
@@ -195,9 +209,13 @@ class SettingsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             settingsRepository.getAlpha().collect { alpha ->
-                if (alphaSeekBar.progress != alpha) {
-                    alphaSeekBar.progress = alpha
+                // Ensure minimum of 64 (25%)
+                val clampedAlpha = alpha.coerceAtLeast(64)
+                if (alphaSeekBar.progress != clampedAlpha) {
+                    alphaSeekBar.progress = clampedAlpha
                 }
+                val percentage = (clampedAlpha * 100 / 255)
+                transparencyValue.text = "$percentage%"
             }
         }
 
