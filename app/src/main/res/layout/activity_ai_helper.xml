@@ -8,222 +8,238 @@
     android:background="#80000000"
     tools:context=".AIHelperActivity">
 
-<!-- Screenshot Background (smaller, fully visible) -->
-<ImageView
-    android:id="@+id/screenshotBackground"
-    android:layout_width="match_parent"
-    android:layout_height="200dp"
-    android:layout_gravity="top"
-    android:scaleType="fitCenter"
-    android:alpha="0.5"
-    android:visibility="gone" />
-
-<!-- Dimming overlay on top of screenshot -->
-<View
-    android:id="@+id/dimmingOverlay"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#60000000"
-    android:visibility="gone" />
-
-<androidx.cardview.widget.CardView
-    android:id="@+id/chatCard"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_gravity="bottom"
-    android:layout_margin="16dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="8dp"
-    app:cardBackgroundColor="#FFFFFF">
-
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="#FFFFFF">
-
-    <!-- Top Bar -->
-    <LinearLayout
+    <!-- Screenshot Background (smaller, fully visible) -->
+    <ImageView
+        android:id="@+id/screenshotBackground"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="#D91976D2"
-        android:padding="8dp"
-        android:gravity="center_vertical"
-        android:elevation="4dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="AI Helper"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF" />
-
-        <Button
-            android:id="@+id/positionTopButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:text="⬆"
-            android:textSize="20sp"
-            android:textColor="#FFFFFF"
-            android:minHeight="48dp"
-            style="?android:attr/buttonBarButtonStyle" />
-
-        <Button
-            android:id="@+id/positionBottomButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:text="⬇"
-            android:textSize="20sp"
-            android:textColor="#FFFFFF"
-            android:minHeight="48dp"
-            style="?android:attr/buttonBarButtonStyle" />
-
-        <Button
-            android:id="@+id/newChatButton"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:text="New"
-            android:textSize="14sp"
-            android:textColor="#FFFFFF"
-            android:minHeight="48dp"
-            style="?android:attr/buttonBarButtonStyle" />
-
-        <Button
-            android:id="@+id/closeButton"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:text="Close"
-            android:textSize="14sp"
-            android:textColor="#FFFFFF"
-            android:minHeight="48dp"
-            style="?android:attr/buttonBarButtonStyle" />
-    </LinearLayout>
-
-    <!-- Step Navigation -->
-    <LinearLayout
-        android:id="@+id/stepNavigationContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:gravity="center"
-        android:background="#E3F2FD"
-        android:visibility="gone">
-
-        <Button
-            android:id="@+id/stepBackButton"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:text="◀ Back"
-            android:textSize="16sp"
-            android:minHeight="48dp"
-            style="?android:attr/buttonBarButtonStyle" />
-
-        <TextView
-            android:id="@+id/stepIndicator"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Step 1 of 5"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:textColor="#1976D2" />
-
-        <Button
-            android:id="@+id/stepForwardButton"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:text="Next ▶"
-            android:textSize="16sp"
-            android:minHeight="48dp"
-            style="?android:attr/buttonBarButtonStyle" />
-    </LinearLayout>
-
-    <!-- Chat Messages RecyclerView -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/messagesRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:padding="8dp"
-        android:paddingBottom="8dp"
-        android:clipToPadding="false"
-        android:scrollbarStyle="outsideOverlay"
-        tools:listitem="@layout/item_chat_message" />
-
-    <!-- Loading Indicator -->
-    <ProgressBar
-        android:id="@+id/loadingIndicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginVertical="4dp"
+        android:layout_height="200dp"
+        android:layout_gravity="top"
+        android:scaleType="fitCenter"
+        android:alpha="0.5"
         android:visibility="gone" />
 
-    <!-- Input Area -->
-    <LinearLayout
+    <!-- Dimming overlay on top of screenshot -->
+    <View
+        android:id="@+id/dimmingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#60000000"
+        android:visibility="gone" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/chatCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:gravity="center_vertical"
-        android:background="#F5F5F5"
-        android:elevation="8dp">
+        android:layout_gravity="bottom"
+        android:layout_margin="12dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="12dp"
+        app:cardBackgroundColor="@color/surface">
 
-        <EditText
-            android:id="@+id/messageInput"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Ask me anything..."
-            android:minHeight="56dp"
-            android:background="@android:drawable/edit_text"
-            android:padding="12dp"
-            android:inputType="textCapSentences|textMultiLine"
-            android:maxLines="3"
-            android:textSize="18sp"
-            android:lineSpacingExtra="2dp"
-            android:imeOptions="actionSend" />
+            android:orientation="vertical">
 
-        <Button
-            android:id="@+id/screenshotButton"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:text="📸"
-            android:textSize="24sp"
-            android:layout_marginStart="6dp"
-            style="?android:attr/borderlessButtonStyle" />
+            <!-- Top Bar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="@color/chat_header"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="12dp"
+                android:gravity="center_vertical">
 
-        <Button
-            android:id="@+id/voiceButton"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:text="🎤"
-            android:textSize="24sp"
-            android:layout_marginStart="4dp"
-            style="?android:attr/borderlessButtonStyle" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🛟"
+                    android:textSize="24sp"
+                    android:layout_marginEnd="10dp" />
 
-        <Button
-            android:id="@+id/sendButton"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:text="➤"
-            android:textSize="24sp"
-            android:layout_marginStart="4dp"
-            android:background="#2196F3"
-            android:textColor="#FFFFFF"
-            style="?android:attr/borderlessButtonStyle" />
-    </LinearLayout>
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="AI Helper"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white" />
 
-</LinearLayout>
+                <Button
+                    android:id="@+id/positionTopButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:text="⬆"
+                    android:textSize="16sp"
+                    android:textColor="@color/white"
+                    android:minHeight="40dp"
+                    android:padding="0dp"
+                    style="?android:attr/buttonBarButtonStyle" />
 
-</androidx.cardview.widget.CardView>
+                <Button
+                    android:id="@+id/positionBottomButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:text="⬇"
+                    android:textSize="16sp"
+                    android:textColor="@color/white"
+                    android:minHeight="40dp"
+                    android:padding="0dp"
+                    style="?android:attr/buttonBarButtonStyle" />
+
+                <Button
+                    android:id="@+id/newChatButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:text="New"
+                    android:textSize="13sp"
+                    android:textColor="@color/white"
+                    android:minHeight="40dp"
+                    android:paddingHorizontal="12dp"
+                    style="?android:attr/buttonBarButtonStyle" />
+
+                <Button
+                    android:id="@+id/closeButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:text="✕"
+                    android:textSize="18sp"
+                    android:textColor="@color/white"
+                    android:minHeight="40dp"
+                    android:padding="0dp"
+                    style="?android:attr/buttonBarButtonStyle" />
+            </LinearLayout>
+
+            <!-- Step Navigation -->
+            <LinearLayout
+                android:id="@+id/stepNavigationContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="10dp"
+                android:gravity="center"
+                android:background="@color/info_light"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/stepBackButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:text="◀ Back"
+                    android:textSize="14sp"
+                    android:minHeight="44dp"
+                    android:textColor="@color/secondary"
+                    style="?android:attr/buttonBarButtonStyle" />
+
+                <TextView
+                    android:id="@+id/stepIndicator"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Step 1 of 5"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:textColor="@color/secondary" />
+
+                <Button
+                    android:id="@+id/stepForwardButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:text="Next ▶"
+                    android:textSize="14sp"
+                    android:minHeight="44dp"
+                    android:textColor="@color/secondary"
+                    style="?android:attr/buttonBarButtonStyle" />
+            </LinearLayout>
+
+            <!-- Chat Messages RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/messagesRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:padding="12dp"
+                android:clipToPadding="false"
+                android:background="@color/surface"
+                tools:listitem="@layout/item_chat_message" />
+
+            <!-- Loading Indicator -->
+            <ProgressBar
+                android:id="@+id/loadingIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginVertical="8dp"
+                android:indeterminateTint="@color/primary"
+                android:visibility="gone" />
+
+            <!-- Input Area -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="12dp"
+                android:gravity="center_vertical"
+                android:background="@color/surface_variant">
+
+                <EditText
+                    android:id="@+id/messageInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Ask me anything..."
+                    android:minHeight="52dp"
+                    android:background="@drawable/chat_input_background"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="14dp"
+                    android:inputType="textCapSentences|textMultiLine"
+                    android:maxLines="3"
+                    android:textSize="16sp"
+                    android:textColorHint="?android:attr/textColorSecondary"
+                    android:imeOptions="actionSend" />
+
+                <Button
+                    android:id="@+id/screenshotButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:text="📸"
+                    android:textSize="20sp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/circle_background"
+                    android:backgroundTint="@color/surface"
+                    style="?android:attr/borderlessButtonStyle" />
+
+                <Button
+                    android:id="@+id/voiceButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:text="🎤"
+                    android:textSize="20sp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/circle_background"
+                    android:backgroundTint="@color/surface"
+                    style="?android:attr/borderlessButtonStyle" />
+
+                <Button
+                    android:id="@+id/sendButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:text="➤"
+                    android:textSize="20sp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/circle_background"
+                    android:backgroundTint="@color/primary"
+                    android:textColor="@color/white"
+                    style="?android:attr/borderlessButtonStyle" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
 
 </FrameLayout>

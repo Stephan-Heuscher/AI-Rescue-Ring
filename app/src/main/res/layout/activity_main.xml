@@ -5,91 +5,111 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:paddingTop="48dp"
-    android:paddingBottom="20dp"
-    android:paddingStart="20dp"
-    android:paddingEnd="20dp"
+    android:background="@color/background"
     tools:context=".MainActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:paddingHorizontal="24dp"
+        android:paddingTop="40dp"
+        android:paddingBottom="32dp">
 
-        <!-- App Icon -->
-        <ImageView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:src="@mipmap/ic_launcher_round"
-            android:contentDescription="@string/app_title"
-            android:layout_marginBottom="16dp"
-            android:elevation="4dp" />
-
-        <!-- App Titel -->
-        <TextView
+        <!-- Hero Section with App Icon and Title -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/app_title"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="?android:attr/textColorPrimary"
-            android:gravity="center"
-            android:contentDescription="@string/assistipoint_app"
-            android:layout_marginBottom="8dp" />
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="32dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/app_subtitle"
-            android:textSize="18sp"
-            android:textColor="?android:attr/textColorSecondary"
-            android:gravity="center"
-            android:contentDescription="@string/your_tap_helper_for_navigation"
-            android:layout_marginBottom="32dp" />
+            <!-- App Icon with subtle shadow -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="60dp"
+                app:cardElevation="8dp"
+                app:cardBackgroundColor="@android:color/transparent"
+                android:layout_marginBottom="20dp">
 
-        <!-- Berechtigungen Section -->
+                <ImageView
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:src="@mipmap/ic_launcher_round"
+                    android:contentDescription="@string/app_title" />
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/app_title"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary"
+                android:gravity="center"
+                android:letterSpacing="0.02" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/app_subtitle"
+                android:textSize="16sp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:gravity="center"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- Permissions Section -->
         <LinearLayout
             android:id="@+id/permissions_section"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/missing_permissions"
-                android:textSize="22sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="?android:attr/textColorPrimary"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp"
+                android:drawablePadding="12dp" />
 
+            <!-- Overlay Permission Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/overlay_permission_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:minHeight="64dp"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="12dp">
+                    android:padding="16dp">
 
-                    <TextView
-                        android:id="@+id/overlay_status_icon"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:text="✗"
-                        android:textSize="28sp"
-                        android:textColor="#D32F2F"
-                        android:gravity="center"
-                        android:layout_marginEnd="16dp" />
+                    <FrameLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/circle_background"
+                        android:backgroundTint="@color/error_light"
+                        android:layout_marginEnd="16dp">
+
+                        <TextView
+                            android:id="@+id/overlay_status_icon"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="✗"
+                            android:textSize="24sp"
+                            android:textColor="@color/error"
+                            android:gravity="center" />
+                    </FrameLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -101,7 +121,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/show_assistipoint"
-                            android:textSize="18sp"
+                            android:textSize="16sp"
                             android:textStyle="bold"
                             android:textColor="?android:attr/textColorPrimary" />
 
@@ -110,7 +130,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/shows_assistipoint_over_apps"
-                            android:textSize="14sp"
+                            android:textSize="13sp"
                             android:textColor="?android:attr/textColorSecondary"
                             android:layout_marginTop="2dp" />
                     </LinearLayout>
@@ -118,93 +138,99 @@
                     <Button
                         android:id="@+id/overlay_permission_button"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="44dp"
                         android:text="@string/allow"
-                        android:textSize="16sp"
-                        android:contentDescription="@string/allow_assistipoint_over_apps"
-                        android:minHeight="48dp" />
+                        android:textSize="14sp"
+                        android:backgroundTint="@color/primary"
+                        android:paddingHorizontal="20dp"
+                        android:minHeight="44dp" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- Accessibility Permission Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/accessibility_permission_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="32dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:minHeight="64dp"
-                android:paddingHorizontal="20dp"
-                android:paddingVertical="12dp">
-
-                <TextView
-                    android:id="@+id/accessibility_status_icon"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:text="✗"
-                    android:textSize="28sp"
-                    android:textColor="#D32F2F"
-                    android:gravity="center"
-                    android:layout_marginEnd="16dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/allow_navigation"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="?android:attr/textColorPrimary" />
+                    <FrameLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/circle_background"
+                        android:backgroundTint="@color/error_light"
+                        android:layout_marginEnd="16dp">
 
-                    <TextView
-                        android:id="@+id/accessibility_status_text"
-                        android:layout_width="wrap_content"
+                        <TextView
+                            android:id="@+id/accessibility_status_icon"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:text="✗"
+                            android:textSize="24sp"
+                            android:textColor="@color/error"
+                            android:gravity="center" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="@string/for_back_home_app_switch"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/allow_navigation"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="?android:attr/textColorPrimary" />
+
+                        <TextView
+                            android:id="@+id/accessibility_status_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/for_back_home_app_switch"
+                            android:textSize="13sp"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/accessibility_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:text="@string/allow"
                         android:textSize="14sp"
-                        android:textColor="?android:attr/textColorSecondary"
-                        android:layout_marginTop="2dp" />
+                        android:backgroundTint="@color/primary"
+                        android:paddingHorizontal="20dp"
+                        android:minHeight="44dp" />
                 </LinearLayout>
-
-                <Button
-                    android:id="@+id/accessibility_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/allow"
-                    android:textSize="16sp"
-                    android:contentDescription="@string/allow_navigation_desc"
-                    android:minHeight="48dp" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
+            </androidx.cardview.widget.CardView>
         </LinearLayout>
 
-        <!-- Aktivieren/Deaktivieren Switch -->
+        <!-- Main Toggle Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            app:cardCornerRadius="12dp"
+            app:cardCornerRadius="20dp"
             app:cardElevation="4dp"
-            app:contentPadding="20dp">
+            app:cardBackgroundColor="@color/surface">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:minHeight="64dp">
+                android:padding="20dp">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -224,7 +250,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/shows_the_assistipoint"
-                        android:textSize="16sp"
+                        android:textSize="14sp"
                         android:textColor="?android:attr/textColorSecondary"
                         android:layout_marginTop="4dp" />
                 </LinearLayout>
@@ -237,47 +263,53 @@
                     android:minHeight="48dp"
                     android:minWidth="48dp"
                     android:layout_marginStart="16dp"
-                    android:layout_marginEnd="8dp"
-                    android:scaleX="1.5"
-                    android:scaleY="1.5" />
+                    android:scaleX="1.3"
+                    android:scaleY="1.3" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Einstellungen Button -->
+        <!-- Settings Button -->
         <Button
             android:id="@+id/settings_button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:text="@string/settings"
-            android:textSize="18sp"
-            android:contentDescription="@string/adjust_color_and_speed"
-            android:minHeight="64dp"
+            android:textSize="16sp"
             android:layout_marginBottom="24dp"
-            android:paddingVertical="16dp" />
+            android:backgroundTint="@color/surface_variant"
+            android:textColor="?android:attr/textColorPrimary"
+            style="@style/Widget.Material3.Button.ElevatedButton" />
 
-        <!-- Rescue Ring Visualization -->
+        <!-- Ready Status Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#FFF8E1"
-            app:contentPadding="20dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/card_highlight_orange">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
+                android:padding="24dp"
                 android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🛟"
+                    android:textSize="48sp"
+                    android:layout_marginBottom="12dp" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Your AI Rescue Ring is Ready!"
-                    android:textSize="22sp"
+                    android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="#F57C00"
+                    android:textColor="@color/primary"
                     android:gravity="center"
                     android:layout_marginBottom="8dp" />
 
@@ -285,75 +317,67 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Tap the floating ring anytime to get intelligent assistance with your device."
-                    android:textSize="16sp"
-                    android:textColor="#E65100"
+                    android:textSize="15sp"
+                    android:textColor="@color/primary_dark"
                     android:gravity="center"
-                    android:lineSpacingExtra="2dp" />
+                    android:lineSpacingExtra="3dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Hilfe Text -->
+        <!-- How it Works Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#E3F2FD"
-            app:contentPadding="20dp">
+            android:layout_marginBottom="24dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/card_highlight_blue">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:padding="24dp">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/how_it_works"
-                    android:textSize="20sp"
+                    android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="#1976D2"
-                    android:layout_marginBottom="12dp" />
+                    android:textColor="@color/secondary"
+                    android:layout_marginBottom="16dp" />
 
                 <TextView
                     android:id="@+id/instructions_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/instructions"
-                    android:textSize="16sp"
-                    android:lineSpacingExtra="4dp"
-                    android:textColor="#1565C0"
-                    android:contentDescription="@string/instructions_desc" />
+                    android:textSize="15sp"
+                    android:lineSpacingExtra="6dp"
+                    android:textColor="@color/secondary_dark" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Service beenden Button -->
+        <!-- Action Buttons -->
         <Button
             android:id="@+id/stop_service_button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:text="@string/stop_app"
-            android:textSize="18sp"
-            android:backgroundTint="#D32F2F"
-            android:textColor="#FFFFFF"
-            android:contentDescription="@string/stop_app_desc"
-            android:minHeight="64dp"
-            android:layout_marginTop="16dp"
-            android:paddingVertical="16dp" />
+            android:textSize="15sp"
+            android:backgroundTint="@color/error"
+            android:layout_marginBottom="12dp" />
 
-        <!-- Uninstall Button -->
         <Button
             android:id="@+id/uninstall_button"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:text="@string/uninstall_app"
-            android:textSize="18sp"
-            android:backgroundTint="#B71C1C"
-            android:textColor="#FFFFFF"
-            android:contentDescription="@string/uninstall_app_desc"
-            android:minHeight="64dp"
-            android:layout_marginTop="12dp"
-            android:paddingVertical="16dp" />
+            android:textSize="15sp"
+            android:textColor="@color/error"
+            android:backgroundTint="@color/surface"
+            style="@style/Widget.Material3.Button.OutlinedButton" />
 
         <!-- Version Info -->
         <TextView
@@ -364,8 +388,7 @@
             android:textSize="12sp"
             android:textColor="?android:attr/textColorSecondary"
             android:gravity="center"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginTop="24dp" />
 
     </LinearLayout>
 </ScrollView>

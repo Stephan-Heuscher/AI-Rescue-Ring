@@ -1,7 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="floating_dot_color">#FF2196F3</color>
-    <color name="primary">#FF2196F3</color>
+    
+    <!-- Primary brand colors - Rescue Orange/Coral theme -->
+    <color name="primary">#FF6B35</color>
+    <color name="primary_dark">#E55A2B</color>
+    <color name="primary_light">#FF8A5C</color>
+    <color name="primary_variant">#D84315</color>
+    
+    <!-- Secondary colors - Calming Blue -->
+    <color name="secondary">#1976D2</color>
+    <color name="secondary_dark">#1565C0</color>
+    <color name="secondary_light">#42A5F5</color>
+    
+    <!-- Surface colors -->
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F5F5F5</color>
+    <color name="background">#FAFAFA</color>
+    
+    <!-- Status colors -->
+    <color name="success">#4CAF50</color>
+    <color name="success_light">#E8F5E9</color>
+    <color name="warning">#FF9800</color>
+    <color name="warning_light">#FFF3E0</color>
+    <color name="error">#D32F2F</color>
+    <color name="error_light">#FFEBEE</color>
+    <color name="info">#2196F3</color>
+    <color name="info_light">#E3F2FD</color>
+    
+    <!-- Floating ring colors -->
+    <color name="floating_dot_color">#FF6B35</color>
+    <color name="ring_blue">#2196F3</color>
+    <color name="ring_red">#F44336</color>
+    <color name="ring_green">#4CAF50</color>
+    <color name="ring_orange">#FF9800</color>
+    
+    <!-- Chat colors -->
+    <color name="chat_user_bubble">#E3F2FD</color>
+    <color name="chat_assistant_bubble">#FFF3E0</color>
+    <color name="chat_header">#FF6B35</color>
+    
+    <!-- Card backgrounds -->
+    <color name="card_highlight_orange">#FFF8E1</color>
+    <color name="card_highlight_blue">#E3F2FD</color>
 </resources>

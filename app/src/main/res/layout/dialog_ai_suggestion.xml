@@ -4,40 +4,55 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="@color/surface">
 
     <!-- Title -->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="AI Suggestion"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="?android:attr/textColorPrimary"
-        android:layout_marginBottom="16dp" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🤖"
+            android:textSize="28sp"
+            android:layout_marginEnd="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AI Suggestion"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary" />
+    </LinearLayout>
 
     <!-- Suggestion Content -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="2dp"
-        app:cardBackgroundColor="#E3F2FD"
-        app:contentPadding="16dp">
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/card_highlight_blue">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Suggested Action"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:textStyle="bold"
-                android:textColor="#1976D2"
+                android:textColor="@color/secondary"
                 android:layout_marginBottom="8dp" />
 
             <TextView
@@ -45,8 +60,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Suggestion details will appear here"
-                android:textSize="16sp"
-                android:textColor="#1565C0"
+                android:textSize="15sp"
+                android:textColor="@color/secondary_dark"
                 android:lineSpacingExtra="4dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
@@ -56,10 +71,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="⚠️ Review this action before approving"
-        android:textSize="12sp"
-        android:textStyle="italic"
-        android:textColor="#F57C00"
-        android:layout_marginBottom="16dp"
+        android:textSize="13sp"
+        android:textColor="@color/warning"
+        android:layout_marginBottom="20dp"
         android:gravity="center" />
 
     <!-- Buttons -->
@@ -72,29 +86,32 @@
         <Button
             android:id="@+id/cancelButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
             android:text="Cancel"
-            android:minHeight="48dp"
+            android:minHeight="44dp"
             android:layout_marginEnd="8dp"
+            android:textColor="?android:attr/textColorSecondary"
             style="?android:attr/buttonBarButtonStyle" />
 
         <Button
             android:id="@+id/refineButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
             android:text="Refine"
-            android:minHeight="48dp"
+            android:minHeight="44dp"
             android:layout_marginEnd="8dp"
+            android:textColor="@color/secondary"
             style="?android:attr/buttonBarButtonStyle" />
 
         <Button
             android:id="@+id/approveButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Approve"
-            android:minHeight="48dp"
-            android:backgroundTint="#4CAF50"
-            android:textColor="#FFFFFF" />
+            android:layout_height="44dp"
+            android:text="✓ Approve"
+            android:minHeight="44dp"
+            android:backgroundTint="@color/success"
+            android:textColor="@color/white"
+            android:paddingHorizontal="20dp" />
     </LinearLayout>
 
 </LinearLayout>
