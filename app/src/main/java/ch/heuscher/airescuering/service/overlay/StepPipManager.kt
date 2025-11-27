@@ -196,7 +196,8 @@ class StepPipManager(
                     val x = coordMatch.groupValues[1]
                     val y = coordMatch.groupValues[2]
                     coordinateHints[stepIndex] = "($x%, $y%)"
-                    highlightHints[stepIndex] = "Tap at ($x%, $y%)"
+                    // Store coordinates for highlight positioning
+                    highlightHints[stepIndex] = "$x,$y"
                 }
             }
             cleanedText = cleanedText.replace(match.value, "").trim()
@@ -349,51 +350,75 @@ class StepPipManager(
      * Show highlight overlay for current step
      */
     private fun showHighlightForCurrentStep() {
-        val highlightDescription = highlightHints[currentStepIndex]
+        val highlightCoords = highlightHints[currentStepIndex]
         
-        if (highlightDescription.isNullOrBlank()) {
+        if (highlightCoords.isNullOrBlank()) {
             hideHighlight()
             return
         }
 
+        // Parse x,y from stored format "x,y"
+        val coordMatch = Regex("""(\d+)\s*,\s*(\d+)""").find(highlightCoords)
+        if (coordMatch == null) {
+            hideHighlight()
+            return
+        }
+        
+        val xPercent = coordMatch.groupValues[1].toIntOrNull() ?: 50
+        val yPercent = coordMatch.groupValues[2].toIntOrNull() ?: 50
+
         try {
+            // Calculate actual pixel position from percentages
+            val xPos = (screenWidth * xPercent / 100)
+            val yPos = (screenHeight * yPercent / 100)
+            
             if (highlightView == null) {
                 val inflater = LayoutInflater.from(context)
                 highlightView = inflater.inflate(R.layout.highlight_overlay, null)
-
-                val highlightParams = WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                    } else {
-                        @Suppress("DEPRECATION")
-                        WindowManager.LayoutParams.TYPE_PHONE
-                    },
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
-                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                    PixelFormat.TRANSLUCENT
-                ).apply {
-                    gravity = Gravity.CENTER
-                }
-
-                windowManager.addView(highlightView, highlightParams)
 
                 highlightContainer = highlightView?.findViewById(R.id.highlightContainer)
                 highlightPulse = highlightView?.findViewById(R.id.highlightPulse)
                 highlightLabel = highlightView?.findViewById(R.id.highlightLabel)
             }
+            
+            // Position at exact coordinates using TOP|START gravity
+            val highlightParams = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                } else {
+                    @Suppress("DEPRECATION")
+                    WindowManager.LayoutParams.TYPE_PHONE
+                },
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                PixelFormat.TRANSLUCENT
+            ).apply {
+                gravity = Gravity.TOP or Gravity.START
+                // Center the highlight on the tap position (highlight is ~80dp = ~240px)
+                x = xPos - 120
+                y = yPos - 120
+            }
 
-            // Update highlight label
-            highlightLabel?.text = highlightDescription
+            // Remove and re-add to update position
+            try {
+                windowManager.removeView(highlightView)
+            } catch (e: Exception) {
+                // View not attached yet
+            }
+            windowManager.addView(highlightView, highlightParams)
+
+            // Show the highlight elements
+            highlightLabel?.text = "Tap here"
             highlightLabel?.visibility = View.VISIBLE
             highlightPulse?.visibility = View.VISIBLE
 
             // Start pulse animation
             startPulseAnimation()
 
-            Log.d(TAG, "Showing highlight: $highlightDescription")
+            Log.d(TAG, "Showing highlight at ($xPercent%, $yPercent%) = pixel ($xPos, $yPos)")
         } catch (e: Exception) {
             Log.e(TAG, "Error showing highlight", e)
         }
@@ -475,20 +500,10 @@ class StepPipManager(
             pipStepContent?.text = ""
         }
 
-        // Update coordinates display (debug feature)
+        // Update coordinates display - show tap location only
         val coords = coordinateHints[currentStepIndex]
-        val highlight = highlightHints[currentStepIndex]
-        if (!coords.isNullOrBlank() || !highlight.isNullOrBlank()) {
-            val displayText = buildString {
-                if (!coords.isNullOrBlank()) {
-                    append("📍 Tap: $coords")
-                }
-                if (!highlight.isNullOrBlank()) {
-                    if (isNotEmpty()) append(" | ")
-                    append("🎯 $highlight")
-                }
-            }
-            pipCoordinatesDisplay?.text = displayText
+        if (!coords.isNullOrBlank()) {
+            pipCoordinatesDisplay?.text = "🎯 Tap: $coords"
             pipCoordinatesDisplay?.visibility = View.VISIBLE
         } else {
             pipCoordinatesDisplay?.visibility = View.GONE

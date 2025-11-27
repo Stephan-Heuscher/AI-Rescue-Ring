@@ -459,20 +459,31 @@ class ChatOverlayManager(
                 }
 
                 result.onSuccess { response ->
+                    Log.d(TAG, "=== RAW RESPONSE ===")
+                    Log.d(TAG, response)
+                    Log.d(TAG, "=== END RAW RESPONSE ===")
+                    
                     // Parse steps if present and show in PiP window
-                    // Steps are marked with "###" headers
+                    // Steps are marked with "###" headers (with or without space after)
                     if (response.contains("###")) {
                         // Split by ### but keep the ### with each step
-                        val stepPattern = Regex("""(?=###)""")
+                        // Use lookahead to split before each ### occurrence
+                        val stepPattern = Regex("""(?=###\s*)""")
                         val rawSteps = response.split(stepPattern)
+                        
+                        Log.d(TAG, "Raw split produced ${rawSteps.size} parts")
+                        rawSteps.forEachIndexed { idx, part ->
+                            Log.d(TAG, "Raw part $idx: '${part.take(60)}...'")
+                        }
+                        
                         // Filter out empty strings and trim each step
                         val steps = rawSteps
                             .map { it.trim() }
                             .filter { it.isNotBlank() && it.startsWith("###") }
 
-                        Log.d(TAG, "Parsed ${steps.size} steps from response")
+                        Log.d(TAG, "Parsed ${steps.size} valid steps from response")
                         steps.forEachIndexed { index, step -> 
-                            Log.d(TAG, "Step $index: ${step.take(80)}...")
+                            Log.d(TAG, "Step $index: ${step.take(100)}...")
                         }
 
                         if (steps.isNotEmpty()) {
@@ -484,6 +495,8 @@ class ChatOverlayManager(
                                 hide()
                             }
                         }
+                    } else {
+                        Log.d(TAG, "No ### found in response")
                     }
 
                     val assistantMessage = AIMessage(

@@ -475,14 +475,24 @@ When provided with a screenshot and user request:
 2. Understand what the user wants to do
 3. Provide clear, actionable steps
 
-RESPONSE FORMAT:
-Each step starts with ### followed by title and metadata:
-### Step Title [POSITION:corner] [TAP:x,y]
+RESPONSE FORMAT - IMPORTANT:
+You MUST format each step as a separate ### header like this:
 
-POSITION: top-left, top-right, bottom-left, bottom-right (place window away from tap area)
-TAP: coordinates as percentage 0-100 (e.g., TAP:50,30 = center, 30% from top) or TAP:none
+### Step 1: First Action [POSITION:top-right] [TAP:50,30]
+Describe what the user should do.
 
-Metadata tags are hidden from users. Keep instructions concise.
+### Step 2: Next Action [POSITION:bottom-left] [TAP:80,90]
+Describe the next step.
+
+### Step 3: Final Action [POSITION:top-left] [TAP:none]
+Describe the final step.
+
+METADATA RULES:
+- POSITION: top-left, top-right, bottom-left, bottom-right (place instruction window away from tap area)
+- TAP: x,y as percentage 0-100 (e.g., TAP:50,30 means 50% from left, 30% from top) or TAP:none if no tap needed
+- Metadata tags [POSITION:...] [TAP:...] are hidden from users
+- Keep each step concise - 1-2 sentences max
+- Always number your steps in the title (Step 1, Step 2, etc.)
         """.trimIndent()
 
         val userMessage = buildString {
