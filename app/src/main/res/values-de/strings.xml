@@ -14,6 +14,17 @@
     <string name="app_title">🛟 AI Rescue Ring</string>
     <string name="app_subtitle">Ihr intelligenter Assistent, immer bereit zu helfen</string>
     <string name="missing_permissions">Einrichtung erforderlich</string>
+    <string name="ai_assistant_subtitle">Ihr intelligenter Assistent, immer bereit zu helfen</string>
+    <string name="status_ready">Bereit zu helfen</string>
+    <string name="status_ready_desc">Tippen Sie jederzeit auf den Rettungsring für KI-Hilfe</string>
+    <string name="ai_assistant">KI-Assistent</string>
+    <string name="tap_to_enable">Zum Aktivieren tippen</string>
+    <string name="permissions">Berechtigungen</string>
+    <string name="overlay_permission">Über anderen Apps anzeigen</string>
+    <string name="accessibility_permission">Bedienungshilfen</string>
+    <string name="grant">Erteilen</string>
+    <string name="granted">✓</string>
+    <string name="stop_service">Dienst stoppen</string>
 
     <!-- Permission Cards -->
     <string name="show_assistipoint">Rettungsring anzeigen</string>

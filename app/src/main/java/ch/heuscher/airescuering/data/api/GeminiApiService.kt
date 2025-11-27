@@ -179,6 +179,7 @@ RESCUE HELPER APP CAPABILITIES:
 - After completing steps, users can take a new screenshot with the 📸 button to show you their progress
 - Users navigate through your steps one at a time using forward ▶ and back ◀ buttons
 - A compact floating instruction window appears that users can drag around
+- You can tell the app WHERE to position itself and WHERE to show a tap indicator
 
 IMPORTANT LIMITATIONS:
 - You CANNOT help with tasks inside Android System Settings due to Android security restrictions
@@ -192,24 +193,36 @@ IMPORTANT GUIDELINES:
 - Keep each step concise and focused on one action
 
 RESPONSE FORMAT (CRITICAL - FOLLOW EXACTLY):
-Each step MUST start with ### followed by the title and positioning metadata.
+Each step MUST start with ### followed by the title and metadata tags.
 
-Position metadata format (on same line as ###):
-### Step Title [POSITION:top-right] [HIGHLIGHT:center]
+Metadata format (on same line as ###, these are HIDDEN from user):
+### Step Title [POSITION:corner] [TAP:x,y]
 
-POSITION options: top-left, top-right, bottom-left, bottom-right (where to place instruction window)
-HIGHLIGHT options: top, bottom, left, right, center, none (which screen area needs attention)
+POSITION options: top-left, top-right, bottom-left, bottom-right
+  - Position the instruction window AWAY from where user needs to tap
+  - If tapping top area → use bottom-left or bottom-right
+  - If tapping bottom area → use top-left or top-right
 
-The [POSITION:] and [HIGHLIGHT:] tags will be hidden from the user - they're for the app to use.
+TAP coordinates: Approximate screen position as percentage (0-100)
+  - TAP:50,20 means center horizontally, 20% from top
+  - TAP:80,90 means near right edge, near bottom
+  - Use TAP:none if no specific tap location for that step
+
+Screen coordinate reference (percentage based):
+  - (50,10) = top center (status bar area)
+  - (50,50) = center of screen
+  - (50,90) = bottom center (navigation area)
+  - (10,50) = left edge center
+  - (90,50) = right edge center
 
 EXAMPLE:
-"### Open Quick Settings [POSITION:bottom-right] [HIGHLIGHT:top]
+"### Swipe Down for Quick Settings [POSITION:bottom-right] [TAP:50,5]
 👆 Swipe down from the very top of your screen.
 
-### Find WiFi Icon [POSITION:bottom-right] [HIGHLIGHT:center]
+### Find WiFi Icon [POSITION:bottom-left] [TAP:30,20]
 🔍 Look for the WiFi icon - it looks like radio waves.
 
-### Tap WiFi [POSITION:bottom-left] [HIGHLIGHT:center]
+### Tap WiFi [POSITION:bottom-left] [TAP:30,20]
 👆 Tap the WiFi icon to turn it on."
         """.trimIndent()
 
@@ -341,17 +354,19 @@ IMPORTANT GUIDELINES:
 - Break down tasks into small, clear steps
 
 RESPONSE FORMAT (CRITICAL):
-Each step MUST start with ### followed by the title and positioning metadata.
+Each step MUST start with ### followed by the title and metadata tags.
 
-Format: ### Step Title [POSITION:value] [HIGHLIGHT:value]
+Format: ### Step Title [POSITION:corner] [TAP:x,y]
 
 POSITION options: top-left, top-right, bottom-left, bottom-right
-HIGHLIGHT options: top, bottom, left, right, center, none
+  - Position instruction window AWAY from where user needs to tap
 
-The metadata tags are hidden from users - they help position the instruction window.
+TAP coordinates: Screen position as percentage (0-100)
+  - TAP:50,30 means center-horizontal, 30% from top
+  - TAP:none if no specific tap location
 
 Example:
-### Tap Settings Icon [POSITION:bottom-left] [HIGHLIGHT:top-right]
+### Tap Settings Icon [POSITION:bottom-left] [TAP:85,15]
 👆 I can see the Settings gear icon in the top right corner. Tap it!
         """.trimIndent()
 
@@ -461,11 +476,11 @@ When provided with a screenshot and user request:
 3. Provide clear, actionable steps
 
 RESPONSE FORMAT:
-Each step starts with ### followed by title and positioning metadata:
-### Step Title [POSITION:top-right] [HIGHLIGHT:center]
+Each step starts with ### followed by title and metadata:
+### Step Title [POSITION:corner] [TAP:x,y]
 
-POSITION: top-left, top-right, bottom-left, bottom-right
-HIGHLIGHT: top, bottom, left, right, center, none
+POSITION: top-left, top-right, bottom-left, bottom-right (place window away from tap area)
+TAP: coordinates as percentage 0-100 (e.g., TAP:50,30 = center, 30% from top) or TAP:none
 
 Metadata tags are hidden from users. Keep instructions concise.
         """.trimIndent()

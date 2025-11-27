@@ -9,6 +9,7 @@
     <color name="primary_dark">#E55A2B</color>
     <color name="primary_light">#FF8A5C</color>
     <color name="primary_variant">#D84315</color>
+    <color name="rescue_orange">#FF6B35</color>
     
     <!-- Secondary colors - Calming Blue -->
     <color name="secondary">#1976D2</color>
@@ -19,16 +20,28 @@
     <color name="surface">#FFFFFF</color>
     <color name="surface_variant">#F5F5F5</color>
     <color name="background">#FAFAFA</color>
+    <color name="card_background">#FFFFFF</color>
+    
+    <!-- Text colors -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="text_hint">#9E9E9E</color>
     
     <!-- Status colors -->
     <color name="success">#4CAF50</color>
+    <color name="success_green">#4CAF50</color>
     <color name="success_light">#E8F5E9</color>
     <color name="warning">#FF9800</color>
+    <color name="warning_amber">#FFC107</color>
     <color name="warning_light">#FFF3E0</color>
     <color name="error">#D32F2F</color>
+    <color name="error_red">#F44336</color>
     <color name="error_light">#FFEBEE</color>
     <color name="info">#2196F3</color>
     <color name="info_light">#E3F2FD</color>
+    
+    <!-- Switch colors -->
+    <color name="switch_track_tint">#80FFFFFF</color>
     
     <!-- Floating ring colors -->
     <color name="floating_dot_color">#FF6B35</color>

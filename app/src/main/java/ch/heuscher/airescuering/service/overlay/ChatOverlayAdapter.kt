@@ -51,11 +51,14 @@ class ChatOverlayAdapter(
             MessageRole.SYSTEM -> "System"
         }
 
+        // Strip metadata tags from content before displaying
+        val cleanContent = stripMetadataTags(message.content)
+
         // Render markdown for assistant messages, plain text for user messages
         if (message.role == MessageRole.ASSISTANT) {
-            markwon?.setMarkdown(holder.messageText, message.content)
+            markwon?.setMarkdown(holder.messageText, cleanContent)
         } else {
-            holder.messageText.text = message.content
+            holder.messageText.text = cleanContent
         }
         
         holder.timeText.text = timeFormat.format(Date(message.timestamp))
@@ -94,4 +97,21 @@ class ChatOverlayAdapter(
     }
 
     override fun getItemCount() = messages.size
+
+    /**
+     * Strip metadata tags from message content
+     * Removes [POSITION:...], [TAP:...], [HIGHLIGHT:...] tags that are meant for the app
+     */
+    private fun stripMetadataTags(content: String): String {
+        var cleaned = content
+        // Remove [POSITION:...] tags
+        cleaned = cleaned.replace(Regex("""\[POSITION:\s*[^\]]+\]""", RegexOption.IGNORE_CASE), "")
+        // Remove [TAP:...] tags
+        cleaned = cleaned.replace(Regex("""\[TAP:\s*[^\]]+\]""", RegexOption.IGNORE_CASE), "")
+        // Remove [HIGHLIGHT:...] tags (legacy)
+        cleaned = cleaned.replace(Regex("""\[HIGHLIGHT:\s*[^\]]+\]""", RegexOption.IGNORE_CASE), "")
+        // Clean up any resulting double spaces or leading/trailing spaces on lines
+        cleaned = cleaned.replace(Regex("""  +"""), " ")
+        return cleaned.trim()
+    }
 }

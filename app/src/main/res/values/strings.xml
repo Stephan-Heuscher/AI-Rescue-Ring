@@ -15,6 +15,17 @@
     <string name="app_title">🛟 AI Rescue Ring</string>
     <string name="app_subtitle">Your intelligent assistant, always ready to help</string>
     <string name="missing_permissions">Setup required</string>
+    <string name="ai_assistant_subtitle">Your intelligent assistant, always ready to help</string>
+    <string name="status_ready">Ready to Help</string>
+    <string name="status_ready_desc">Tap the rescue ring anytime for AI assistance</string>
+    <string name="ai_assistant">AI Assistant</string>
+    <string name="tap_to_enable">Tap to enable</string>
+    <string name="permissions">Permissions</string>
+    <string name="overlay_permission">Display over other apps</string>
+    <string name="accessibility_permission">Accessibility service</string>
+    <string name="grant">Grant</string>
+    <string name="granted">✓</string>
+    <string name="stop_service">Stop Service</string>
 
     <!-- Permission Cards -->
     <string name="show_assistipoint">Display Rescue Ring</string>

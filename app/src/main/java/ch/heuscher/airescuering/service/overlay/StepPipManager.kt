@@ -145,6 +145,9 @@ class StepPipManager(
                 x = 16 // offset from right edge
                 y = 100 // offset from top/bottom
             }
+            
+            // Store initial gravity for drag calculations
+            currentGravity = params.gravity
 
             // Add view to window
             windowManager.addView(pipView, params)
@@ -169,7 +172,7 @@ class StepPipManager(
     }
 
     /**
-     * Parse step text and extract position/highlight metadata
+     * Parse step text and extract position/tap metadata
      * Returns cleaned text without metadata
      */
     private fun parseAndStoreMetadata(stepIndex: Int, stepText: String): String {
@@ -182,21 +185,31 @@ class StepPipManager(
             cleanedText = cleanedText.replace(match.value, "").trim()
         }
 
-        // Extract highlight hint: [HIGHLIGHT: description or coordinates]
-        val highlightRegex = Regex("""\[HIGHLIGHT:\s*([^\]]+)\]""", RegexOption.IGNORE_CASE)
-        highlightRegex.find(stepText)?.let { match ->
-            val highlightValue = match.groupValues[1].trim()
-            highlightHints[stepIndex] = highlightValue
-            
-            // Check if highlight contains coordinates like "center" or area descriptions
-            // Also look for tap coordinates in the text
+        // Extract tap coordinates: [TAP:x,y] or [TAP:none]
+        val tapRegex = Regex("""\[TAP:\s*([^\]]+)\]""", RegexOption.IGNORE_CASE)
+        tapRegex.find(stepText)?.let { match ->
+            val tapValue = match.groupValues[1].trim()
+            if (tapValue.lowercase() != "none") {
+                // Parse x,y coordinates
+                val coordMatch = Regex("""(\d+)\s*,\s*(\d+)""").find(tapValue)
+                if (coordMatch != null) {
+                    val x = coordMatch.groupValues[1]
+                    val y = coordMatch.groupValues[2]
+                    coordinateHints[stepIndex] = "($x%, $y%)"
+                    highlightHints[stepIndex] = "Tap at ($x%, $y%)"
+                }
+            }
             cleanedText = cleanedText.replace(match.value, "").trim()
         }
-        
-        // Extract tap coordinates from text: patterns like "tap at (x, y)" or "position (x,y)"
-        val coordRegex = Regex("""\((\d+)\s*,\s*(\d+)\)""")
-        coordRegex.find(stepText)?.let { match ->
-            coordinateHints[stepIndex] = "(${match.groupValues[1]}, ${match.groupValues[2]})"
+
+        // Legacy: Also check for old HIGHLIGHT format
+        val highlightRegex = Regex("""\[HIGHLIGHT:\s*([^\]]+)\]""", RegexOption.IGNORE_CASE)
+        highlightRegex.find(cleanedText)?.let { match ->
+            val highlightValue = match.groupValues[1].trim()
+            if (!highlightHints.containsKey(stepIndex)) {
+                highlightHints[stepIndex] = highlightValue
+            }
+            cleanedText = cleanedText.replace(match.value, "").trim()
         }
 
         return cleanedText
@@ -273,10 +286,15 @@ class StepPipManager(
         }
     }
 
+    // Current gravity for proper drag calculations
+    private var currentGravity = Gravity.TOP or Gravity.END
+
     /**
      * Set up touch listener for dragging
      */
     private fun setupTouchListener(params: WindowManager.LayoutParams) {
+        currentGravity = params.gravity
+
         val dragTouchListener = View.OnTouchListener { view, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -294,8 +312,16 @@ class StepPipManager(
                     if (deltaX > MOVE_THRESHOLD || deltaY > MOVE_THRESHOLD) {
                         hasMoved = true
 
-                        val positionDeltaX = initialTouchX - event.rawX
-                        val positionDeltaY = event.rawY - initialTouchY
+                        val touchDeltaX = event.rawX - initialTouchX
+                        val touchDeltaY = event.rawY - initialTouchY
+
+                        // Account for gravity: with END gravity, x increases LEFT from right edge
+                        // With START gravity, x increases RIGHT from left edge
+                        val isRightAligned = (currentGravity and Gravity.END) == Gravity.END
+                        val isBottomAligned = (currentGravity and Gravity.BOTTOM) == Gravity.BOTTOM
+
+                        val positionDeltaX = if (isRightAligned) -touchDeltaX else touchDeltaX
+                        val positionDeltaY = if (isBottomAligned) -touchDeltaY else touchDeltaY
 
                         params.x = (initialX + positionDeltaX).toInt()
                         params.y = (initialY + positionDeltaY).toInt()
@@ -479,6 +505,7 @@ class StepPipManager(
     /**
      * Reposition window based on current step's position hint
      * Supports: top-left, top-right, bottom-left, bottom-right, top, bottom
+     * Uses smooth animation for deliberate transitions
      */
     private fun repositionIfNeeded() {
         val positionHint = positionHints[currentStepIndex] ?: return
@@ -496,16 +523,63 @@ class StepPipManager(
             val targetGravity = verticalGravity or horizontalGravity
 
             if (params.gravity != targetGravity) {
-                params.gravity = targetGravity
-                params.x = 16
-                params.y = 100
+                // Animate the transition to new position
+                val startX = params.x
+                val startY = params.y
+                val startGravity = params.gravity
+                
+                // Target position
+                val targetX = 16
+                val targetY = 100
 
-                try {
-                    windowManager.updateViewLayout(view, params)
-                    Log.d(TAG, "Repositioned window to $positionHint (gravity=$targetGravity)")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error repositioning window", e)
+                // Use ValueAnimator for smooth, deliberate movement
+                val animator = ValueAnimator.ofFloat(0f, 1f).apply {
+                    duration = 600 // 600ms for deliberate movement
+                    interpolator = AccelerateDecelerateInterpolator()
+                    
+                    addUpdateListener { animation ->
+                        val progress = animation.animatedValue as Float
+                        
+                        // Interpolate x and y positions
+                        params.x = (startX + (targetX - startX) * progress).toInt()
+                        params.y = (startY + (targetY - startY) * progress).toInt()
+                        
+                        // Update gravity at midpoint for smoother transition
+                        if (progress >= 0.5f && params.gravity != targetGravity) {
+                            params.gravity = targetGravity
+                            currentGravity = targetGravity
+                            params.x = targetX
+                            params.y = targetY
+                        }
+                        
+                        try {
+                            windowManager.updateViewLayout(view, params)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error updating view during animation", e)
+                        }
+                    }
+                    
+                    addListener(object : android.animation.Animator.AnimatorListener {
+                        override fun onAnimationStart(animation: android.animation.Animator) {}
+                        override fun onAnimationEnd(animation: android.animation.Animator) {
+                            // Ensure final position is correct
+                            params.gravity = targetGravity
+                            params.x = targetX
+                            params.y = targetY
+                            currentGravity = targetGravity
+                            try {
+                                windowManager.updateViewLayout(view, params)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error finalizing position", e)
+                            }
+                            Log.d(TAG, "Repositioned window to $positionHint (gravity=$targetGravity)")
+                        }
+                        override fun onAnimationCancel(animation: android.animation.Animator) {}
+                        override fun onAnimationRepeat(animation: android.animation.Animator) {}
+                    })
                 }
+                
+                animator.start()
             }
         }
     }
