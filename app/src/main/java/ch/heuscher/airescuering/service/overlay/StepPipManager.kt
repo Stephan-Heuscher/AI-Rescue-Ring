@@ -51,6 +51,7 @@ class StepPipManager(
     private var pipPreviousButton: Button? = null
     private var pipNextButton: Button? = null
     private var pipCloseButton: ImageButton? = null
+    private var pipCoordinatesDisplay: TextView? = null
 
     // Highlight components
     private var highlightContainer: FrameLayout? = null
@@ -63,6 +64,7 @@ class StepPipManager(
     private var currentStepIndex = 0
     private var positionHints = mutableMapOf<Int, String>() // step index -> position hint
     private var highlightHints = mutableMapOf<Int, String>() // step index -> highlight description
+    private var coordinateHints = mutableMapOf<Int, String>() // step index -> coordinates (x, y)
 
     // Markdown renderer
     private val markwon: Markwon = Markwon.create(context)
@@ -173,18 +175,28 @@ class StepPipManager(
     private fun parseAndStoreMetadata(stepIndex: Int, stepText: String): String {
         var cleanedText = stepText
 
-        // Extract position hint: [POSITION: top] or [POSITION: bottom]
-        val positionRegex = Regex("""\[POSITION:\s*(top|bottom)\]""", RegexOption.IGNORE_CASE)
+        // Extract position hint: [POSITION: top-right] or [POSITION: bottom-left]
+        val positionRegex = Regex("""\[POSITION:\s*([^\]]+)\]""", RegexOption.IGNORE_CASE)
         positionRegex.find(stepText)?.let { match ->
-            positionHints[stepIndex] = match.groupValues[1].lowercase()
+            positionHints[stepIndex] = match.groupValues[1].lowercase().trim()
             cleanedText = cleanedText.replace(match.value, "").trim()
         }
 
-        // Extract highlight hint: [HIGHLIGHT: description]
+        // Extract highlight hint: [HIGHLIGHT: description or coordinates]
         val highlightRegex = Regex("""\[HIGHLIGHT:\s*([^\]]+)\]""", RegexOption.IGNORE_CASE)
         highlightRegex.find(stepText)?.let { match ->
-            highlightHints[stepIndex] = match.groupValues[1].trim()
+            val highlightValue = match.groupValues[1].trim()
+            highlightHints[stepIndex] = highlightValue
+            
+            // Check if highlight contains coordinates like "center" or area descriptions
+            // Also look for tap coordinates in the text
             cleanedText = cleanedText.replace(match.value, "").trim()
+        }
+        
+        // Extract tap coordinates from text: patterns like "tap at (x, y)" or "position (x,y)"
+        val coordRegex = Regex("""\((\d+)\s*,\s*(\d+)\)""")
+        coordRegex.find(stepText)?.let { match ->
+            coordinateHints[stepIndex] = "(${match.groupValues[1]}, ${match.groupValues[2]})"
         }
 
         return cleanedText
@@ -203,6 +215,7 @@ class StepPipManager(
             isVisible = false
             positionHints.clear()
             highlightHints.clear()
+            coordinateHints.clear()
             Log.d(TAG, "PiP window hidden")
         } catch (e: Exception) {
             Log.e(TAG, "Error hiding PiP window", e)
@@ -234,6 +247,7 @@ class StepPipManager(
             pipPreviousButton = view.findViewById(R.id.pipPreviousButton)
             pipNextButton = view.findViewById(R.id.pipNextButton)
             pipCloseButton = view.findViewById(R.id.pipCloseButton)
+            pipCoordinatesDisplay = view.findViewById(R.id.pipCoordinatesDisplay)
 
             // Set up button listeners
             pipPreviousButton?.setOnClickListener {
@@ -435,6 +449,25 @@ class StepPipManager(
             pipStepContent?.text = ""
         }
 
+        // Update coordinates display (debug feature)
+        val coords = coordinateHints[currentStepIndex]
+        val highlight = highlightHints[currentStepIndex]
+        if (!coords.isNullOrBlank() || !highlight.isNullOrBlank()) {
+            val displayText = buildString {
+                if (!coords.isNullOrBlank()) {
+                    append("📍 Tap: $coords")
+                }
+                if (!highlight.isNullOrBlank()) {
+                    if (isNotEmpty()) append(" | ")
+                    append("🎯 $highlight")
+                }
+            }
+            pipCoordinatesDisplay?.text = displayText
+            pipCoordinatesDisplay?.visibility = View.VISIBLE
+        } else {
+            pipCoordinatesDisplay?.visibility = View.GONE
+        }
+
         // Update button states
         pipPreviousButton?.isEnabled = currentStepIndex > 0
         pipNextButton?.isEnabled = currentStepIndex < currentSteps.size - 1
@@ -445,6 +478,7 @@ class StepPipManager(
 
     /**
      * Reposition window based on current step's position hint
+     * Supports: top-left, top-right, bottom-left, bottom-right, top, bottom
      */
     private fun repositionIfNeeded() {
         val positionHint = positionHints[currentStepIndex] ?: return
@@ -452,17 +486,23 @@ class StepPipManager(
         pipView?.let { view ->
             val params = view.layoutParams as? WindowManager.LayoutParams ?: return
 
-            val currentGravity = params.gravity and Gravity.VERTICAL_GRAVITY_MASK
-            val targetGravity = if (positionHint == "bottom") Gravity.BOTTOM else Gravity.TOP
+            // Parse position hint
+            val isBottom = positionHint.contains("bottom")
+            val isLeft = positionHint.contains("left")
+            
+            val verticalGravity = if (isBottom) Gravity.BOTTOM else Gravity.TOP
+            val horizontalGravity = if (isLeft) Gravity.START else Gravity.END
+            
+            val targetGravity = verticalGravity or horizontalGravity
 
-            if (currentGravity != targetGravity) {
-                params.gravity = (params.gravity and Gravity.HORIZONTAL_GRAVITY_MASK.inv()) or 
-                                 targetGravity or Gravity.END
+            if (params.gravity != targetGravity) {
+                params.gravity = targetGravity
+                params.x = 16
                 params.y = 100
 
                 try {
                     windowManager.updateViewLayout(view, params)
-                    Log.d(TAG, "Repositioned window to $positionHint")
+                    Log.d(TAG, "Repositioned window to $positionHint (gravity=$targetGravity)")
                 } catch (e: Exception) {
                     Log.e(TAG, "Error repositioning window", e)
                 }

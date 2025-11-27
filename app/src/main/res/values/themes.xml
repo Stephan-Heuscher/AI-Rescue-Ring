@@ -20,10 +20,10 @@
         <item name="colorOnSecondary">@color/white</item>
         <item name="colorOnSurface">@color/black</item>
         
-        <!-- Status bar -->
-        <item name="android:statusBarColor">@color/primary_dark</item>
+        <!-- Status bar - use orange for visibility -->
+        <item name="android:statusBarColor">@color/primary</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="android:navigationBarColor">@color/primary_dark</item>
     </style>
 
     <style name="Theme.AIRescueRing" parent="Base.Theme.AIRescueRing" />

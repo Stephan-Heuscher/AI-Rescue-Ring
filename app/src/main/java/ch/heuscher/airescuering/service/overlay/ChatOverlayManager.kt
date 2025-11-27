@@ -460,10 +460,20 @@ class ChatOverlayManager(
 
                 result.onSuccess { response ->
                     // Parse steps if present and show in PiP window
+                    // Steps are marked with "###" headers
                     if (response.contains("###")) {
-                        val rawSteps = response.split("###")
-                        // Filter out empty strings and trim
-                        val steps = rawSteps.filter { it.isNotBlank() }.map { it.trim() }
+                        // Split by ### but keep the ### with each step
+                        val stepPattern = Regex("""(?=###)""")
+                        val rawSteps = response.split(stepPattern)
+                        // Filter out empty strings and trim each step
+                        val steps = rawSteps
+                            .map { it.trim() }
+                            .filter { it.isNotBlank() && it.startsWith("###") }
+
+                        Log.d(TAG, "Parsed ${steps.size} steps from response")
+                        steps.forEachIndexed { index, step -> 
+                            Log.d(TAG, "Step $index: ${step.take(80)}...")
+                        }
 
                         if (steps.isNotEmpty()) {
                             Handler(Looper.getMainLooper()).post {
@@ -690,8 +700,8 @@ class ChatOverlayManager(
      */
     private fun setupChatHistorySpinner() {
         val displayNames = chatSessions.map { it.getDisplayName() }
-        val adapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, displayNames)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        val adapter = ArrayAdapter(context, R.layout.spinner_item_white, displayNames)
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
 
         chatHistorySpinner?.adapter = adapter
 

@@ -26,10 +26,12 @@
         <Spinner
             android:id="@+id/chatHistorySpinner"
             android:layout_width="0dp"
-            android:layout_height="32dp"
+            android:layout_height="40dp"
             android:layout_weight="1"
-            android:background="@android:drawable/btn_dropdown"
-            android:spinnerMode="dropdown"/>
+            android:background="@drawable/spinner_background"
+            android:popupBackground="@color/surface"
+            android:spinnerMode="dropdown"
+            android:dropDownWidth="match_parent"/>
 
         <ImageButton
             android:id="@+id/newChatButton"

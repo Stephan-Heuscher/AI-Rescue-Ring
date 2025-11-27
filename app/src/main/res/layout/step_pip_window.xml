@@ -76,6 +76,21 @@
                 android:text="Step content..."
                 android:maxLines="6"/>
 
+            <!-- Debug: Tap Coordinates Display -->
+            <TextView
+                android:id="@+id/pipCoordinatesDisplay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:background="#E8F5E9"
+                android:textSize="12sp"
+                android:textColor="#2E7D32"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:text="📍 Tap: (x, y)"
+                android:visibility="gone"/>
+
             <!-- Compact Navigation -->
             <LinearLayout
                 android:id="@+id/pipFooter"
