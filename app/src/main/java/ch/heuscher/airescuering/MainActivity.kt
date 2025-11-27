@@ -42,7 +42,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var overlaySwitch: SwitchCompat
     private lateinit var settingsButton: Button
     private lateinit var stopServiceButton: Button
-    private lateinit var uninstallButton: Button
     private lateinit var instructionsText: TextView
     private lateinit var versionInfo: TextView
 
@@ -120,7 +119,6 @@ class MainActivity : AppCompatActivity() {
         overlaySwitch = findViewById(R.id.overlay_switch)
         settingsButton = findViewById(R.id.settings_button)
         stopServiceButton = findViewById(R.id.stop_service_button)
-        uninstallButton = findViewById(R.id.uninstall_button)
         instructionsText = findViewById(R.id.instructions_text)
         versionInfo = findViewById(R.id.version_info)
         Log.d(TAG, "initializeViews: All views found")
@@ -141,7 +139,6 @@ class MainActivity : AppCompatActivity() {
             openAccessibilitySettings()
         }
         stopServiceButton.setOnClickListener { showStopServiceDialog() }
-        uninstallButton.setOnClickListener { showUninstallDialog() }
         settingsButton.setOnClickListener { openSettings() }
 
         overlaySwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -247,27 +244,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showStopServiceDialog() {
-        // Stoppe Services, aber ändere den gespeicherten Status nicht
-        // So bleibt beim nächsten App-Start der Switch-Status erhalten
+        // Stop services but don't change the saved status
+        // So on next app start the switch status is preserved
         stopOverlayService()
         closeApp()
-    }
-
-    private fun showUninstallDialog() {
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.uninstall_app))
-            .setMessage(getString(R.string.uninstall_app_confirmation))
-            .setPositiveButton(getString(R.string.uninstall)) { _, _ ->
-                uninstallApp()
-            }
-            .setNegativeButton(getString(R.string.cancel), null)
-            .show()
-    }
-
-    private fun uninstallApp() {
-        val packageUri = Uri.parse("package:$packageName")
-        val uninstallIntent = Intent(Intent.ACTION_DELETE, packageUri)
-        startActivity(uninstallIntent)
     }
 
     private fun closeApp() {

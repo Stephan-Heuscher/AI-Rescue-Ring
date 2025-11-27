@@ -38,16 +38,16 @@
     <string name="shows_the_assistipoint">Zeigt Ihren KI-Rettungsring auf dem Bildschirm</string>
 
     <!-- Buttons -->
-    <string name="settings">⚙️ Einstellungen</string>
-    <string name="stop_app">⛔ Rettungsring stoppen</string>
-    <string name="uninstall_app">🗑️ Deinstallieren</string>
+    <string name="settings">Einstellungen</string>
+    <string name="stop_app">Rettungsring stoppen</string>
+    <string name="uninstall_app">Deinstallieren</string>
     <string name="uninstall">Deinstallieren</string>
     <string name="uninstall_app_confirmation">Möchten Sie AI Rescue Ring deinstallieren?</string>
     <string name="uninstall_app_desc">App deinstallieren</string>
 
     <!-- Help Section -->
-    <string name="how_it_works">🛟 So funktioniert es</string>
-    <string name="instructions">🛟 Tippen Sie auf den Rettungsring, um Hilfe zu erhalten!\n\n• Tippen = KI-Assistent öffnen\n• Sprache oder Text = Sagen Sie mir, was Sie brauchen\n• Lang drücken + ziehen = Ring neu positionieren\n\nDie KI hilft Ihnen bei jeder Aufgabe auf Ihrem Gerät!</string>
+    <string name="how_it_works">So funktioniert es</string>
+    <string name="instructions">Tippen Sie auf den Rettungsring, um Hilfe zu erhalten!\n\n• Tippen = KI-Assistent öffnen\n• Sprache oder Text = Sagen Sie mir, was Sie brauchen\n• Lang drücken + ziehen = Ring neu positionieren\n\nDie KI hilft Ihnen bei jeder Aufgabe auf Ihrem Gerät!</string>
 
     <!-- Settings Screen -->
     <string name="back">Zurück</string>
@@ -76,7 +76,7 @@
     <string name="wait_time_for_app_switch">Anpassung des Animations-Timings</string>
 
     <!-- AI Helper -->
-    <string name="ai_helper_title">🤖 KI-Assistent</string>
+    <string name="ai_helper_title">KI-Assistent</string>
     <string name="ai_helper_description">Konfigurieren Sie Ihren intelligenten Rettungsassistenten</string>
     <string name="ai_helper_enabled">KI-Unterstützung aktiviert</string>
     <string name="ai_api_key_label">Gemini API-Schlüssel</string>

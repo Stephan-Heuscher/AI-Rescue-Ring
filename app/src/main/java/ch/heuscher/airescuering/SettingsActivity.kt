@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import ch.heuscher.airescuering.di.ServiceLocator
@@ -59,8 +60,32 @@ class SettingsActivity : AppCompatActivity() {
         setupLongPressDragSwitch()
         setupLockPositionSwitch()
         setupAdvancedFeatures()
+        setupUninstallButton()
         setupAIHelperControls()
         setupApiKeyHelpLink()
+    }
+
+    private fun setupUninstallButton() {
+        findViewById<Button>(R.id.uninstall_button).setOnClickListener {
+            showUninstallDialog()
+        }
+    }
+
+    private fun showUninstallDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.uninstall_app))
+            .setMessage(getString(R.string.uninstall_app_confirmation))
+            .setPositiveButton(getString(R.string.uninstall)) { _, _ ->
+                uninstallApp()
+            }
+            .setNegativeButton(getString(R.string.cancel), null)
+            .show()
+    }
+
+    private fun uninstallApp() {
+        val packageUri = Uri.parse("package:$packageName")
+        val uninstallIntent = Intent(Intent.ACTION_DELETE, packageUri)
+        startActivity(uninstallIntent)
     }
 
     private fun setupApiKeyHelpLink() {

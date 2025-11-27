@@ -522,7 +522,8 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:minHeight="56dp">
+                        android:minHeight="56dp"
+                        android:layout_marginBottom="16dp">
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -554,15 +555,34 @@
                             android:minHeight="48dp"
                             android:minWidth="48dp" />
                     </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/surface_variant"
+                        android:layout_marginVertical="8dp" />
+
+                    <!-- Uninstall App -->
+                    <Button
+                        android:id="@+id/uninstall_button"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:text="@string/uninstall"
+                        android:textSize="15sp"
+                        android:textColor="@color/error"
+                        android:backgroundTint="@color/error_light"
+                        style="@style/Widget.Material3.Button.ElevatedButton"
+                        android:layout_marginTop="8dp" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Impressum Button -->
+        <!-- Legal Notice Button -->
         <Button
             android:id="@+id/impressum_button"
             android:layout_width="match_parent"
             android:layout_height="52dp"
+            android:layout_marginTop="4dp"
             android:text="@string/impressum_title"
             android:textSize="15sp"
             android:textColor="?android:attr/textColorSecondary"

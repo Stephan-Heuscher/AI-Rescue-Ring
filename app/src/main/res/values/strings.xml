@@ -39,16 +39,16 @@
     <string name="shows_the_assistipoint">Shows your AI rescue ring on screen</string>
 
     <!-- Buttons -->
-    <string name="settings">⚙️ Settings</string>
-    <string name="stop_app">⛔ Stop Rescue Ring</string>
-    <string name="uninstall_app">🗑️ Uninstall</string>
+    <string name="settings">Settings</string>
+    <string name="stop_app">Stop Rescue Ring</string>
+    <string name="uninstall_app">Uninstall</string>
     <string name="uninstall">Uninstall</string>
     <string name="uninstall_app_confirmation">Do you want to uninstall AI Rescue Ring?</string>
     <string name="uninstall_app_desc">Uninstall app</string>
 
     <!-- Help Section -->
-    <string name="how_it_works">🛟 How it works</string>
-    <string name="instructions">🛟 Tap the rescue ring to ask for help!\n\n• Tap = Open AI Assistant\n• Voice or text = Tell me what you need\n• Long press + drag = Reposition ring\n\nThe AI will help you with any task on your device!</string>
+    <string name="how_it_works">How it works</string>
+    <string name="instructions">Tap the rescue ring to ask for help!\n\n• Tap = Open AI Assistant\n• Voice or text = Tell me what you need\n• Long press + drag = Reposition ring\n\nThe AI will help you with any task on your device!</string>
 
     <!-- Settings Screen -->
     <string name="back">Back</string>
@@ -77,7 +77,7 @@
     <string name="wait_time_for_app_switch">Animation timing adjustment</string>
 
     <!-- AI Helper -->
-    <string name="ai_helper_title">🤖 AI Assistant</string>
+    <string name="ai_helper_title">AI Assistant</string>
     <string name="ai_helper_description">Configure your intelligent rescue assistant</string>
     <string name="ai_helper_enabled">AI assistance enabled</string>
     <string name="ai_api_key_label">Gemini API Key</string>
