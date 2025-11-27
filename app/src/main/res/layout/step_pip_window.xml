@@ -64,17 +64,24 @@
                     app:tint="#FFFFFF"/>
             </LinearLayout>
 
-            <!-- Step Content (Compact) -->
-            <TextView
-                android:id="@+id/pipStepContent"
+            <!-- Step Content (Scrollable) -->
+            <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="12dp"
-                android:textSize="15sp"
-                android:lineSpacingExtra="4dp"
-                android:textColor="?android:attr/textColorPrimary"
-                android:text="Step content..."
-                android:maxLines="6"/>
+                android:maxHeight="200dp"
+                android:scrollbars="vertical"
+                android:fadeScrollbars="false">
+
+                <TextView
+                    android:id="@+id/pipStepContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp"
+                    android:textSize="15sp"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="@color/text_primary"
+                    android:text="Step content..."/>
+            </ScrollView>
 
             <!-- Debug: Tap Coordinates Display -->
             <TextView

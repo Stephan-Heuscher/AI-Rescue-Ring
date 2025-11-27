@@ -368,9 +368,21 @@ class StepPipManager(
         val yPercent = coordMatch.groupValues[2].toIntOrNull() ?: 50
 
         try {
-            // Calculate actual pixel position from percentages
+            // Get status bar height
+            val statusBarHeight = getStatusBarHeight()
+            // Get navigation bar height  
+            val navBarHeight = getNavigationBarHeight()
+            
+            // Calculate usable screen area (excluding status bar and navbar)
+            val usableHeight = screenHeight - statusBarHeight - navBarHeight
+            
+            // Calculate actual pixel position from percentages within usable area
             val xPos = (screenWidth * xPercent / 100)
-            val yPos = (screenHeight * yPercent / 100)
+            val yPos = statusBarHeight + (usableHeight * yPercent / 100)
+            
+            // Get highlight size (120dp converted to pixels)
+            val density = context.resources.displayMetrics.density
+            val highlightSizePx = (60 * density).toInt() // Half of 120dp for centering
             
             if (highlightView == null) {
                 val inflater = LayoutInflater.from(context)
@@ -397,9 +409,9 @@ class StepPipManager(
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.START
-                // Center the highlight on the tap position (highlight is ~80dp = ~240px)
-                x = xPos - 120
-                y = yPos - 120
+                // Center the highlight on the tap position
+                x = xPos - highlightSizePx
+                y = yPos - highlightSizePx
             }
 
             // Remove and re-add to update position
@@ -418,7 +430,7 @@ class StepPipManager(
             // Start pulse animation
             startPulseAnimation()
 
-            Log.d(TAG, "Showing highlight at ($xPercent%, $yPercent%) = pixel ($xPos, $yPos)")
+            Log.d(TAG, "Showing highlight at ($xPercent%, $yPercent%) = pixel ($xPos, $yPos), statusBar=$statusBarHeight, navBar=$navBarHeight, usableHeight=$usableHeight")
         } catch (e: Exception) {
             Log.e(TAG, "Error showing highlight", e)
         }
@@ -603,6 +615,32 @@ class StepPipManager(
      * Check if PiP window is visible
      */
     fun isShowing(): Boolean = isVisible
+
+    /**
+     * Get status bar height
+     */
+    private fun getStatusBarHeight(): Int {
+        val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
+        return if (resourceId > 0) {
+            context.resources.getDimensionPixelSize(resourceId)
+        } else {
+            // Default fallback ~24dp
+            (24 * context.resources.displayMetrics.density).toInt()
+        }
+    }
+
+    /**
+     * Get navigation bar height
+     */
+    private fun getNavigationBarHeight(): Int {
+        val resourceId = context.resources.getIdentifier("navigation_bar_height", "dimen", "android")
+        return if (resourceId > 0) {
+            context.resources.getDimensionPixelSize(resourceId)
+        } else {
+            // Default fallback ~48dp
+            (48 * context.resources.displayMetrics.density).toInt()
+        }
+    }
 
     /**
      * Clean up resources

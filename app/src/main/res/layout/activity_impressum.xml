@@ -165,7 +165,7 @@
             android:layout_height="wrap_content"
             app:cardCornerRadius="16dp"
             app:cardElevation="2dp"
-            app:cardBackgroundColor="@color/card_highlight_blue">
+            app:cardBackgroundColor="@color/card_highlight_orange">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -179,7 +179,7 @@
                     android:text="@string/open_source_title"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="@color/secondary"
+                    android:textColor="@color/primary"
                     android:layout_marginBottom="12dp" />
 
                 <TextView
@@ -188,7 +188,7 @@
                     android:text="@string/open_source_content"
                     android:textSize="15sp"
                     android:lineSpacingExtra="4dp"
-                    android:textColor="@color/secondary_dark" />
+                    android:textColor="@color/text_primary" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
