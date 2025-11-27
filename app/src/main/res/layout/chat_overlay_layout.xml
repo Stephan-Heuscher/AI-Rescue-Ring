@@ -7,39 +7,35 @@
     android:orientation="vertical"
     android:background="#FFFFFFFF">
 
-    <!-- Top Bar with Chat Selector - Rescue Orange theme -->
+    <!-- Compact Top Bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="@color/primary"
-        android:elevation="4dp"
-        android:padding="12dp"
+        android:padding="8dp"
         android:gravity="center_vertical">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🛟 AI Rescue"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="12dp"/>
+            android:text="🛟"
+            android:textSize="18sp"
+            android:layout_marginEnd="8dp"/>
 
         <Spinner
             android:id="@+id/chatHistorySpinner"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="32dp"
             android:layout_weight="1"
             android:background="@android:drawable/btn_dropdown"
-            android:spinnerMode="dropdown"
-            android:minHeight="36dp"/>
+            android:spinnerMode="dropdown"/>
 
         <ImageButton
             android:id="@+id/newChatButton"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="8dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="4dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_menu_add"
             android:contentDescription="New Chat"
@@ -47,168 +43,113 @@
 
         <ImageButton
             android:id="@+id/hideButton"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="4dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="2dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
             android:contentDescription="Hide"
             app:tint="#FFFFFF" />
     </LinearLayout>
 
-    <!-- Screenshot Preview Area (Compact) with trash icon -->
+    <!-- Screenshot Preview (Compact) -->
     <FrameLayout
         android:id="@+id/screenshotPreviewContainer"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:layout_margin="8dp"
+        android:layout_height="80dp"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginTop="4dp"
         android:visibility="gone"
-        android:background="@color/surface_variant"
-        android:elevation="2dp">
+        android:background="@color/surface_variant">
 
         <ImageView
             android:id="@+id/screenshotPreviewImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitCenter"
-            android:layout_margin="2dp"
             android:contentDescription="Screenshot preview" />
 
         <ImageButton
             android:id="@+id/deleteScreenshotButton"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:layout_gravity="top|end"
-            android:layout_margin="4dp"
+            android:layout_margin="2dp"
             android:src="@drawable/ic_delete"
             android:background="@drawable/circle_background"
             android:backgroundTint="@color/error"
-            android:padding="6dp"
+            android:padding="4dp"
             android:contentDescription="Remove screenshot" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|start"
-            android:layout_margin="6dp"
-            android:text="📸 Attached"
-            android:textSize="12sp"
-            android:textColor="#FFFFFF"
-            android:background="@color/primary"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp" />
     </FrameLayout>
 
-    <!-- Chat Messages RecyclerView -->
+    <!-- Chat Messages (Compact) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatMessagesRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="150dp"
-        android:padding="12dp"
-        android:paddingBottom="8dp"
+        android:minHeight="100dp"
+        android:padding="8dp"
         android:clipToPadding="false"
-        android:scrollbarStyle="outsideOverlay"
         android:nestedScrollingEnabled="true"
         android:background="@color/background" />
 
     <!-- Loading Indicator -->
     <ProgressBar
         android:id="@+id/chatLoadingIndicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginVertical="8dp"
+        android:layout_marginVertical="4dp"
         android:visibility="gone"
         android:indeterminateTint="@color/primary" />
 
-    <!-- Steps Container -->
+    <!-- Steps Container (Hidden - using PiP instead) -->
     <LinearLayout
         android:id="@+id/stepsContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:visibility="gone"
-        android:background="@color/surface"
-        android:padding="12dp"
-        android:elevation="4dp">
+        android:visibility="gone">
 
         <TextView
             android:id="@+id/stepIndicator"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Step 1 of 5"
-            android:textAlignment="center"
-            android:textStyle="bold"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="12sp"
-            android:layout_marginBottom="6dp"/>
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/stepTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Step Title"
-            android:textAlignment="center"
-            android:textStyle="bold"
-            android:textColor="@color/primary"
-            android:textSize="18sp"
-            android:layout_marginBottom="10dp"
-            android:paddingHorizontal="8dp"/>
+            android:visibility="gone"/>
 
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:background="@color/surface_variant"
-            android:padding="12dp"
-            android:layout_marginBottom="10dp">
-            <TextView
-                android:id="@+id/currentStepText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="15sp"
-                android:textColor="?android:attr/textColorPrimary"
-                android:text="Step content..."
-                android:lineSpacingMultiplier="1.3" />
-        </ScrollView>
-
-        <LinearLayout
+        <TextView
+            android:id="@+id/currentStepText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
+            android:visibility="gone"/>
 
-            <Button
-                android:id="@+id/stepBackwardButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="◀ Previous"
-                android:textColor="@color/primary"
-                style="?android:attr/buttonBarButtonStyle" />
+        <Button
+            android:id="@+id/stepBackwardButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"/>
 
-            <Space
-                android:layout_width="24dp"
-                android:layout_height="wrap_content" />
-
-            <Button
-                android:id="@+id/stepForwardButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Next ▶"
-                android:textColor="@color/primary"
-                style="?android:attr/buttonBarButtonStyle" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/stepForwardButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"/>
     </LinearLayout>
 
-    <!-- Input Area with improved styling -->
+    <!-- Compact Input Area -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="12dp"
+        android:padding="6dp"
         android:gravity="center_vertical"
-        android:background="@color/surface"
-        android:elevation="6dp">
+        android:background="@color/surface">
 
         <EditText
             android:id="@+id/chatMessageInput"
@@ -218,40 +159,39 @@
             android:hint="Ask for help..."
             android:textColor="?android:attr/textColorPrimary"
             android:textColorHint="?android:attr/textColorSecondary"
-            android:minHeight="44dp"
+            android:minHeight="40dp"
             android:background="@drawable/edit_text_background"
-            android:padding="12dp"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="8dp"
             android:inputType="textCapSentences|textMultiLine"
-            android:maxLines="3"
-            android:textSize="15sp" />
+            android:maxLines="2"
+            android:textSize="14sp" />
 
         <ImageButton
             android:id="@+id/chatScreenshotButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:src="@android:drawable/ic_menu_camera"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="4dp"
             android:contentDescription="Take screenshot"
             app:tint="@color/primary" />
 
         <ImageButton
             android:id="@+id/chatVoiceButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:src="@android:drawable/ic_btn_speak_now"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:layout_marginStart="2dp"
             android:contentDescription="Voice input"
             app:tint="@color/secondary" />
 
         <ImageButton
             android:id="@+id/chatSendButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:src="@android:drawable/ic_menu_send"
             android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:layout_marginStart="2dp"
             android:contentDescription="Send message"
             app:tint="@color/primary" />
     </LinearLayout>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/highlightContainer"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent">
+
+    <!-- Pulsing highlight indicator -->
+    <View
+        android:id="@+id/highlightPulse"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_gravity="center"
+        android:background="@drawable/highlight_pulse_background" />
+
+    <!-- Label describing what to look for -->
+    <TextView
+        android:id="@+id/highlightLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Look here"
+        android:textSize="16sp"
+        android:textColor="@color/primary"
+        android:textStyle="bold"
+        android:background="@drawable/highlight_label_background"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="6dp"
+        android:elevation="4dp"
+        android:visibility="visible" />
+
+</FrameLayout>

@@ -209,10 +209,7 @@ class ChatOverlayManager(
             setupListeners()
             setupRecyclerView()
 
-            // Add welcome message only if chat is empty
-            if (messages.isEmpty()) {
-                addWelcomeMessage()
-            }
+            // Don't add welcome here - it's handled in loadChatHistory() and startNewChat()
 
             // Process any pending screenshot now that views are initialized
             pendingScreenshot?.let { bitmap ->
@@ -388,12 +385,15 @@ class ChatOverlayManager(
     }
 
     /**
-     * Add welcome message
+     * Add welcome message for new chat sessions
      */
     private fun addWelcomeMessage() {
+        // Only add if truly empty (no messages at all)
+        if (messages.isNotEmpty()) return
+        
         val welcomeMessage = AIMessage(
             id = UUID.randomUUID().toString(),
-            content = "👋 Hello! I'm your AI rescue assistant. I'm here to help you step-by-step with any task on your device.\n\nWhat would you like to do today?",
+            content = "👋 Hi! I'm your AI rescue assistant. How can I help you today?",
             role = MessageRole.ASSISTANT
         )
         addMessage(welcomeMessage)
@@ -671,6 +671,16 @@ class ChatOverlayManager(
         // Load messages from current session
         messages.clear()
         messages.addAll(currentSession!!.messages)
+
+        // Add welcome message only if this is a truly empty new session
+        if (messages.isEmpty()) {
+            val welcomeMessage = AIMessage(
+                id = UUID.randomUUID().toString(),
+                content = "👋 Hi! I'm your AI rescue assistant. How can I help you today?",
+                role = MessageRole.ASSISTANT
+            )
+            messages.add(welcomeMessage)
+        }
 
         Log.d(TAG, "Loaded ${chatSessions.size} sessions, current: ${currentSession?.id}")
     }
