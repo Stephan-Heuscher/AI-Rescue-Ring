@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
 import android.util.Base64
 import android.util.Log
 import android.view.Gravity
@@ -40,6 +41,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.util.*
+import java.util.Locale
 
 /**
  * Manages the floating chat overlay window.
@@ -48,7 +50,8 @@ import java.util.*
 class ChatOverlayManager(
     private val context: Context,
     private val geminiApiKey: String,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val aiHelperRepository: ch.heuscher.airescuering.domain.repository.AIHelperRepository? = null
 ) {
     companion object {
         private const val TAG = "ChatOverlayManager"
@@ -103,6 +106,12 @@ class ChatOverlayManager(
     private var inactivityRunnable: Runnable? = null
     private val INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000L // 5 minutes
 
+    // Voice-first mode properties
+    private var tts: TextToSpeech? = null
+    private var ttsReady = false
+    private var voiceFirstMode = false
+    private var autoSpeakResponses = false
+
     // Callbacks
     var onHideRequest: (() -> Unit)? = null
     var onScreenshotRequest: (() -> Unit)? = null
@@ -125,8 +134,38 @@ class ChatOverlayManager(
             }
         }
 
+        // Initialize TextToSpeech for voice-first mode
+        tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                ttsReady = true
+                tts?.language = Locale.getDefault()
+                tts?.setSpeechRate(0.9f) // Slower speech for elderly users
+                Log.d(TAG, "TextToSpeech initialized successfully")
+            } else {
+                Log.e(TAG, "TextToSpeech initialization failed")
+                ttsReady = false
+            }
+        }
+
+        // Load voice-first settings from repository
+        loadVoiceFirstSettings()
+
         // Load chat history
         loadChatHistory()
+    }
+
+    /**
+     * Load voice-first mode settings from repository
+     */
+    private fun loadVoiceFirstSettings() {
+        aiHelperRepository?.let { repo ->
+            scope.launch {
+                repo.isVoiceFirstMode().collect { voiceFirstMode = it }
+            }
+            scope.launch {
+                repo.isAutoSpeakResponses().collect { autoSpeakResponses = it }
+            }
+        }
     }
 
     /**
@@ -216,6 +255,12 @@ class ChatOverlayManager(
                 Log.d(TAG, "Processing pending screenshot after show()")
                 processScreenshotInternal(bitmap)
                 pendingScreenshot = null
+            }
+
+            // Voice-first greeting if enabled
+            if (voiceFirstMode && ttsReady && messages.size <= 1) {
+                val greeting = "Hi! I'm your AI rescue assistant. How can I help you today?"
+                speakText(greeting)
             }
 
             Log.d(TAG, "=== show: Chat overlay shown successfully ===")
@@ -597,8 +642,58 @@ class ChatOverlayManager(
                 messagesRecyclerView?.scrollToPosition(messages.size - 1)
             }
 
+            // Auto-speak assistant responses if enabled
+            if (autoSpeakResponses && message.role == MessageRole.ASSISTANT && ttsReady) {
+                // Clean markdown from response before speaking
+                val cleanText = cleanMarkdownForSpeech(message.content)
+                speakText(cleanText)
+            }
+
             // Auto-save session
             saveCurrentSession()
+        }
+    }
+
+    /**
+     * Clean markdown from text for TTS
+     */
+    private fun cleanMarkdownForSpeech(text: String): String {
+        return text
+            .replace(Regex("#+\\s+"), "") // Remove heading markers
+            .replace(Regex("\\*\\*(.+?)\\*\\*"), "$1") // Remove bold
+            .replace(Regex("\\*(.+?)\\*"), "$1") // Remove italic
+            .replace(Regex("\\[(.+?)\\]\\(.+?\\)"), "$1") // Remove links
+            .replace(Regex("`(.+?)`"), "$1") // Remove code blocks
+            .replace(Regex("###.+"), "") // Remove step headers
+            .trim()
+    }
+
+    /**
+     * Speak text using TextToSpeech
+     */
+    private fun speakText(text: String) {
+        if (!ttsReady || tts == null) {
+            Log.w(TAG, "TTS not ready, cannot speak")
+            return
+        }
+
+        if (text.isBlank()) {
+            Log.w(TAG, "Cannot speak empty text")
+            return
+        }
+
+        try {
+            // Limit text length for TTS (Android has limits)
+            val textToSpeak = if (text.length > 500) {
+                text.take(500) + "..."
+            } else {
+                text
+            }
+
+            Log.d(TAG, "Speaking: ${textToSpeak.take(100)}...")
+            tts?.speak(textToSpeak, TextToSpeech.QUEUE_ADD, null)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error speaking text", e)
         }
     }
 
@@ -815,6 +910,12 @@ class ChatOverlayManager(
         inactivityHandler?.removeCallbacks(inactivityRunnable!!)
         inactivityHandler = null
         inactivityRunnable = null
+
+        // Shutdown TextToSpeech
+        tts?.stop()
+        tts?.shutdown()
+        tts = null
+        ttsReady = false
 
         hide()
         stepPipManager?.destroy()

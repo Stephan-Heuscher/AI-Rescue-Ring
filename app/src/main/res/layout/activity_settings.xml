@@ -22,7 +22,12 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="28dp">
+            android:layout_marginBottom="28dp"
+            android:layout_marginHorizontal="-20dp"
+            android:layout_marginTop="-24dp"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="16dp"
+            android:background="@color/rescue_orange">
 
             <ImageButton
                 android:id="@+id/back_button"
@@ -32,7 +37,8 @@
                 android:contentDescription="@string/back"
                 style="?android:attr/borderlessButtonStyle"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:padding="12dp" />
+                android:padding="12dp"
+                android:tint="@android:color/white" />
 
             <TextView
                 android:layout_width="0dp"
@@ -41,7 +47,7 @@
                 android:text="@string/settings_title"
                 android:textSize="26sp"
                 android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary"
+                android:textColor="@android:color/white"
                 android:layout_marginStart="16dp" />
         </LinearLayout>
 
@@ -643,18 +649,6 @@
                         android:layout_height="1dp"
                         android:background="@color/surface_variant"
                         android:layout_marginVertical="8dp" />
-
-                    <!-- Uninstall App -->
-                    <Button
-                        android:id="@+id/uninstall_button"
-                        android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:text="@string/uninstall"
-                        android:textSize="15sp"
-                        android:textColor="@color/error"
-                        android:backgroundTint="@color/error_light"
-                        style="@style/Widget.Material3.Button.ElevatedButton"
-                        android:layout_marginTop="8dp" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>

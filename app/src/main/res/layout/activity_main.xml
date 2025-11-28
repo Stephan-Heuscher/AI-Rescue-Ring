@@ -23,7 +23,12 @@
                 android:gravity="center"
                 android:orientation="vertical"
                 android:paddingTop="16dp"
-                android:paddingBottom="24dp">
+                android:paddingBottom="24dp"
+                android:paddingHorizontal="20dp"
+                android:background="@color/rescue_orange"
+                android:layout_marginHorizontal="-20dp"
+                android:layout_marginTop="-24dp"
+                android:layout_marginBottom="16dp">
 
                 <ImageView
                     android:layout_width="100dp"
@@ -36,7 +41,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:text="@string/app_name"
-                    android:textColor="@color/rescue_orange"
+                    android:textColor="@android:color/white"
                     android:textSize="26sp"
                     android:textStyle="bold" />
 
@@ -46,7 +51,8 @@
                     android:layout_marginTop="4dp"
                     android:gravity="center"
                     android:text="@string/ai_assistant_subtitle"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@android:color/white"
+                    android:alpha="0.9"
                     android:textSize="14sp" />
 
             </LinearLayout>

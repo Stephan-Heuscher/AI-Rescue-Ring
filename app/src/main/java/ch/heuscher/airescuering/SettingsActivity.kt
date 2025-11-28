@@ -62,32 +62,8 @@ class SettingsActivity : AppCompatActivity() {
         setupLongPressDragSwitch()
         setupLockPositionSwitch()
         setupAdvancedFeatures()
-        setupUninstallButton()
         setupAIHelperControls()
         setupApiKeyHelpLink()
-    }
-
-    private fun setupUninstallButton() {
-        findViewById<Button>(R.id.uninstall_button).setOnClickListener {
-            showUninstallDialog()
-        }
-    }
-
-    private fun showUninstallDialog() {
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.uninstall_app))
-            .setMessage(getString(R.string.uninstall_app_confirmation))
-            .setPositiveButton(getString(R.string.uninstall)) { _, _ ->
-                uninstallApp()
-            }
-            .setNegativeButton(getString(R.string.cancel), null)
-            .show()
-    }
-
-    private fun uninstallApp() {
-        val packageUri = Uri.parse("package:$packageName")
-        val uninstallIntent = Intent(Intent.ACTION_DELETE, packageUri)
-        startActivity(uninstallIntent)
     }
 
     private fun setupApiKeyHelpLink() {

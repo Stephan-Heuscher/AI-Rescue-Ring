@@ -3,12 +3,12 @@
     <string name="app_name">AI Rescue Ring</string>
 
     <!-- Permissions -->
-    <string name="accessibility_service_description">Lets AI Rescue Ring help you with device tasks using AI assistance</string>
-    <string name="ai_assistant_accessibility_description">Allows the AI Assistant to see your screen and perform actions to help you complete tasks. The AI can tap, swipe, and interact with your device on your behalf.</string>
+    <string name="accessibility_service_description">Let your AI rescue ring help with tasks on your device</string>
+    <string name="ai_assistant_accessibility_description">The AI assistant can see your screen and tap things to help you. It\'s like having a helpful friend watching over your shoulder to guide you.</string>
     <string name="overlay_permission_needed">Display rescue ring needed</string>
-    <string name="accessibility_service_needed">AI assistant service needed</string>
+    <string name="accessibility_service_needed">Let Me Help - Permission Needed</string>
     <string name="please_enable_overlay">Please allow this app to display the rescue ring</string>
-    <string name="please_enable_accessibility">Please turn on the AI assistant service for this app</string>
+    <string name="please_enable_accessibility">Please turn on this permission so I can help you better</string>
     <string name="open_settings">Open settings</string>
 
     <!-- Main Screen -->
@@ -89,8 +89,8 @@
     <!-- Dialogs -->
     <string name="allow_assistipoint_display">Display Rescue Ring</string>
     <string name="allow_assistipoint_message">Allow AI Rescue Ring to be displayed over other apps for instant help.</string>
-    <string name="allow_navigation_title">Accessibility Service Required</string>
-    <string name="allow_navigation_message">AI Rescue Ring uses Android\'s Accessibility Service to provide a better user experience.\n\n<b>Why we need this permission:</b>\n• Detect when the keyboard appears to automatically move the rescue ring out of the way\n• Detect system UI elements to ensure the ring stays visible and accessible\n\n<b>What we use it for:</b>\n• Smart positioning - automatically repositioning the floating ring\n• Keyboard detection - moving the ring when you type\n• Window monitoring - tracking app changes for optimal ring placement\n\n<b>What we DON\'T do:</b>\n• We do NOT collect any personal data\n• We do NOT share any information with third parties\n• We do NOT read your screen content\n• We do NOT track your activity\n\nThis permission is only used to improve the floating ring\'s behavior on your device.\n\nIn the next screen, find and enable \"AI Rescue Ring\" in accessibility settings.</string>
+    <string name="allow_navigation_title">Let Me Help You - Setup Needed</string>
+    <string name="allow_navigation_message">Your AI rescue ring needs a special permission to help you better.\n\n<b>What this means:</b>\nThe permission allows the rescue ring to watch your screen and notice when your keyboard appears. This helps the ring move out of the way so you can type.\n\n<b>What we use it for:</b>\n• Watching for your keyboard - so the ring isn\'t in the way\n• Noticing when apps switch - to keep the ring visible\n• Moving the ring automatically - so it stays helpful\n\n<b>What we never do:</b>\n• We never look at what you type\n• We never save your information\n• We never share your data\n• We never track what you do\n\n<b>Next step:</b>\nWhen you see the settings screen, find \"AI Rescue Ring\" and turn it on. That\'s it!\n\nThis is just one permission. Your privacy and safety come first.</string>
     <string name="open">Open Settings</string>
     <string name="cancel">Cancel</string>
     <string name="choose_custom_color">Choose rescue ring color</string>

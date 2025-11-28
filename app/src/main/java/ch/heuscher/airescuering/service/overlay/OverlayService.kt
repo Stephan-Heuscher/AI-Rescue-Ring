@@ -379,11 +379,12 @@ class OverlayService : Service() {
                     Log.w(TAG, "API key not set, chat overlay will show warning")
                 }
 
-                // Create chat overlay manager
+                // Create chat overlay manager with AI helper repository for voice settings
                 chatOverlayManager = ChatOverlayManager(
                     context = this@OverlayService,
                     geminiApiKey = apiKey.ifEmpty { "dummy-key" },
-                    scope = serviceScope
+                    scope = serviceScope,
+                    aiHelperRepository = ServiceLocator.aiHelperRepository
                 ).apply {
                     onHideRequest = {
                         hideChatOverlay()
