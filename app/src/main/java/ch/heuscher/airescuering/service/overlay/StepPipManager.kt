@@ -276,10 +276,14 @@ class StepPipManager(
                     updateStepDisplay()
                     showHighlightForCurrentStep()
                 } else {
-                    // Last step completed - show completion message
+                    // Last step completed - show congratulations message and keep window open
                     Log.d(TAG, "All steps completed!")
-                    hide()
-                    onClose?.invoke()
+                    pipStepTitleExpanded?.text = "🎉 Congratulations!"
+                    pipStepContent?.text = "You've successfully completed all steps. Great job! Tap the X to close."
+                    pipDoneButton?.isEnabled = false
+                    pipDoneButton?.alpha = 0.5f
+                    pipPreviousButton?.isEnabled = false
+                    pipNextButton?.isEnabled = false
                 }
             }
 

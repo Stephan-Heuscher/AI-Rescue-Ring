@@ -90,7 +90,7 @@
     <string name="allow_assistipoint_display">Display Rescue Ring</string>
     <string name="allow_assistipoint_message">Allow AI Rescue Ring to be displayed over other apps for instant help.</string>
     <string name="allow_navigation_title">Let Me Help You - Setup Needed</string>
-    <string name="allow_navigation_message">Your AI rescue ring needs a special permission to help you better.\n\n<b>What this means:</b>\nThe permission allows the rescue ring to watch your screen and notice when your keyboard appears. This helps the ring move out of the way so you can type.\n\n<b>What we use it for:</b>\n• Watching for your keyboard - so the ring isn\'t in the way\n• Noticing when apps switch - to keep the ring visible\n• Moving the ring automatically - so it stays helpful\n\n<b>What we never do:</b>\n• We never look at what you type\n• We never save your information\n• We never share your data\n• We never track what you do\n\n<b>Next step:</b>\nWhen you see the settings screen, find \"AI Rescue Ring\" and turn it on. That\'s it!\n\nThis is just one permission. Your privacy and safety come first.</string>
+    <string name="allow_navigation_message">I need a permission to help you better.\n\nThis allows me to see your screen and help guide you through tasks.\n\nWhen the settings open, find \"AI Rescue Ring\" and turn it on.\n\nYour privacy is safe - I never save or share what you do.</string>
     <string name="open">Open Settings</string>
     <string name="cancel">Cancel</string>
     <string name="choose_custom_color">Choose rescue ring color</string>

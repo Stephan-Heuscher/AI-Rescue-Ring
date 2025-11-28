@@ -127,14 +127,10 @@ class ChatOverlayManager(
             currentStepIndex = 0
         }
         stepPipManager?.onStepComplete = { stepIndex ->
-            // Step completed - speak the next step or confirmation
-            if (stepIndex + 1 < currentSteps.size) {
-                val nextStep = currentSteps[stepIndex + 1]
-                val cleanText = cleanMarkdownForSpeech(nextStep)
-                speakText("Step ${ stepIndex + 2}. $cleanText")
-            } else {
-                speakText("All steps completed! Great job!")
-            }
+            // Step completed - speak confirmation for current step
+            val currentStep = currentSteps[stepIndex]
+            val cleanText = cleanMarkdownForSpeech(currentStep)
+            speakText("Step ${stepIndex + 1} complete. $cleanText")
         }
 
         // Initialize inactivity handler
@@ -414,8 +410,10 @@ class ChatOverlayManager(
         }
 
         voiceButton?.setOnClickListener {
-            // Request voice input from service/activity
-            onVoiceInputRequest?.invoke()
+            // Note: Voice input via overlay is not supported on Android
+            // (overlays cannot access RecognizerIntent). Users can enable
+            // voice via accessibility service or settings.
+            Toast.makeText(context, "Voice input is available via accessibility service", Toast.LENGTH_SHORT).show()
         }
 
         screenshotButton?.setOnClickListener {
