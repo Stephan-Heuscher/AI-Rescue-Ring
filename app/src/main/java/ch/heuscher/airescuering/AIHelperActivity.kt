@@ -73,6 +73,11 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var currentScreenshot: Bitmap? = null
     private var currentScreenshotPath: String? = null
     private var tts: TextToSpeech? = null
+    private var ttsReady = false
+
+    // Voice-first mode settings for elderly users
+    private var voiceFirstMode = true
+    private var autoSpeakResponses = true
 
     // Chat history for maintaining conversation context with the AI model
     private val chatHistory = mutableListOf<ch.heuscher.airescuering.data.api.Content>()
@@ -106,6 +111,9 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         setContentView(R.layout.activity_ai_helper)
 
         initViews()
+        
+        // Load voice-first mode settings
+        loadVoiceFirstSettings()
 
         // Set dynamic window size after views are initialized
         chatCard.post {
@@ -133,12 +141,18 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         setScreenshotBackground(bitmap)
                         Log.d(TAG, "Screenshot set as background from intent: ${bitmap.width}x${bitmap.height}")
 
-                        // Add welcome message
+                        // Add welcome message and speak it in voice-first mode
+                        val welcomeMessage = "Hello! I'm your AI assistant. I can see what's on your screen and help you with it. What would you like to do?"
                         addMessage(AIMessage(
                             id = UUID.randomUUID().toString(),
-                            content = "Hello! I'm your AI assistant. I can see what's on your screen and help you with it. What would you like to do?",
+                            content = welcomeMessage,
                             role = MessageRole.ASSISTANT
                         ))
+                        
+                        // Voice-first: Speak greeting and auto-start voice input
+                        if (voiceFirstMode) {
+                            speakAndListen(welcomeMessage)
+                        }
                     } else {
                         Log.e(TAG, "Failed to decode bitmap from base64")
                         // Fall back to taking screenshot
@@ -157,6 +171,52 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         } else {
             Log.d(TAG, "Active chat exists (${chatHistory.size} messages), skipping initial screenshot")
         }
+    }
+    
+    /**
+     * Load voice-first mode settings from repository
+     */
+    private fun loadVoiceFirstSettings() {
+        lifecycleScope.launch {
+            ServiceLocator.aiHelperRepository.isVoiceFirstMode().collect { enabled ->
+                voiceFirstMode = enabled
+                Log.d(TAG, "Voice-first mode: $enabled")
+            }
+        }
+        lifecycleScope.launch {
+            ServiceLocator.aiHelperRepository.isAutoSpeakResponses().collect { enabled ->
+                autoSpeakResponses = enabled
+                Log.d(TAG, "Auto-speak responses: $enabled")
+            }
+        }
+    }
+    
+    /**
+     * Voice-first mode: Speak a message then automatically start listening
+     */
+    private fun speakAndListen(text: String) {
+        if (!ttsReady) {
+            Log.w(TAG, "TTS not ready yet, will start voice recognition directly")
+            // Delay voice recognition slightly
+            android.os.Handler(mainLooper).postDelayed({
+                startVoiceRecognition()
+            }, 500)
+            return
+        }
+        
+        tts?.setOnUtteranceCompletedListener { utteranceId ->
+            if (utteranceId == "voice_first_greeting") {
+                // After speaking, automatically start listening
+                runOnUiThread {
+                    startVoiceRecognition()
+                }
+            }
+        }
+        
+        val params = HashMap<String, String>()
+        params[TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID] = "voice_first_greeting"
+        @Suppress("DEPRECATION")
+        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, params)
     }
 
     /**
@@ -618,12 +678,15 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                             role = MessageRole.ASSISTANT
                         )
                         addMessage(planMessage)
+                        
+                        // Voice-first: Speak the AI response
+                        speakResponse(plan)
                     }
 
                     // Store the plan
                     currentPlan = plan
 
-                    // Show approval dialog
+                    // Show approval dialog (spoken in voice-first mode)
                     showPlanApprovalDialog(plan)
                 }.onFailure { error ->
                     Log.e(TAG, "Stage 1: Error generating plan", error)
@@ -633,12 +696,16 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         Toast.LENGTH_LONG
                     ).show()
 
+                    val errorContent = "Sorry, I encountered an error while creating a plan: ${error.message}"
                     val errorMessage = AIMessage(
                         id = UUID.randomUUID().toString(),
-                        content = "Sorry, I encountered an error while creating a plan: ${error.message}",
+                        content = errorContent,
                         role = MessageRole.ASSISTANT
                     )
                     addMessage(errorMessage)
+                    
+                    // Voice-first: Speak error message
+                    speakResponse(errorContent)
                 }
             } finally {
                 loadingIndicator.visibility = View.GONE
@@ -652,6 +719,11 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
      * Show dialog to approve or reject the generated plan
      */
     private fun showPlanApprovalDialog(plan: String) {
+        // Voice-first: Speak the approval question
+        if (voiceFirstMode) {
+            speakResponse("I have a plan ready. Do you want me to execute it? Say yes to proceed or no to cancel.")
+        }
+        
         AlertDialog.Builder(this)
             .setTitle("Approve Plan")
             .setMessage("Do you want me to execute this plan?")
@@ -661,18 +733,21 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             }
             .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()
+                val cancelContent = "Plan cancelled. Feel free to ask me to try a different approach!"
                 val cancelMessage = AIMessage(
                     id = UUID.randomUUID().toString(),
-                    content = "Plan cancelled. Feel free to ask me to try a different approach!",
+                    content = cancelContent,
                     role = MessageRole.ASSISTANT
                 )
                 addMessage(cancelMessage)
+                speakResponse(cancelContent)
             }
             .setNeutralButton("Refine") { dialog, _ ->
                 dialog.dismiss()
                 messageInput.setText("Please refine the plan: ")
                 messageInput.setSelection(messageInput.text.length)
                 messageInput.requestFocus()
+                speakResponse("Please tell me how you'd like me to refine the plan.")
             }
             .show()
     }
@@ -1392,13 +1467,39 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             val result = tts?.setLanguage(Locale.getDefault())
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Log.e(TAG, "TTS: Language not supported")
+            } else {
+                ttsReady = true
+                Log.d(TAG, "TTS: Ready")
+                
+                // Set speech rate slightly slower for elderly users
+                tts?.setSpeechRate(0.9f)
             }
         } else {
             Log.e(TAG, "TTS: Initialization failed")
         }
     }
 
+    /**
+     * Speak AI response aloud (voice-first mode)
+     * Strips markdown formatting for cleaner speech
+     */
     private fun speakResponse(text: String) {
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        if (!autoSpeakResponses || !ttsReady) {
+            return
+        }
+        
+        // Clean markdown for speech
+        val cleanText = text
+            .replace(Regex("#+\\s*"), "")  // Remove headers
+            .replace(Regex("\\*\\*([^*]+)\\*\\*"), "$1")  // Remove bold
+            .replace(Regex("\\*([^*]+)\\*"), "$1")  // Remove italic
+            .replace(Regex("```[\\s\\S]*?```"), "code block omitted")  // Skip code blocks
+            .replace(Regex("`([^`]+)`"), "$1")  // Remove inline code
+            .replace(Regex("\\[([^]]+)\\]\\([^)]+\\)"), "$1")  // Convert links to text
+            .replace(Regex("^[-*]\\s+", RegexOption.MULTILINE), "")  // Remove list bullets
+            .replace(Regex("\\n{2,}"), ". ")  // Convert multiple newlines to periods
+            .trim()
+        
+        tts?.speak(cleanText, TextToSpeech.QUEUE_FLUSH, null, "response_${System.currentTimeMillis()}")
     }
 }

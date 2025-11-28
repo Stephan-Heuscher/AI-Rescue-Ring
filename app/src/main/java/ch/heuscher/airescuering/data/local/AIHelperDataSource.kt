@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Data source interface for AI Helper settings.
  * Uses encrypted storage for sensitive data like API keys.
+ * Supports voice-first mode for elderly users.
  */
 interface AIHelperDataSource {
 
@@ -26,4 +27,11 @@ interface AIHelperDataSource {
 
     fun getModel(): Flow<String>
     suspend fun setModel(model: String)
+    
+    // Voice-first mode for elderly users
+    fun isVoiceFirstMode(): Flow<Boolean>
+    suspend fun setVoiceFirstMode(enabled: Boolean)
+    
+    fun isAutoSpeakResponses(): Flow<Boolean>
+    suspend fun setAutoSpeakResponses(enabled: Boolean)
 }

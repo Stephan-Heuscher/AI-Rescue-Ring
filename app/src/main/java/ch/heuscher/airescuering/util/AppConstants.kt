@@ -82,4 +82,14 @@ object AppConstants {
     const val DEFAULT_SIZE = 64
     const val DEFAULT_VIBRATION_ENABLED = true
     const val DEFAULT_POSITION_LOCKED = false
+    
+    // Ring size presets (dp) for elderly-friendly "One Tap Wonder" mode
+    const val RING_SIZE_SMALL = 48
+    const val RING_SIZE_MEDIUM = 64
+    const val RING_SIZE_LARGE = 96
+    const val RING_SIZE_EXTRA_LARGE = 128  // Recommended for elderly users
+    
+    // Voice-first mode defaults
+    const val DEFAULT_VOICE_FIRST_MODE = true  // Voice-first for elderly
+    const val DEFAULT_AUTO_SPEAK_RESPONSES = true  // Always speak AI responses
 }

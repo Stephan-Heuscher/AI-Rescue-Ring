@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Repository interface for AI Helper settings and operations.
+ * Supports voice-first mode for elderly users.
  */
 interface AIHelperRepository {
 
@@ -25,4 +26,11 @@ interface AIHelperRepository {
 
     fun getModel(): Flow<String>
     suspend fun setModel(model: String)
+    
+    // Voice-first mode for elderly users
+    fun isVoiceFirstMode(): Flow<Boolean>
+    suspend fun setVoiceFirstMode(enabled: Boolean)
+    
+    fun isAutoSpeakResponses(): Flow<Boolean>
+    suspend fun setAutoSpeakResponses(enabled: Boolean)
 }

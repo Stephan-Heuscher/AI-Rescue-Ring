@@ -1,28 +1,36 @@
 # AI Rescue Ring - Project Context
 
 ## Project Overview
-Android app providing AI-powered assistance through a floating rescue ring UI. Users can access AI help from anywhere on their device via a persistent floating button.
+Android app providing AI-powered assistance through a floating rescue ring UI. Users can access AI help from anywhere on their device via a persistent floating button. **Voice-first design optimized for elderly users**.
 
 ## Tech Stack
 - **Language**: Kotlin
 - **Platform**: Android
-- **AI Model**: Gemini 2.5 Computer Use Preview (gemini-2.5-computer-use-preview-10-2025)
+- **AI Model**: Gemini 3 Pro Preview (gemini-3-pro-preview)
 - **API**: Google Generative AI API
 - **UI**: Material Design components, RecyclerView for chat
+- **Voice**: Android TTS and Speech Recognition for voice-first interaction
 
 ## Key Requirements
 
 ### AI Model Configuration
-- **Default Model**: `gemini-2.5-computer-use-preview-10-2025`
+- **Default Model**: `gemini-3-pro-preview`
   - Configured in: `app/src/main/java/ch/heuscher/airescuering/data/local/SecureAIHelperDataSource.kt:33`
 - **Computer Use**: Enabled with proper tool definitions
 - **User Approval Flow**: ALL AI-suggested actions MUST be approved by user via dialog before execution
 
+### Voice-First Mode (Elderly-Friendly)
+- **Voice-First Mode**: Auto-start voice input after greeting (default: ON)
+- **Auto-Speak Responses**: Read all AI responses aloud via TTS (default: ON)
+- **Ring Size Presets**: Small (48dp), Medium (64dp), Large (96dp), Extra Large (128dp)
+- **PiP Overlay Mode**: Floating step-by-step instructions as backup display mode
+
 ### User Interface
 - **Chat Interface**: Semi-transparent overlay over the current screen
-- **Floating Ring**: Persistent accessibility service-based overlay
+- **Floating Ring**: Persistent accessibility service-based overlay (configurable size)
 - **Message Display**: RecyclerView with user/assistant message differentiation
 - **Voice Input**: Supported via Android's RecognizerIntent
+- **TTS Output**: All responses spoken aloud in voice-first mode
 
 ### API Integration
 - **Service**: `app/src/main/java/ch/heuscher/airescuering/data/api/GeminiApiService.kt`

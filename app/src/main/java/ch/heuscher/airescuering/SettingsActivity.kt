@@ -34,6 +34,8 @@ class SettingsActivity : AppCompatActivity() {
     // AI Helper fields
     private lateinit var apiKeyInput: EditText
     private lateinit var voiceInputSwitch: androidx.appcompat.widget.SwitchCompat
+    private lateinit var voiceFirstModeSwitch: androidx.appcompat.widget.SwitchCompat
+    private lateinit var autoSpeakSwitch: androidx.appcompat.widget.SwitchCompat
 
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var aiHelperRepository: AIHelperRepository
@@ -155,6 +157,8 @@ class SettingsActivity : AppCompatActivity() {
         // AI Helper views
         apiKeyInput = findViewById(R.id.api_key_input)
         voiceInputSwitch = findViewById(R.id.voice_input_switch)
+        voiceFirstModeSwitch = findViewById(R.id.voice_first_mode_switch)
+        autoSpeakSwitch = findViewById(R.id.auto_speak_switch)
     }
 
     private fun setupBackButton() {
@@ -298,6 +302,20 @@ class SettingsActivity : AppCompatActivity() {
                 aiHelperRepository.setUseVoiceInput(isChecked)
             }
         }
+
+        // Voice-first mode switch (elderly-friendly)
+        voiceFirstModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            lifecycleScope.launch {
+                aiHelperRepository.setVoiceFirstMode(isChecked)
+            }
+        }
+
+        // Auto-speak responses switch
+        autoSpeakSwitch.setOnCheckedChangeListener { _, isChecked ->
+            lifecycleScope.launch {
+                aiHelperRepository.setAutoSpeakResponses(isChecked)
+            }
+        }
     }
 
     private fun observeAIHelperSettings() {
@@ -315,6 +333,24 @@ class SettingsActivity : AppCompatActivity() {
             aiHelperRepository.useVoiceInput().collect { useVoice ->
                 if (voiceInputSwitch.isChecked != useVoice) {
                     voiceInputSwitch.isChecked = useVoice
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            // Observe voice-first mode setting
+            aiHelperRepository.isVoiceFirstMode().collect { enabled ->
+                if (voiceFirstModeSwitch.isChecked != enabled) {
+                    voiceFirstModeSwitch.isChecked = enabled
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            // Observe auto-speak setting
+            aiHelperRepository.isAutoSpeakResponses().collect { enabled ->
+                if (autoSpeakSwitch.isChecked != enabled) {
+                    autoSpeakSwitch.isChecked = enabled
                 }
             }
         }

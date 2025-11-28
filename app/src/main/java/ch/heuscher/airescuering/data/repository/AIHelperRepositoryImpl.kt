@@ -48,4 +48,16 @@ class AIHelperRepositoryImpl(
     override suspend fun setModel(model: String) {
         dataSource.setModel(model)
     }
+
+    override fun isVoiceFirstMode(): Flow<Boolean> = dataSource.isVoiceFirstMode()
+
+    override suspend fun setVoiceFirstMode(enabled: Boolean) {
+        dataSource.setVoiceFirstMode(enabled)
+    }
+
+    override fun isAutoSpeakResponses(): Flow<Boolean> = dataSource.isAutoSpeakResponses()
+
+    override suspend fun setAutoSpeakResponses(enabled: Boolean) {
+        dataSource.setAutoSpeakResponses(enabled)
+    }
 }

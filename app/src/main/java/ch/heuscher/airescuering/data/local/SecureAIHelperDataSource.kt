@@ -30,8 +30,10 @@ class SecureAIHelperDataSource(
         private const val KEY_VOICE_INPUT = "ai_helper_voice_input"
         private const val KEY_AUTO_EXECUTE = "ai_helper_auto_execute"
         private const val KEY_MODEL = "ai_helper_model"
-        private const val DEFAULT_MODEL = "gemini-2.5-computer-use-preview-10-2025"
+        private const val DEFAULT_MODEL = "gemini-3-pro-preview"
         private const val KEY_MIGRATED = "migrated_from_encrypted"
+        private const val KEY_VOICE_FIRST_MODE = "ai_helper_voice_first_mode"
+        private const val KEY_AUTO_SPEAK_RESPONSES = "ai_helper_auto_speak_responses"
     }
 
     // Standard SharedPreferences for backup-friendly storage
@@ -123,18 +125,30 @@ class SecureAIHelperDataSource(
     }.distinctUntilChanged()
 
     override fun getConfig(): Flow<AIHelperConfig> = combine(
-        isEnabled(),
-        getApiKey(),
-        useVoiceInput(),
-        getAutoExecuteSuggestions(),
-        getModel()
-    ) { enabled, apiKey, voiceInput, autoExecute, model ->
+        combine(
+            isEnabled(),
+            getApiKey(),
+            useVoiceInput(),
+            getAutoExecuteSuggestions(),
+            getModel()
+        ) { enabled, apiKey, voiceInput, autoExecute, model ->
+            listOf(enabled, apiKey, voiceInput, autoExecute, model)
+        },
+        combine(
+            isVoiceFirstMode(),
+            isAutoSpeakResponses()
+        ) { voiceFirstMode, autoSpeakResponses ->
+            listOf(voiceFirstMode, autoSpeakResponses)
+        }
+    ) { basicSettings, voiceSettings ->
         AIHelperConfig(
-            enabled = enabled,
-            apiKey = apiKey,
-            useVoiceInput = voiceInput,
-            autoExecuteSuggestions = autoExecute,
-            model = model
+            enabled = basicSettings[0] as Boolean,
+            apiKey = basicSettings[1] as String,
+            useVoiceInput = basicSettings[2] as Boolean,
+            autoExecuteSuggestions = basicSettings[3] as Boolean,
+            model = basicSettings[4] as String,
+            voiceFirstMode = voiceSettings[0] as Boolean,
+            autoSpeakResponses = voiceSettings[1] as Boolean
         )
     }
 
@@ -145,6 +159,8 @@ class SecureAIHelperDataSource(
             putBoolean(KEY_VOICE_INPUT, config.useVoiceInput)
             putBoolean(KEY_AUTO_EXECUTE, config.autoExecuteSuggestions)
             putString(KEY_MODEL, config.model)
+            putBoolean(KEY_VOICE_FIRST_MODE, config.voiceFirstMode)
+            putBoolean(KEY_AUTO_SPEAK_RESPONSES, config.autoSpeakResponses)
             apply()
         }
     }
@@ -192,5 +208,23 @@ class SecureAIHelperDataSource(
 
     override suspend fun setModel(model: String) {
         prefs.edit().putString(KEY_MODEL, model).apply()
+    }
+
+    override fun isVoiceFirstMode(): Flow<Boolean> =
+        getPreferenceFlow(KEY_VOICE_FIRST_MODE, true) { sharedPrefs, key, default ->
+            sharedPrefs.getBoolean(key, default)
+        }
+
+    override suspend fun setVoiceFirstMode(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_VOICE_FIRST_MODE, enabled).apply()
+    }
+
+    override fun isAutoSpeakResponses(): Flow<Boolean> =
+        getPreferenceFlow(KEY_AUTO_SPEAK_RESPONSES, true) { sharedPrefs, key, default ->
+            sharedPrefs.getBoolean(key, default)
+        }
+
+    override suspend fun setAutoSpeakResponses(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_AUTO_SPEAK_RESPONSES, enabled).apply()
     }
 }
