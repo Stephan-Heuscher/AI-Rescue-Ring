@@ -103,31 +103,50 @@
                 android:id="@+id/pipFooter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center"
+                android:orientation="vertical"
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="4dp"
                 android:background="@color/surface_variant">
 
+                <!-- "I did it" Button -->
                 <Button
-                    android:id="@+id/pipPreviousButton"
-                    android:layout_width="0dp"
+                    android:id="@+id/pipDoneButton"
+                    android:layout_width="match_parent"
                     android:layout_height="36dp"
-                    android:layout_weight="1"
-                    android:text="◀"
-                    android:textSize="16sp"
-                    android:layout_marginEnd="4dp"
-                    style="@style/Widget.Material3.Button.TextButton"/>
+                    android:text="✓ I did it!"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="4dp"
+                    android:backgroundTint="@color/success_green"
+                    style="@style/Widget.Material3.Button.ElevatedButton"/>
 
-                <Button
-                    android:id="@+id/pipNextButton"
-                    android:layout_width="0dp"
-                    android:layout_height="36dp"
-                    android:layout_weight="1"
-                    android:text="▶"
-                    android:textSize="16sp"
-                    android:layout_marginStart="4dp"
-                    style="@style/Widget.Material3.Button.TextButton"/>
+                <!-- Previous/Next Navigation -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <Button
+                        android:id="@+id/pipPreviousButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="◀ Back"
+                        android:textSize="13sp"
+                        android:layout_marginEnd="4dp"
+                        style="@style/Widget.Material3.Button.TextButton"/>
+
+                    <Button
+                        android:id="@+id/pipNextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:text="Next ▶"
+                        android:textSize="13sp"
+                        android:layout_marginStart="4dp"
+                        style="@style/Widget.Material3.Button.TextButton"/>
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>

@@ -26,6 +26,7 @@ import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ch.heuscher.airescuering.R
@@ -115,6 +116,7 @@ class ChatOverlayManager(
     // Callbacks
     var onHideRequest: (() -> Unit)? = null
     var onScreenshotRequest: (() -> Unit)? = null
+    var onVoiceInputRequest: (() -> Unit)? = null
 
     init {
         geminiService = GeminiApiService(geminiApiKey, debug = true)
@@ -123,6 +125,16 @@ class ChatOverlayManager(
             // When PiP is closed, clear the steps
             currentSteps = listOf()
             currentStepIndex = 0
+        }
+        stepPipManager?.onStepComplete = { stepIndex ->
+            // Step completed - speak the next step or confirmation
+            if (stepIndex + 1 < currentSteps.size) {
+                val nextStep = currentSteps[stepIndex + 1]
+                val cleanText = cleanMarkdownForSpeech(nextStep)
+                speakText("Step ${ stepIndex + 2}. $cleanText")
+            } else {
+                speakText("All steps completed! Great job!")
+            }
         }
 
         // Initialize inactivity handler
@@ -402,8 +414,8 @@ class ChatOverlayManager(
         }
 
         voiceButton?.setOnClickListener {
-            Toast.makeText(context, "Voice input: Please use the app directly for voice features", Toast.LENGTH_SHORT).show()
-            // Note: Voice recognition requires an Activity context, so we can't use it directly in overlay
+            // Request voice input from service/activity
+            onVoiceInputRequest?.invoke()
         }
 
         screenshotButton?.setOnClickListener {
@@ -538,6 +550,13 @@ class ChatOverlayManager(
                                 // Show steps in PiP window and hide chat
                                 stepPipManager?.show(steps, 0)
                                 hide()
+                                
+                                // Speak the first step
+                                if (autoSpeakResponses && ttsReady) {
+                                    val firstStep = steps[0]
+                                    val cleanText = cleanMarkdownForSpeech(firstStep)
+                                    speakText("Step 1. $cleanText")
+                                }
                             }
                         }
                     } else {
@@ -666,6 +685,20 @@ class ChatOverlayManager(
             .replace(Regex("`(.+?)`"), "$1") // Remove code blocks
             .replace(Regex("###.+"), "") // Remove step headers
             .trim()
+    }
+
+    /**
+     * Process voice input results from speech recognition
+     */
+    fun processVoiceInput(text: String) {
+        if (text.isNotEmpty()) {
+            messageInput?.setText(text)
+            // Auto-send the voice input
+            Handler(Looper.getMainLooper()).post {
+                sendMessage(text)
+                messageInput?.text?.clear()
+            }
+        }
     }
 
     /**

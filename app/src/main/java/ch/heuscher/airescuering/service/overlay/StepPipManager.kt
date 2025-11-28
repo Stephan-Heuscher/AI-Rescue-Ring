@@ -50,6 +50,7 @@ class StepPipManager(
     private var pipStepContent: TextView? = null
     private var pipPreviousButton: Button? = null
     private var pipNextButton: Button? = null
+    private var pipDoneButton: Button? = null
     private var pipCloseButton: ImageButton? = null
     private var pipCoordinatesDisplay: TextView? = null
 
@@ -82,6 +83,7 @@ class StepPipManager(
 
     // Callbacks
     var onClose: (() -> Unit)? = null
+    var onStepComplete: ((stepIndex: Int) -> Unit)? = null
 
     /**
      * Show the PiP window with steps
@@ -260,10 +262,27 @@ class StepPipManager(
             pipStepContent = view.findViewById(R.id.pipStepContent)
             pipPreviousButton = view.findViewById(R.id.pipPreviousButton)
             pipNextButton = view.findViewById(R.id.pipNextButton)
+            pipDoneButton = view.findViewById(R.id.pipDoneButton)
             pipCloseButton = view.findViewById(R.id.pipCloseButton)
             pipCoordinatesDisplay = view.findViewById(R.id.pipCoordinatesDisplay)
 
             // Set up button listeners
+            pipDoneButton?.setOnClickListener {
+                // User confirmed they completed the step
+                onStepComplete?.invoke(currentStepIndex)
+                // Auto-advance to next step
+                if (currentStepIndex < currentSteps.size - 1) {
+                    currentStepIndex++
+                    updateStepDisplay()
+                    showHighlightForCurrentStep()
+                } else {
+                    // Last step completed - show completion message
+                    Log.d(TAG, "All steps completed!")
+                    hide()
+                    onClose?.invoke()
+                }
+            }
+
             pipPreviousButton?.setOnClickListener {
                 if (currentStepIndex > 0) {
                     currentStepIndex--

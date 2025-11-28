@@ -10,8 +10,10 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.speech.RecognizerIntent
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import ch.heuscher.airescuering.AIRescueRingAccessibilityService
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.model.DotPosition
@@ -26,6 +28,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 /**
  * Refactored OverlayService with clear separation of concerns.
@@ -392,6 +395,9 @@ class OverlayService : Service() {
                     onScreenshotRequest = {
                         requestScreenshot()
                     }
+                    onVoiceInputRequest = {
+                        startVoiceInput()
+                    }
                 }
 
                 // Set up screenshot callback in accessibility service
@@ -470,6 +476,50 @@ class OverlayService : Service() {
                 Log.d(TAG, "Screenshot captured, now showing overlay")
                 chatOverlayManager?.show()
             }
+        }
+    }
+
+    private fun startVoiceInput() {
+        Log.d(TAG, "startVoiceInput: Requesting voice input")
+        try {
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
+                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            }
+            
+            // Store the overlay manager reference so we can pass results back
+            intent.putExtra("return_to_overlay", true)
+            
+            // Start activity for result with flag to allow overlay
+            val flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+            intent.flags = flags
+            
+            // Use a custom receiver to capture results
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    if (intent?.action == "voice_input_result") {
+                        val voiceText = intent.getStringExtra("voice_text") ?: ""
+                        Log.d(TAG, "Voice input received: $voiceText")
+                        chatOverlayManager?.processVoiceInput(voiceText)
+                    }
+                }
+            }
+            
+            // Register receiver
+            val filter = IntentFilter("voice_input_result")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                @Suppress("UnspecifiedRegisterReceiverFlag")
+                registerReceiver(receiver, filter)
+            }
+            
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error starting voice input", e)
+            Toast.makeText(this, "Voice input not available", Toast.LENGTH_SHORT).show()
         }
     }
 
