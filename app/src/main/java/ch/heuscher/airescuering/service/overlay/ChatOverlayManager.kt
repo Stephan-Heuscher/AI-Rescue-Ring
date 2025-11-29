@@ -520,25 +520,40 @@ class ChatOverlayManager(
                     
                     // Parse steps if present and show in PiP window
                     // Steps are marked with "###" headers (with or without space after)
+                    // The LLM may use various formats:
+                    // - ### Step 1: Title
+                    // - ###Step 1: Title  
+                    // - ### 1. Title
+                    // - ### First Step
                     if (response.contains("###")) {
-                        // Split by ### but keep the ### with each step
-                        // Use lookahead to split before each ### occurrence
-                        val stepPattern = Regex("""(?=###\s*)""")
-                        val rawSteps = response.split(stepPattern)
+                        // Use regex to find all ### headers and extract each step
+                        // This handles cases where there's intro text before the first ###
+                        val stepHeaderPattern = Regex("""###\s*""")
                         
-                        Log.d(TAG, "Raw split produced ${rawSteps.size} parts")
-                        rawSteps.forEachIndexed { idx, part ->
-                            Log.d(TAG, "Raw part $idx: '${part.take(60)}...'")
+                        // Find all positions where ### occurs
+                        val matches = stepHeaderPattern.findAll(response).toList()
+                        Log.d(TAG, "Found ${matches.size} ### headers in response")
+                        
+                        val steps = mutableListOf<String>()
+                        
+                        for (i in matches.indices) {
+                            val startPos = matches[i].range.first
+                            val endPos = if (i + 1 < matches.size) {
+                                matches[i + 1].range.first
+                            } else {
+                                response.length
+                            }
+                            
+                            val stepText = response.substring(startPos, endPos).trim()
+                            if (stepText.isNotBlank()) {
+                                steps.add(stepText)
+                                Log.d(TAG, "Extracted step $i: '${stepText.take(80)}...'")
+                            }
                         }
-                        
-                        // Filter out empty strings and trim each step
-                        val steps = rawSteps
-                            .map { it.trim() }
-                            .filter { it.isNotBlank() && it.startsWith("###") }
 
                         Log.d(TAG, "Parsed ${steps.size} valid steps from response")
                         steps.forEachIndexed { index, step -> 
-                            Log.d(TAG, "Step $index: ${step.take(100)}...")
+                            Log.d(TAG, "Final step $index: ${step.take(100)}...")
                         }
 
                         if (steps.isNotEmpty()) {

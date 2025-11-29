@@ -126,16 +126,19 @@ Modify `GeminiRequest` in `GeminiApiModels.kt` and corresponding serialization i
 ## Recent Changes (Session: November 29, 2025)
 
 ### Issues Fixed
-1. **Microphone Accessibility**: Disabled voice button on overlay (Android doesn't allow RecognizerIntent from overlay apps). Users must use accessibility service instead.
-2. **Step Hint Timing**: Fixed off-by-one issue - now shows confirmation for current step instead of announcing next step too early.
-3. **PiP Completion Flow**: Window now stays open with congratulations message when all steps completed, instead of immediately closing. User must tap X button to close.
-4. **UI Consistency**: Added orange fixed header to legal notice activity, matching main activity and settings activity styling.
-5. **Accessibility Text**: Shortened "allow_navigation_message" dialog from very long explanation to concise, elderly-friendly version.
+1. **Microphone Accessibility**: Voice button on overlay shows informative toast (Android doesn't allow RecognizerIntent from overlay apps). Users can use accessibility service instead.
+2. **Step Parsing**: Improved step parsing in ChatOverlayManager to use regex `findAll` instead of `split` - now correctly handles LLM responses with intro text before steps, preventing "success after one step" issue.
+3. **Settings Layout Consistency**: Fixed settings activity to have fixed orange header outside ScrollView (matching main activity and legal notice).
+4. **Step Hint Timing**: Fixed off-by-one issue - now shows confirmation for current step instead of announcing next step too early.
+5. **PiP Completion Flow**: Window now stays open with congratulations message when all steps completed, instead of immediately closing. User must tap X button to close.
+6. **UI Consistency**: All three main activities (main, settings, legal notice) now have consistent fixed orange headers.
+7. **Accessibility Text**: Shortened "allow_navigation_message" dialog from very long explanation to concise, elderly-friendly version.
 
 ### Key Code Changes
-- **ChatOverlayManager.kt**: Voice button now shows toast instead of trying RecognizerIntent. Fixed step completion callback to speak current step confirmation.
+- **ChatOverlayManager.kt**: Improved step parsing with regex findAll to extract steps from any position in response. Voice button shows toast instead of trying RecognizerIntent.
 - **StepPipManager.kt**: Completion button now shows congratulations and disables further navigation instead of closing.
-- **activity_impressum.xml**: Restructured to have fixed orange header outside ScrollView (matches activity_main.xml and activity_settings.xml).
+- **activity_settings.xml**: Restructured to have fixed orange header outside ScrollView (matches activity_main.xml and activity_impressum.xml).
+- **activity_impressum.xml**: Already had fixed orange header outside ScrollView.
 - **strings.xml**: Shortened `allow_navigation_message` from ~15 lines to 4 lines.
 
 
