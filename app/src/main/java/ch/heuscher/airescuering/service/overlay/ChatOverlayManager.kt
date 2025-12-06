@@ -127,10 +127,16 @@ class ChatOverlayManager(
             currentStepIndex = 0
         }
         stepPipManager?.onStepComplete = { stepIndex ->
-            // Step completed - speak confirmation for current step
-            val currentStep = currentSteps[stepIndex]
-            val cleanText = cleanMarkdownForSpeech(currentStep)
-            speakText("Step ${stepIndex + 1} complete. $cleanText")
+            // Step completed - speak brief confirmation and move to next
+            if (stepIndex + 1 < currentSteps.size) {
+                // There's a next step - speak it
+                val nextStep = currentSteps[stepIndex + 1]
+                val cleanText = cleanMarkdownForSpeech(nextStep)
+                speakText("Step ${stepIndex + 2}. $cleanText")
+            } else {
+                // Last step completed
+                speakText("All steps completed. Great job!")
+            }
         }
 
         // Initialize inactivity handler
@@ -525,6 +531,7 @@ class ChatOverlayManager(
                     // - ###Step 1: Title  
                     // - ### 1. Title
                     // - ### First Step
+                    var hasSteps = false
                     if (response.contains("###")) {
                         // Use regex to find all ### headers and extract each step
                         // This handles cases where there's intro text before the first ###
@@ -557,6 +564,7 @@ class ChatOverlayManager(
                         }
 
                         if (steps.isNotEmpty()) {
+                            hasSteps = true
                             Handler(Looper.getMainLooper()).post {
                                 currentSteps = steps
                                 currentStepIndex = 0
@@ -581,7 +589,8 @@ class ChatOverlayManager(
                         content = response,
                         role = MessageRole.ASSISTANT
                     )
-                    addMessage(assistantMessage, scrollToEnd = false)
+                    // Don't auto-speak if we have steps (steps are spoken individually)
+                    addMessage(assistantMessage, scrollToEnd = false, skipSpeaking = hasSteps)
                 }.onFailure { error ->
                     showError("Error: ${error.message}")
 
@@ -666,7 +675,7 @@ class ChatOverlayManager(
     /**
      * Add a message to the chat
      */
-    private fun addMessage(message: AIMessage, scrollToEnd: Boolean = true) {
+    private fun addMessage(message: AIMessage, scrollToEnd: Boolean = true, skipSpeaking: Boolean = false) {
         Handler(Looper.getMainLooper()).post {
             messages.add(message)
             adapter?.notifyItemInserted(messages.size - 1)
@@ -675,7 +684,7 @@ class ChatOverlayManager(
             }
 
             // Auto-speak assistant responses if enabled
-            if (autoSpeakResponses && message.role == MessageRole.ASSISTANT && ttsReady) {
+            if (!skipSpeaking && autoSpeakResponses && message.role == MessageRole.ASSISTANT && ttsReady) {
                 // Clean markdown from response before speaking
                 val cleanText = cleanMarkdownForSpeech(message.content)
                 speakText(cleanText)
@@ -737,7 +746,7 @@ class ChatOverlayManager(
             }
 
             Log.d(TAG, "Speaking: ${textToSpeak.take(100)}...")
-            tts?.speak(textToSpeak, TextToSpeech.QUEUE_ADD, null)
+            tts?.speak(textToSpeak, TextToSpeech.QUEUE_FLUSH, null)
         } catch (e: Exception) {
             Log.e(TAG, "Error speaking text", e)
         }

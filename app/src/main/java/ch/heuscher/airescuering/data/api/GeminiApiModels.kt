@@ -42,7 +42,15 @@ data class GenerationConfig(
     val topP: Double = 0.95,
     val maxOutputTokens: Int = 8192,
     @SerialName("responseMimeType")
-    val responseMimeType: String = "text/plain"
+    val responseMimeType: String = "text/plain",
+    @SerialName("thinkingConfig")
+    val thinkingConfig: ThinkingConfig? = null
+)
+
+@Serializable
+data class ThinkingConfig(
+    @SerialName("thinking_level")
+    val thinkingLevel: String
 )
 
 @Serializable

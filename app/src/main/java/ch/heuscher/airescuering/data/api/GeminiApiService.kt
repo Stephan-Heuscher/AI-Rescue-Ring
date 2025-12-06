@@ -56,7 +56,7 @@ class GeminiApiService(
     /**
      * Generate content using the specified Gemini model.
      *
-     * @param model The model to use (e.g., "gemini-2.0-flash-exp")
+     * @param model The model to use (e.g., "gemini-3-pro-preview")
      * @param messages List of conversation messages
      * @param systemPrompt Optional system instruction
      * @return Response from the API or null if error
@@ -78,7 +78,8 @@ class GeminiApiService(
                 contents = contents,
                 generationConfig = GenerationConfig(
                     temperature = 1.0,
-                    maxOutputTokens = 8192
+                    maxOutputTokens = 8192,
+                    thinkingConfig = ThinkingConfig(thinkingLevel = "low")
                 ),
                 systemInstruction = systemPrompt?.let {
                     Content(
@@ -266,7 +267,8 @@ EXAMPLE:
                 contents = contents,
                 generationConfig = GenerationConfig(
                     temperature = 1.0,
-                    maxOutputTokens = 8192
+                    maxOutputTokens = 8192,
+                    thinkingConfig = ThinkingConfig(thinkingLevel = "low")
                 ),
                 systemInstruction = Content(
                     role = "system",
@@ -274,7 +276,7 @@ EXAMPLE:
                 )
             )
 
-            val url = "$BASE_URL/gemini-flash-latest:generateContent?key=$apiKey"
+            val url = "$BASE_URL/gemini-3-pro-preview:generateContent?key=$apiKey"
             val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
                 .toRequestBody("application/json".toMediaType())
 
@@ -392,7 +394,8 @@ Example:
                 contents = contents,
                 generationConfig = GenerationConfig(
                     temperature = 0.7,  // Lower temperature for more focused responses
-                    maxOutputTokens = 8192
+                    maxOutputTokens = 8192,
+                    thinkingConfig = ThinkingConfig(thinkingLevel = "low")
                 ),
                 systemInstruction = Content(
                     role = "system",
@@ -400,7 +403,7 @@ Example:
                 )
             )
 
-            val url = "$BASE_URL/gemini-flash-latest:generateContent?key=$apiKey"
+            val url = "$BASE_URL/gemini-3-pro-preview:generateContent?key=$apiKey"
             val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
                 .toRequestBody("application/json".toMediaType())
 
@@ -410,7 +413,7 @@ Example:
                 .build()
 
             if (debug) {
-                Log.d(TAG, "Request with image: model=gemini-flash-latest")
+                Log.d(TAG, "Request with image: model=gemini-3-pro-preview")
             }
 
             client.newCall(httpRequest).execute().use { response ->
@@ -507,14 +510,14 @@ METADATA RULES:
 
         return if (screenshot != null) {
             generateContentWithImage(
-                model = "gemini-2.5-computer-use-preview-10-2025",
+                model = "gemini-3-pro-preview",
                 text = userMessage,
                 image = screenshot,
                 systemPrompt = systemPrompt
             )
         } else {
             generateContent(
-                model = "gemini-2.5-computer-use-preview-10-2025",
+                model = "gemini-3-pro-preview",
                 messages = listOf("user" to userMessage),
                 systemPrompt = systemPrompt
             )
@@ -560,7 +563,8 @@ METADATA RULES:
                 contents = contents,
                 generationConfig = GenerationConfig(
                     temperature = 1.0,
-                    maxOutputTokens = 8192
+                    maxOutputTokens = 8192,
+                    thinkingConfig = ThinkingConfig(thinkingLevel = "low")
                 ),
                 systemInstruction = systemPrompt?.let {
                     Content(
@@ -663,7 +667,7 @@ METADATA RULES:
      * Generate content using the specified Gemini model with full Content objects.
      * Used for advanced scenarios like computer use with conversation history.
      *
-     * @param model The model to use (e.g., "gemini-2.5-computer-use-preview-10-2025")
+     * @param model The model to use (e.g., "gemini-3-pro-preview")
      * @param contents List of Content objects representing the conversation
      * @param systemPrompt Optional system instruction
      * @return Response from the API
@@ -678,7 +682,8 @@ METADATA RULES:
                 contents = contents,
                 generationConfig = GenerationConfig(
                     temperature = 1.0,
-                    maxOutputTokens = 8192
+                    maxOutputTokens = 8192,
+                    thinkingConfig = ThinkingConfig(thinkingLevel = "low")
                 ),
                 systemInstruction = systemPrompt?.let {
                     Content(
@@ -815,7 +820,7 @@ Always be helpful and precise in your actions.
             """.trimIndent()
 
             return@withContext generateContentFull(
-                model = "gemini-2.5-computer-use-preview-10-2025",
+                model = "gemini-3-pro-preview",
                 contents = contents,
                 systemPrompt = systemPrompt
             )

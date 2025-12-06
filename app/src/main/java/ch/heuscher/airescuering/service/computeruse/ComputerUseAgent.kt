@@ -24,7 +24,7 @@ class ComputerUseAgent(
     companion object {
         private const val TAG = "ComputerUseAgent"
         private const val MAX_TURNS = 10
-        private const val MODEL = "gemini-2.5-computer-use-preview-10-2025"
+        private const val MODEL = "gemini-3-pro-preview"
     }
 
     private val uiActionExecutor = UIActionExecutor(context)
