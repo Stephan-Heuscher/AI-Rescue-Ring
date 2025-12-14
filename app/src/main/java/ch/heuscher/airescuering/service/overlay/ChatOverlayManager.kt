@@ -117,6 +117,8 @@ class ChatOverlayManager(
     var onHideRequest: (() -> Unit)? = null
     var onScreenshotRequest: (() -> Unit)? = null
     var onVoiceInputRequest: (() -> Unit)? = null
+    var onShowIndicator: ((Int, Int) -> Unit)? = null
+    var onHideIndicator: (() -> Unit)? = null
 
 
 
@@ -135,6 +137,14 @@ class ChatOverlayManager(
             // When PiP is closed, clear the steps
             currentSteps = listOf()
             currentStepIndex = 0
+            // Hide indicator when closed
+            onHideIndicator?.invoke()
+        }
+        stepPipManager?.onShowIndicator = { x, y ->
+            onShowIndicator?.invoke(x, y)
+        }
+        stepPipManager?.onHideIndicator = {
+            onHideIndicator?.invoke()
         }
         stepPipManager?.onStepComplete = { stepIndex ->
             // Step completed - speak brief confirmation and move to next

@@ -84,6 +84,8 @@ class StepPipManager(
     // Callbacks
     var onClose: (() -> Unit)? = null
     var onStepComplete: ((stepIndex: Int) -> Unit)? = null
+    var onShowIndicator: ((Int, Int) -> Unit)? = null
+    var onHideIndicator: (() -> Unit)? = null
 
     /**
      * Show the PiP window with steps
@@ -403,16 +405,10 @@ class StepPipManager(
             val xPos = (screenWidth * xPercent / 100)
             val yPos = statusBarHeight + (usableHeight * yPercent / 100)
             
-            // Send broadcast to show Telestrator indicator
-            val intent = android.content.Intent(ch.heuscher.airescuering.util.AppConstants.ACTION_SHOW_INDICATOR).apply {
-                putExtra("x", xPos)
-                putExtra("y", yPos)
-                putExtra("duration", 0L) // Show indefinitely until step changes
-                setPackage(context.packageName) // Explicit intent for security
-            }
-            context.sendBroadcast(intent)
+            // Send callback to show Telestrator indicator
+            onShowIndicator?.invoke(xPos, yPos)
 
-            Log.d(TAG, "Broadcasting show indicator at ($xPercent%, $yPercent%) = pixel ($xPos, $yPos)")
+            Log.d(TAG, "Invoking show indicator callback at ($xPercent%, $yPercent%) = pixel ($xPos, $yPos)")
         } catch (e: Exception) {
             Log.e(TAG, "Error showing highlight", e)
         }
@@ -423,12 +419,9 @@ class StepPipManager(
      */
     private fun hideHighlight() {
         try {
-            // Send broadcast to hide Telestrator indicator
-            val intent = android.content.Intent(ch.heuscher.airescuering.util.AppConstants.ACTION_HIDE_INDICATOR).apply {
-                setPackage(context.packageName)
-            }
-            context.sendBroadcast(intent)
-            Log.d(TAG, "Broadcasting hide indicator")
+            // Send callback to hide Telestrator indicator
+            onHideIndicator?.invoke()
+            Log.d(TAG, "Invoking hide indicator callback")
         } catch (e: Exception) {
             Log.e(TAG, "Error hiding highlight", e)
         }

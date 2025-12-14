@@ -245,7 +245,7 @@ class OverlayService : Service() {
             registerReceiver(settingsReceiver, settingsFilter, Context.RECEIVER_NOT_EXPORTED)
             registerReceiver(keyboardReceiver, keyboardFilter, Context.RECEIVER_NOT_EXPORTED)
             registerReceiver(configurationReceiver, configFilter, Context.RECEIVER_NOT_EXPORTED)
-            registerReceiver(telestratorReceiver, telestratorFilter, Context.RECEIVER_NOT_EXPORTED)
+            registerReceiver(telestratorReceiver, telestratorFilter, Context.RECEIVER_EXPORTED)
         } else {
             @Suppress("DEPRECATION")
             registerReceiver(settingsReceiver, settingsFilter)
@@ -430,6 +430,14 @@ class OverlayService : Service() {
                     }
                     onVoiceInputRequest = {
                         startVoiceInput()
+                    }
+                    onShowIndicator = { x, y ->
+                        Log.d(TAG, "Callback: Showing indicator at $x, $y")
+                        telestratorManager?.showIndicator(x, y, 0L)
+                    }
+                    onHideIndicator = {
+                        Log.d(TAG, "Callback: Hiding indicator")
+                        telestratorManager?.removeIndicator()
                     }
                 }
 
