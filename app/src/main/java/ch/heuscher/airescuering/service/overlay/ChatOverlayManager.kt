@@ -118,6 +118,16 @@ class ChatOverlayManager(
     var onScreenshotRequest: (() -> Unit)? = null
     var onVoiceInputRequest: (() -> Unit)? = null
 
+
+
+    /**
+     * Update the API key securely.
+     */
+    fun updateApiKey(apiKey: String) {
+        geminiService = GeminiApiService(apiKey, debug = true)
+        Log.d(TAG, "API key updated")
+    }
+
     init {
         geminiService = GeminiApiService(geminiApiKey, debug = true)
         stepPipManager = StepPipManager(context)

@@ -445,6 +445,17 @@ class OverlayService : Service() {
                 }
 
                 Log.d(TAG, "Chat overlay manager initialized")
+
+                // Observe API key changes to update the service
+                launch {
+                    ServiceLocator.aiHelperRepository.getApiKey().collect { newKey ->
+                        if (newKey.isNotEmpty()) {
+                             Log.d(TAG, "Updating API key in ChatOverlayManager")
+                             chatOverlayManager?.updateApiKey(newKey)
+                        }
+                    }
+                }
+
             } catch (e: Exception) {
                 Log.e(TAG, "Error initializing chat overlay", e)
             }

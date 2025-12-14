@@ -66,6 +66,24 @@ class SettingsActivity : AppCompatActivity() {
         setupApiKeyHelpLink()
     }
 
+
+
+    override fun onPause() {
+        super.onPause()
+        saveApiKey()
+    }
+
+    private fun saveApiKey() {
+        val apiKey = apiKeyInput.text.toString().trim()
+        lifecycleScope.launch {
+            aiHelperRepository.setApiKey(apiKey)
+            // Auto-enable AI helper when API key is provided
+            if (apiKey.isNotEmpty()) {
+                aiHelperRepository.setEnabled(true)
+            }
+        }
+    }
+
     private fun setupApiKeyHelpLink() {
         findViewById<android.widget.TextView>(R.id.api_key_help_link).setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://ai.google.dev"))
