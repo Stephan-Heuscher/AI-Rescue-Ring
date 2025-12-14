@@ -54,6 +54,8 @@ object AppConstants {
     const val ACTION_UPDATE_KEYBOARD = "ch.heuscher.airescuering.UPDATE_KEYBOARD"
     const val ACTION_SCREENSHOT_CAPTURED = "ch.heuscher.airescuering.SCREENSHOT_CAPTURED"
     const val ACTION_SCREENSHOT_FAILED = "ch.heuscher.airescuering.SCREENSHOT_FAILED"
+    const val ACTION_SHOW_INDICATOR = "ch.heuscher.airescuering.SHOW_INDICATOR"
+    const val ACTION_HIDE_INDICATOR = "ch.heuscher.airescuering.HIDE_INDICATOR"
 
     // SharedPreferences
     const val PREFS_NAME = "overlay_settings"

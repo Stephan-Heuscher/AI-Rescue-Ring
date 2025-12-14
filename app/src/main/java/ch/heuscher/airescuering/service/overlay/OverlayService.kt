@@ -53,6 +53,7 @@ class OverlayService : Service() {
     private lateinit var positionAnimator: PositionAnimator
     private lateinit var orientationHandler: OrientationHandler
     private var chatOverlayManager: ChatOverlayManager? = null
+    private var telestratorManager: TelestratorManager? = null
 
     // Service scope for coroutines
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -92,6 +93,26 @@ class OverlayService : Service() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_CONFIGURATION_CHANGED) {
                 handleOrientationChange()
+            }
+        }
+    }
+
+    // Broadcast receiver for Telestrator actions
+    private val telestratorReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.d(TAG, "Telestrator broadcast received: ${intent?.action}")
+            when (intent?.action) {
+                AppConstants.ACTION_SHOW_INDICATOR -> {
+                    val x = intent.getIntExtra("x", 0)
+                    val y = intent.getIntExtra("y", 0)
+                    val duration = intent.getLongExtra("duration", 10000L)
+                    Log.d(TAG, "Showing indicator at $x, $y for ${duration}ms")
+                    telestratorManager?.showIndicator(x, y, duration)
+                }
+                AppConstants.ACTION_HIDE_INDICATOR -> {
+                    Log.d(TAG, "Hiding indicator")
+                    telestratorManager?.removeIndicator()
+                }
             }
         }
     }
@@ -147,6 +168,9 @@ class OverlayService : Service() {
 
         // Initialize chat overlay manager
         initializeChatOverlay()
+
+        // Initialize Telestrator
+        telestratorManager = TelestratorManager(this, getSystemService(Context.WINDOW_SERVICE) as WindowManager)
     }
 
     override fun onDestroy() {
@@ -163,6 +187,7 @@ class OverlayService : Service() {
         unregisterReceiver(settingsReceiver)
         unregisterReceiver(keyboardReceiver)
         unregisterReceiver(configurationReceiver)
+        unregisterReceiver(telestratorReceiver)
 
         viewManager.removeOverlayView()
     }
@@ -210,11 +235,16 @@ class OverlayService : Service() {
         val settingsFilter = IntentFilter(AppConstants.ACTION_UPDATE_SETTINGS)
         val keyboardFilter = IntentFilter(AppConstants.ACTION_UPDATE_KEYBOARD)
         val configFilter = IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED)
+        val telestratorFilter = IntentFilter().apply {
+            addAction(AppConstants.ACTION_SHOW_INDICATOR)
+            addAction(AppConstants.ACTION_HIDE_INDICATOR)
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(settingsReceiver, settingsFilter, Context.RECEIVER_NOT_EXPORTED)
             registerReceiver(keyboardReceiver, keyboardFilter, Context.RECEIVER_NOT_EXPORTED)
             registerReceiver(configurationReceiver, configFilter, Context.RECEIVER_NOT_EXPORTED)
+            registerReceiver(telestratorReceiver, telestratorFilter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             @Suppress("DEPRECATION")
             registerReceiver(settingsReceiver, settingsFilter)
@@ -222,6 +252,8 @@ class OverlayService : Service() {
             registerReceiver(keyboardReceiver, keyboardFilter)
             @Suppress("DEPRECATION")
             registerReceiver(configurationReceiver, configFilter)
+            @Suppress("DEPRECATION")
+            registerReceiver(telestratorReceiver, telestratorFilter)
         }
     }
 

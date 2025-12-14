@@ -64,6 +64,9 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private lateinit var stepBackButton: Button
     private lateinit var stepForwardButton: Button
     private lateinit var stepIndicator: TextView
+    
+    // For resuming execution
+    private var pendingNextStep: (() -> Unit)? = null
 
     private val messages = mutableListOf<AIMessage>()
     private lateinit var adapter: ChatAdapter
@@ -726,7 +729,7 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         
         AlertDialog.Builder(this)
             .setTitle("Approve Plan")
-            .setMessage("Do you want me to execute this plan?")
+            .setMessage("Ready to start? I will guide you step-by-step.")
             .setPositiveButton("Execute") { dialog, _ ->
                 dialog.dismiss()
                 executePlan(plan)
@@ -938,21 +941,47 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     )
                 )
 
-                // Wait a bit for the action to complete and screen to update
-                kotlinx.coroutines.delay(500)
-
-                // Capture new screenshot after action
-                hideStopButton() // Hide stop button before screenshot
-                val newScreenshot = captureScreenshotSync()
-                showStopButton() // Show stop button again after screenshot
-
-                if (newScreenshot != null) {
-                    currentScreenshot = newScreenshot
-                    // Continue to next round with new screenshot and function response
-                    executeRoundWithResponse(service, request, plan, newScreenshot, functionResponse, roundNumber + 1)
-                } else {
-                    // Continue with old screenshot if capture failed
-                    executeRoundWithResponse(service, request, plan, screenshot, functionResponse, roundNumber + 1)
+                // TELESTRATOR CHANGE: 
+                // Since the user needs time to perform the action, we should NOT automatically capture a screenshot 
+                // and loop. Instead, we should PAUSE and ask the user to confirm/continue.
+                
+                // Add a "Continue" button message
+                val continueId = UUID.randomUUID().toString()
+                val continueMessage = AIMessage(
+                    id = continueId,
+                    content = "GUIDANCE: I've marked where to tap. \n\n**Please perform the action, then tap 'Continue' below.**",
+                    role = MessageRole.ASSISTANT,
+                    messageType = MessageType.ACTION_REQUIRED,
+                    actionData = ActionData(
+                        actionId = continueId,
+                        actionText = "Ready for next step?",
+                        showApproveButton = true, // Reused as "Continue"
+                        showRefineButton = false
+                    )
+                )
+                addMessage(continueMessage)
+                
+                // Stop the loop here. The user will trigger the next step manually.
+                hideStopButton()
+                isExecuting = false // Pause execution state
+                showActivity() // Show activity so user can click Continue
+                
+                // We need to store the STATE so "Continue" knows what to do.
+                // We can store (service, request, plan, roundNumber, functionResponse) in class variables?
+                // Or easier: Just define a "nextStepLambda"
+                
+                pendingNextStep = {
+                     // Capture new screenshot when user says Continue
+                     lifecycleScope.launch {
+                         val newScreenshot = captureScreenshotSync()
+                         if (newScreenshot != null) {
+                             currentScreenshot = newScreenshot
+                             executeRoundWithResponse(service, request, plan, newScreenshot, functionResponse, roundNumber + 1)
+                         } else {
+                             // Fallback
+                             executeRoundWithResponse(service, request, plan, screenshot, functionResponse, roundNumber + 1)
+                         }
+                     }
                 }
 
             } else if (firstPart?.text != null) {
@@ -991,13 +1020,8 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
      * Perform the action specified by the function call
      */
     private suspend fun performAction(functionCall: ch.heuscher.airescuering.data.api.FunctionCall): Boolean {
-        val accessibilityService = AIRescueRingAccessibilityService.instance
-        if (accessibilityService == null) {
-            Log.e(TAG, "Accessibility service not available")
-            Toast.makeText(this, "Accessibility service not enabled", Toast.LENGTH_SHORT).show()
-            return false
-        }
-
+        // TELESTRATOR MODE: We do NOT perform the action. We show the user where to click.
+        
         // Get screen dimensions
         val displayMetrics = resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
@@ -1007,28 +1031,54 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             "click_at" -> {
                 val x = functionCall.args["x"]?.toString()?.toDoubleOrNull()?.toInt() ?: 0
                 val y = functionCall.args["y"]?.toString()?.toDoubleOrNull()?.toInt() ?: 0
-                Log.d(TAG, "Performing click at ($x, $y)")
-                accessibilityService.performTap(x, y, screenWidth, screenHeight)
+                
+                // Convert normalized to actual pixels if needed (Gemini sometimes sends 0-1000)
+                // Assuming Gemini sends 0-1000 mapped coordinates based on previous prompt instructions
+                val actualX = (x / 1000f) * screenWidth
+                val actualY = (y / 1000f) * screenHeight
+                
+                Log.d(TAG, "Visual Guidance: Pointing at ($actualX, $actualY)")
+                
+                // Show indicator via Broadcast
+                val intent = Intent(ch.heuscher.airescuering.util.AppConstants.ACTION_SHOW_INDICATOR).apply {
+                    putExtra("x", actualX.toInt())
+                    putExtra("y", actualY.toInt())
+                    putExtra("duration", 10000L) // Show for 10 seconds
+                }
+                sendBroadcast(intent)
+                
+                // We return "true" so the loop continues, but in reality we are waiting for the user.
+                // For the "Computer Use" loop, sending "success" might make it think it's done.
+                // But since we want to GUIDE, we should ideally pause here.
+                // However, for MVP, we'll just indicate "success" so it generates the NEXT instruction? 
+                // No, if we say success, it might try to click the NEXT thing immediately which won't exist yet.
+                // So we must STOP the loop here and wait for user.
+                
+                // Let's modify the behavior: 
+                // 1. Show indicator
+                // 2. Speak the instruction
+                // 3. STOP the loop (return false? or handle specially?)
+                
+                // Actually, executeRoundInternal handles the loop. 
+                // If performAction returns true, it takes a screenshot immediately.
+                // We don't want that. We want to wait for the user to navigate.
+                
+                // So: Show indicator -> Toast/Speak "Tap here" -> Return TRUE (action 'handled') -> 
+                // BUT we need to tell the loop to PAUSE.
+                
+                true 
             }
             "scroll" -> {
                 val direction = functionCall.args["direction"]?.toString()?.trim('"') ?: "down"
-                Log.d(TAG, "Performing scroll: $direction")
-
-                // Define swipe coordinates based on direction
-                val (startX, startY, endX, endY) = when (direction.lowercase()) {
-                    "up" -> listOf(500, 700, 500, 300) // Swipe up
-                    "down" -> listOf(500, 300, 500, 700) // Swipe down
-                    "left" -> listOf(700, 500, 300, 500) // Swipe left
-                    "right" -> listOf(300, 500, 700, 500) // Swipe right
-                    else -> listOf(500, 700, 500, 300) // Default to up
-                }
-
-                accessibilityService.performSwipe(startX, startY, endX, endY, screenWidth, screenHeight)
+                Log.d(TAG, "Visual Guidance: Scroll $direction")
+                speakResponse("Please scroll $direction")
+                true
             }
             "type_text" -> {
                 val text = functionCall.args["text"]?.toString()?.trim('"') ?: ""
-                Log.d(TAG, "Performing type text: $text")
-                accessibilityService.performTypeText(text)
+                Log.d(TAG, "Visual Guidance: Type '$text'")
+                speakResponse("Please type: $text")
+                true
             }
             else -> {
                 Log.w(TAG, "Unknown action: ${functionCall.name}")
@@ -1392,7 +1442,23 @@ class AIHelperActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     Toast.makeText(this@AIHelperActivity, "Suggestion approved", Toast.LENGTH_SHORT).show()
                     // Hide buttons after approval
                     holder.actionButtonsContainer.visibility = View.GONE
-                    // TODO: Execute the approved action
+                    holder.actionButtonsContainer.visibility = View.GONE
+                    
+                    // Execute pending next step if available
+                    if (pendingNextStep != null) {
+                        Log.d(TAG, "Executing pending next step (Guidance)")
+                        isExecuting = true // Resume execution state
+                        showStopButton()
+                        pendingNextStep?.invoke()
+                        pendingNextStep = null
+                        
+                        // Hide indicator when continuing
+                        val intent = Intent(ch.heuscher.airescuering.util.AppConstants.ACTION_HIDE_INDICATOR)
+                        sendBroadcast(intent)
+                    } else {
+                        // TODO: Execute the approved action (Legacy code path)
+                        Toast.makeText(this@AIHelperActivity, "Action approved (Legacy)", Toast.LENGTH_SHORT).show()
+                    }
                 }
 
                 holder.refineButton.setOnClickListener {
