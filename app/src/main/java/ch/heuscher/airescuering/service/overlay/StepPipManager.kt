@@ -403,75 +403,18 @@ class StepPipManager(
             val xPos = (screenWidth * xPercent / 100)
             val yPos = statusBarHeight + (usableHeight * yPercent / 100)
             
-            // Get highlight size (120dp converted to pixels)
-            val density = context.resources.displayMetrics.density
-            val highlightSizePx = (60 * density).toInt() // Half of 120dp for centering
-            
-            if (highlightView == null) {
-                val inflater = LayoutInflater.from(context)
-                highlightView = inflater.inflate(R.layout.highlight_overlay, null)
-
-                highlightContainer = highlightView?.findViewById(R.id.highlightContainer)
-                highlightPulse = highlightView?.findViewById(R.id.highlightPulse)
-                highlightLabel = highlightView?.findViewById(R.id.highlightLabel)
+            // Send broadcast to show Telestrator indicator
+            val intent = android.content.Intent(ch.heuscher.airescuering.util.AppConstants.ACTION_SHOW_INDICATOR).apply {
+                putExtra("x", xPos)
+                putExtra("y", yPos)
+                putExtra("duration", 0L) // Show indefinitely until step changes
+                setPackage(context.packageName) // Explicit intent for security
             }
-            
-            // Position at exact coordinates using TOP|START gravity
-            val highlightParams = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                } else {
-                    @Suppress("DEPRECATION")
-                    WindowManager.LayoutParams.TYPE_PHONE
-                },
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                PixelFormat.TRANSLUCENT
-            ).apply {
-                gravity = Gravity.TOP or Gravity.START
-                // Center the highlight on the tap position
-                x = xPos - highlightSizePx
-                y = yPos - highlightSizePx
-            }
+            context.sendBroadcast(intent)
 
-            // Remove and re-add to update position
-            try {
-                windowManager.removeView(highlightView)
-            } catch (e: Exception) {
-                // View not attached yet
-            }
-            windowManager.addView(highlightView, highlightParams)
-
-            // Show the highlight elements
-            highlightLabel?.text = "Tap here"
-            highlightLabel?.visibility = View.VISIBLE
-            highlightPulse?.visibility = View.VISIBLE
-
-            // Start pulse animation
-            startPulseAnimation()
-
-            Log.d(TAG, "Showing highlight at ($xPercent%, $yPercent%) = pixel ($xPos, $yPos), statusBar=$statusBarHeight, navBar=$navBarHeight, usableHeight=$usableHeight")
+            Log.d(TAG, "Broadcasting show indicator at ($xPercent%, $yPercent%) = pixel ($xPos, $yPos)")
         } catch (e: Exception) {
             Log.e(TAG, "Error showing highlight", e)
-        }
-    }
-
-    /**
-     * Start the pulsing animation for highlight
-     */
-    private fun startPulseAnimation() {
-        pulseAnimator?.cancel()
-
-        highlightPulse?.let { pulse ->
-            pulseAnimator = ObjectAnimator.ofFloat(pulse, "alpha", 0.3f, 1f, 0.3f).apply {
-                duration = 1500
-                repeatCount = ValueAnimator.INFINITE
-                interpolator = AccelerateDecelerateInterpolator()
-                start()
-            }
         }
     }
 
@@ -480,16 +423,12 @@ class StepPipManager(
      */
     private fun hideHighlight() {
         try {
-            pulseAnimator?.cancel()
-            pulseAnimator = null
-
-            highlightView?.let { 
-                windowManager.removeView(it) 
+            // Send broadcast to hide Telestrator indicator
+            val intent = android.content.Intent(ch.heuscher.airescuering.util.AppConstants.ACTION_HIDE_INDICATOR).apply {
+                setPackage(context.packageName)
             }
-            highlightView = null
-            highlightContainer = null
-            highlightPulse = null
-            highlightLabel = null
+            context.sendBroadcast(intent)
+            Log.d(TAG, "Broadcasting hide indicator")
         } catch (e: Exception) {
             Log.e(TAG, "Error hiding highlight", e)
         }
