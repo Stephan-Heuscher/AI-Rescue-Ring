@@ -21,28 +21,29 @@ class TelestratorView @JvmOverloads constructor(
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        strokeWidth = 8f
-        color = Color.RED // Default, will be updated
+        strokeWidth = 12f
+        color = Color.RED
     }
 
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         color = Color.RED
-        alpha = 50
+        alpha = 80 // Slightly more visible fill
+    }
+    
+    // Additional glow paint
+    private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 20f
+        color = Color.RED
+        alpha = 100
+        maskFilter = android.graphics.BlurMaskFilter(30f, android.graphics.BlurMaskFilter.Blur.OUTER)
     }
 
     private var pulseAnimator: ValueAnimator? = null
     private var currentRadius = 0f
-    private var maxRadius = 100f
+    private var maxRadius = 150f // Larger max radius
     private var currentAlpha = 255
-
-    // Target coordinates relative to the screen (raw pixels)
-    // The view itself will be positioned by WindowManager at (0,0) covering the whole screen,
-    // or positioned specifically at the target. 
-    // Decision: It's better to position the VIEW at the target location to avoid drawing full screen 
-    // overlay which might block touches if not careful.
-    // However, if we want to draw arrows, we might need more space.
-    // For "Click Here" rings, a small constrained view at coordinates is best.
 
     init {
         // Start pulsing immediately
@@ -52,7 +53,8 @@ class TelestratorView @JvmOverloads constructor(
     fun setColor(color: Int) {
         paint.color = color
         fillPaint.color = color
-        fillPaint.alpha = 50
+        fillPaint.alpha = 80
+        glowPaint.color = color
         invalidate()
     }
 
@@ -60,21 +62,22 @@ class TelestratorView @JvmOverloads constructor(
         pulseAnimator?.cancel()
         
         pulseAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 1500
+            duration = 1200 // Faster pulse
             repeatCount = ValueAnimator.INFINITE
             repeatMode = ValueAnimator.RESTART
             interpolator = DecelerateInterpolator()
             
             addUpdateListener { animator ->
                 val fraction = animator.animatedValue as Float
-                // Radius grows from 0% to 100% of view size
+                // Radius grows from 0% to 100% of view size (clamped)
                 val size = Math.min(width, height) / 2f
                 currentRadius = fraction * size
                 
                 // Alpha fades out as it grows
                 currentAlpha = ((1f - fraction) * 255).toInt()
                 paint.alpha = currentAlpha
-                fillPaint.alpha = (currentAlpha * 0.2f).toInt() // Fill is always more transparent
+                fillPaint.alpha = (currentAlpha * 0.3f).toInt()
+                glowPaint.alpha = (currentAlpha * 0.5f).toInt()
                 
                 invalidate()
             }
@@ -88,17 +91,25 @@ class TelestratorView @JvmOverloads constructor(
         val cx = width / 2f
         val cy = height / 2f
         
+        // Draw glow
+        canvas.drawCircle(cx, cy, currentRadius, glowPaint)
+
         // Draw the fill
         canvas.drawCircle(cx, cy, currentRadius, fillPaint)
         
         // Draw the stroke/ring
         canvas.drawCircle(cx, cy, currentRadius, paint)
         
-        // Draw a solid center dot that always stays
+        // Draw a solid center dot that always stays visible
         paint.alpha = 255
         paint.style = Paint.Style.FILL
-        canvas.drawCircle(cx, cy, 10f, paint)
+        canvas.drawCircle(cx, cy, 15f, paint) // Larger center dot
         
+        // Draw a second, static ring for constant visibility
+        paint.style = Paint.Style.STROKE
+        paint.alpha = 150
+        canvas.drawCircle(cx, cy, 30f, paint)
+
         // Restore paint style
         paint.style = Paint.Style.STROKE
     }
