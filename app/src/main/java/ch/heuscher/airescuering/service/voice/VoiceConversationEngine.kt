@@ -37,6 +37,7 @@ class VoiceConversationEngine(
 ) {
     companion object {
         private const val TAG = "VoiceConversationEngine"
+        private const val MAX_LISTENING_RETRIES = 3
     }
 
     enum class State {
@@ -64,6 +65,7 @@ class VoiceConversationEngine(
     private var conversationHistory: MutableList<Pair<String, String>> = mutableListOf() // role, content
     private var currentJob: Job? = null
     private var apiKey: String = ""
+    private var listeningRetryCount: Int = 0
 
     /**
      * Set the API key and/or proxy URL for Gemini. 
@@ -87,6 +89,7 @@ class VoiceConversationEngine(
         Log.d(TAG, "Starting new conversation. Screenshot=${screenshot != null}, app=$foregroundApp")
         currentScreenshot = screenshot
         conversationHistory.clear()
+        listeningRetryCount = 0
 
         // Transition to greeting
         setState(State.GREETING)
@@ -112,12 +115,15 @@ class VoiceConversationEngine(
      */
     fun processMessage(userMessage: String) {
         if (userMessage.isBlank()) {
-            startListening() // Retry listening
+            retryListening("Blank message")
             return
         }
 
         Log.d(TAG, "Processing user message: \"$userMessage\"")
         onTranscription?.invoke(userMessage)
+        
+        // Reset retry count on any valid message
+        listeningRetryCount = 0
 
         // Check for voice command to adjust speed
         if (handleVoiceCommand(userMessage)) return
@@ -241,11 +247,12 @@ class VoiceConversationEngine(
      * Start listening for speech input (STT).
      */
     fun startListening() {
-        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
-            Log.w(TAG, "Speech recognition not available")
-            onError?.invoke("Speech recognition not available")
-            return
-        }
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+                Log.w(TAG, "Speech recognition not available")
+                onError?.invoke("Speech recognition not available")
+                return@post
+            }
 
         setState(State.LISTENING)
 
@@ -263,8 +270,8 @@ class VoiceConversationEngine(
                     if (bestResult.isNotBlank()) {
                         processMessage(bestResult)
                     } else {
-                        // Empty result - keep listening
-                        startListening()
+                        // Empty result - retry a few times then retire
+                        retryListening("Empty STT result")
                     }
                 }
 
@@ -277,18 +284,13 @@ class VoiceConversationEngine(
                     }
                     Log.d(TAG, "STT error: $errorMessage")
                     
-                    // On timeout or no match, just go back to idle
+                    // On timeout or no match, retire gracefully
                     if (error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || 
                         error == SpeechRecognizer.ERROR_NO_MATCH) {
-                        // User didn't say anything - retire gracefully
-                        val farewell = personality.getFarewell()
-                        setState(State.SPEAKING)
-                        voiceManager.speak(farewell) {
-                            stopConversation()
-                        }
+                        retireGracefully()
                     } else {
-                        // Real error - keep listening
-                        startListening()
+                        // Real error - keep listening until retry limit
+                        retryListening("STT error: $errorMessage")
                     }
                 }
 
@@ -321,11 +323,37 @@ class VoiceConversationEngine(
             }
 
             speechRecognizer?.startListening(intent)
-            Log.d(TAG, "STT listening started")
+            Log.d(TAG, "STT listening started (retry count: $listeningRetryCount)")
             
         } catch (e: Exception) {
             Log.e(TAG, "Error starting speech recognition", e)
             setState(State.IDLE)
+        }
+        } // end of main thread post
+    }
+
+    private fun retryListening(reason: String) {
+        listeningRetryCount++
+        Log.d(TAG, "Retrying listening (count: $listeningRetryCount/$MAX_LISTENING_RETRIES). Reason: $reason")
+        
+        if (listeningRetryCount < MAX_LISTENING_RETRIES) {
+            // Wait a short moment before retrying to avoid rapid cycles
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                if (state == State.LISTENING) {
+                    startListening()
+                }
+            }, 500)
+        } else {
+            Log.w(TAG, "Max listening retries reached. Retiring.")
+            retireGracefully()
+        }
+    }
+
+    private fun retireGracefully() {
+        val farewell = personality.getFarewell()
+        setState(State.SPEAKING)
+        voiceManager.speak(farewell) {
+            stopConversation()
         }
     }
 
@@ -335,9 +363,15 @@ class VoiceConversationEngine(
     fun stopConversation() {
         Log.d(TAG, "Stopping conversation")
         currentJob?.cancel()
-        speechRecognizer?.cancel()
-        speechRecognizer?.destroy()
-        speechRecognizer = null
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            try {
+                speechRecognizer?.cancel()
+                speechRecognizer?.destroy()
+                speechRecognizer = null
+            } catch (e: Exception) {
+                Log.e(TAG, "Error destroying speech recognizer", e)
+            }
+        }
         voiceManager.stop()
         currentScreenshot = null
         setState(State.IDLE)

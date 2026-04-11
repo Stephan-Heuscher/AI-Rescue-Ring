@@ -116,22 +116,36 @@ class ButlerVoiceManager(
             override fun onDone(utteranceId: String?) {
                 isSpeaking = false
                 Log.d(TAG, "Speaking done: $utteranceId")
-                onSpeechDone?.invoke()
-                onSpeechDone = null
+                invokeAndClearCallback()
+            }
+
+            override fun onStop(utteranceId: String?, interrupted: Boolean) {
+                isSpeaking = false
+                Log.d(TAG, "Speaking stopped: $utteranceId (interrupted=$interrupted)")
+                clearCallback()
             }
 
             @Deprecated("Deprecated in API")
             override fun onError(utteranceId: String?) {
                 isSpeaking = false
                 Log.e(TAG, "Speaking error: $utteranceId")
-                onSpeechDone?.invoke()
-                onSpeechDone = null
+                invokeAndClearCallback()
             }
         })
         
         isReady = true
         onReady?.invoke()
         Log.d(TAG, "Butler voice manager ready. Rate=$speechRate, Pitch=$BUTLER_PITCH")
+    }
+
+    private fun invokeAndClearCallback() {
+        val callback = onSpeechDone
+        onSpeechDone = null
+        callback?.invoke()
+    }
+
+    private fun clearCallback() {
+        onSpeechDone = null
     }
 
     /**
@@ -243,6 +257,7 @@ class ButlerVoiceManager(
      */
     fun stop() {
         tts?.stop()
+        clearCallback()
         isSpeaking = false
     }
 
