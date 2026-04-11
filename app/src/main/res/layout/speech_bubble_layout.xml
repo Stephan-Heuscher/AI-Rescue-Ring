@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- J-AI-mes Speech Bubble Layout - shows what J-AI-mes is saying -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <LinearLayout
+        android:id="@+id/speech_bubble_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/speech_bubble_background"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:maxWidth="280dp"
+        android:minWidth="120dp"
+        android:elevation="4dp">
+
+        <TextView
+            android:id="@+id/speech_bubble_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/primary"
+            android:textSize="15sp"
+            android:fontFamily="sans-serif-medium"
+            android:lineSpacingMultiplier="1.2"
+            android:maxLines="4"
+            android:ellipsize="end" />
+
+        <!-- Listening indicator (visible when J-AI-mes is listening) -->
+        <TextView
+            android:id="@+id/listening_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎤"
+            android:textSize="18sp"
+            android:layout_gravity="center_horizontal"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</FrameLayout>

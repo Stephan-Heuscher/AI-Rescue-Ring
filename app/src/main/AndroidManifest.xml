@@ -10,6 +10,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
 
+    <!-- TTS engine discovery (required for Android 11+) -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -44,12 +51,6 @@
             android:theme="@style/Theme.Material3.DayNight"
             android:parentActivityName=".SettingsActivity" />
 
-        <activity
-            android:name=".AIHelperActivity"
-            android:exported="false"
-            android:label="AI Helper"
-            android:theme="@style/Theme.AIRescueRing.Transparent"
-            android:launchMode="singleTop" />
 
         <service
             android:name=".service.overlay.OverlayService"

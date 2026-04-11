@@ -1,9 +1,11 @@
-﻿package ch.heuscher.airescuering.data.api
+package ch.heuscher.airescuering.data.api
 
 import android.graphics.Bitmap
 import android.util.Base64
 import android.util.Log
+import ch.heuscher.airescuering.data.firebase.FirebaseAuthManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -16,16 +18,61 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Service for interacting with the Gemini API.
- * Handles requests to Gemini models with thinking mode enabled.
+ * Supports two modes:
+ * - **Direct mode**: When apiKey is provided, calls Gemini API directly.
+ * - **Proxy mode**: When apiKey is empty, routes through Firebase Cloud Function.
  */
 class GeminiApiService(
-    private val apiKey: String,
+    private val apiKey: String = "",
+    private val proxyUrl: String = "",
     private val debug: Boolean = false
 ) {
     companion object {
         private const val TAG = "GeminiApiService"
         private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
         private const val TIMEOUT_SECONDS = 60L
+    }
+
+    /** True when no API key is set and a proxy URL is available. */
+    val useProxy: Boolean get() = apiKey.isBlank() && proxyUrl.isNotBlank()
+
+    /**
+     * Builds an OkHttp Request for either direct or proxy mode.
+     *
+     * Direct mode: POST to Gemini API with ?key=... 
+     * Proxy mode:  POST to Cloud Function with Firebase Auth token, wrapping model in body.
+     */
+    private suspend fun buildHttpRequest(
+        model: String,
+        geminiRequest: GeminiRequest
+    ): Request {
+        val requestJson = json.encodeToString(GeminiRequest.serializer(), geminiRequest)
+
+        if (useProxy) {
+            // Proxy mode: wrap with model field, add auth header
+            val proxyBody = buildString {
+                // Insert "model" into the JSON object
+                append("{\"model\":\"$model\",")
+                append(requestJson.substring(1)) // skip opening {
+            }
+            val idToken = FirebaseAuthManager.getIdToken()
+                ?: throw Exception("Firebase authentication failed. Please check your connection.")
+
+            Log.d(TAG, "Using proxy mode → $proxyUrl")
+            return Request.Builder()
+                .url(proxyUrl)
+                .addHeader("Authorization", "Bearer $idToken")
+                .post(proxyBody.toRequestBody("application/json".toMediaType()))
+                .build()
+        } else {
+            // Direct mode: call Gemini API with key
+            val url = "$BASE_URL/$model:generateContent?key=$apiKey"
+            Log.d(TAG, "Using direct mode → $model")
+            return Request.Builder()
+                .url(url)
+                .post(requestJson.toRequestBody("application/json".toMediaType()))
+                .build()
+        }
     }
 
     private val json = Json {
@@ -97,17 +144,10 @@ class GeminiApiService(
                 }
             )
 
-            val url = "$BASE_URL/$model:generateContent?key=$apiKey"
-            val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
-                .toRequestBody("application/json".toMediaType())
-
-            val httpRequest = Request.Builder()
-                .url(url)
-                .post(requestBody)
-                .build()
+            val httpRequest = buildHttpRequest(model, request)
 
             if (debug) {
-                Log.d(TAG, "Request: $requestBody")
+                Log.d(TAG, "Request to model: $model")
             }
 
             client.newCall(httpRequest).execute().use { response ->
@@ -173,11 +213,11 @@ class GeminiApiService(
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
             val systemPrompt = """
-You are a patient, friendly AI rescue assistant helping technically challenged users with their Android device. Your goal is to guide them step-by-step through tasks in the simplest way possible.
+You are J-AI-mes, a personal AI butler. You are warm, professional, and attentive. Your goal is to help the user with anything on their phone in a concise, dignified manner.
 
-RESCUE HELPER APP CAPABILITIES:
+J-AI-MES CAPABILITIES:
 - You can see the user's screen through screenshots
-- After completing steps, users can take a new screenshot with the 📸 button to show you their progress
+- You speak your responses aloud, so keep them concise (max 2-3 sentences)
 - Users navigate through your steps one at a time using forward ▶ and back ◀ buttons
 - A compact floating instruction window appears that users can drag around
 - You can tell the app WHERE to position itself and WHERE to show a tap indicator
@@ -276,7 +316,7 @@ EXAMPLE:
                 )
             )
 
-            val url = "$BASE_URL/gemini-3-pro-preview:generateContent?key=$apiKey"
+            val url = "$BASE_URL/gemini-3.1-flash-lite-preview:generateContent?key=$apiKey"
             val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
                 .toRequestBody("application/json".toMediaType())
 
@@ -346,7 +386,7 @@ EXAMPLE:
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
             val systemPrompt = """
-You are a patient, friendly AI rescue assistant helping technically challenged users with their Android device. The user has shared a screenshot of their screen.
+You are J-AI-mes, a personal AI butler. The user has shared a screenshot of their screen. You are warm, professional, and concise.
 
 IMPORTANT GUIDELINES:
 - Analyze the screenshot carefully to understand what the user sees
@@ -403,7 +443,7 @@ Example:
                 )
             )
 
-            val url = "$BASE_URL/gemini-3-pro-preview:generateContent?key=$apiKey"
+            val url = "$BASE_URL/gemini-3.1-flash-lite-preview:generateContent?key=$apiKey"
             val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
                 .toRequestBody("application/json".toMediaType())
 
@@ -471,7 +511,7 @@ Example:
         context: String = ""
     ): Result<String> {
         val systemPrompt = """
-You are an AI assistant helping users with their Android device.
+You are J-AI-mes, a personal AI butler helping users with their Android device.
 
 When provided with a screenshot and user request:
 1. Analyze the screenshot to understand what's on screen
@@ -510,7 +550,7 @@ METADATA RULES:
 
         return if (screenshot != null) {
             generateContentWithImage(
-                model = "gemini-3-pro-preview",
+                model = "gemini-3.1-flash-lite-preview",
                 text = userMessage,
                 image = screenshot,
                 systemPrompt = systemPrompt
@@ -582,14 +622,7 @@ METADATA RULES:
                 }
             )
 
-            val url = "$BASE_URL/$model:generateContent?key=$apiKey"
-            val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
-                .toRequestBody("application/json".toMediaType())
-
-            val httpRequest = Request.Builder()
-                .url(url)
-                .post(requestBody)
-                .build()
+            val httpRequest = buildHttpRequest(model, request)
 
             if (debug) {
                 Log.d(TAG, "Request with image: text=$text, imageSize=${image.width}x${image.height}")
@@ -701,14 +734,7 @@ METADATA RULES:
                 }
             )
 
-            val url = "$BASE_URL/$model:generateContent?key=$apiKey"
-            val requestBody = json.encodeToString(GeminiRequest.serializer(), request)
-                .toRequestBody("application/json".toMediaType())
-
-            val httpRequest = Request.Builder()
-                .url(url)
-                .post(requestBody)
-                .build()
+            val httpRequest = buildHttpRequest(model, request)
 
             if (debug) {
                 Log.d(TAG, "Full content request: model=$model, contents=${contents.size}")

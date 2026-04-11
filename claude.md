@@ -1,72 +1,87 @@
-# AI Rescue Ring - Project Context
+# J-AI-mes - Project Context
 
 ## Project Overview
-Android app providing AI-powered assistance through a floating rescue ring UI. Users can access AI help from anywhere on their device via a persistent floating button. **Voice-first design optimized for elderly users**.
+Android app providing AI-powered personal butler assistance through a floating overlay button. Users access J-AI-mes from anywhere on their device via a persistent floating butler button. **Voice-first design** with speech as primary input/output. Formerly "AI Rescue Ring", rebranded while keeping the same Play Store listing.
 
 ## Tech Stack
 - **Language**: Kotlin
 - **Platform**: Android
-- **AI Model**: Gemini 3 Pro Preview (gemini-3-pro-preview)
-- **API**: Google Generative AI API
-- **UI**: Material Design components, RecyclerView for chat
-- **Voice**: Android TTS and Speech Recognition for voice-first interaction
+- **AI Model**: Gemini 3.1 Flash Lite (gemini-3.1-flash-lite-preview) for conversation
+- **AI Model (Actions)**: Gemini 3 Pro Preview for computer use / complex tasks
+- **API**: Google Generative AI API (via Firebase proxy)
+- **UI**: Material Design components, floating overlay
+- **Voice**: Android TTS (Google engine, butler-tuned) and Speech Recognition
 
 ## Key Requirements
 
 ### AI Model Configuration
-- **Default Model**: `gemini-3-pro-preview`
-  - Configured in: `app/src/main/java/ch/heuscher/airescuering/data/local/SecureAIHelperDataSource.kt:33`
-- **Computer Use**: Enabled with proper tool definitions
+- **Default Model**: `gemini-3.1-flash-lite-preview`
+  - Configured in: `app/src/main/java/ch/heuscher/airescuering/data/local/SecureAIHelperDataSource.kt`
+- **Computer Use**: Enabled with proper tool definitions for `gemini-3-pro-preview`
 - **User Approval Flow**: ALL AI-suggested actions MUST be approved by user via dialog before execution
 
-### Voice-First Mode (Elderly-Friendly)
-- **Voice-First Mode**: Auto-start voice input after greeting (default: ON)
-- **Auto-Speak Responses**: Read all AI responses aloud via TTS (default: ON)
-- **Ring Size Presets**: Small (48dp), Medium (64dp), Large (96dp), Extra Large (128dp)
-- **PiP Overlay Mode**: Floating step-by-step instructions as backup display mode
-- **Voice Limitations**: Voice input via overlay not available (Android RecognizerIntent restriction). Users can enable voice through accessibility service settings.
+### Voice-First Butler Mode
+- **Butler Voice**: British English male (en-gb) or German male (de-de) via Google TTS
+- **Butler Tuning**: Pitch 0.92, Speech rate 0.88x (measured, dignified)
+- **Speaking Speed**: User-configurable 0.5x - 1.5x slider
+- **Auto-Speak**: All responses spoken aloud via TTS (always on)
+- **Auto-Listen**: Voice input auto-activates after greeting
+- **Locale**: German for 'de' locale, British English otherwise
+
+### Butler Personality
+- Warm, professional, attentive concierge
+- British English: "sir/ma'am", "Very well", "Certainly"
+- German: formal "Sie", "Sehr wohl", "Selbstverständlich"  
+- Time-aware greetings (Good morning / Guten Morgen)
+- Context-aware: knows which app user is in
+- Concise: max 2-3 sentences for spoken responses
+
+### Proactive Monitoring (Configurable)
+- **Level 0 (Passive)**: Only responds when tapped
+- **Level 1 (Notifications)**: Notices notifications, offers to read
+- **Level 2 (Screen)**: Periodic screen analysis for helpable situations
+- **Level 3 (Full Companion)**: All above + periodic check-ins
 
 ### User Interface
-- **Chat Interface**: Semi-transparent overlay over the current screen
-- **Floating Ring**: Persistent accessibility service-based overlay (configurable size)
-- **Message Display**: RecyclerView with user/assistant message differentiation
-- **Voice Input**: Supported via Android's RecognizerIntent
-- **TTS Output**: All responses spoken aloud in voice-first mode
+- **Butler Button**: Floating overlay (96dp default, navy+gold butler icon)
+- **Speech Bubble**: Minimal overlay showing J-AI-mes' words near button
+- **Voice Input Bar**: Bottom of screen during active conversation
+- **applicationId**: `ch.heuscher.airescuering` (kept for Play Store continuity)
 
 ### API Integration
 - **Service**: `app/src/main/java/ch/heuscher/airescuering/data/api/GeminiApiService.kt`
 - **Models**: `app/src/main/java/ch/heuscher/airescuering/data/api/GeminiApiModels.kt`
 - **Tool Support**: Computer Use tool with ENVIRONMENT_BROWSER
-- **Response Types**: Text responses OR function calls (requires user approval)
+- **Future**: Firebase proxy for API key management (zero user friction)
 
 ### Data Storage
-- **API Key**: Stored unencrypted in SharedPreferences for cloud backup support
 - **Preferences**: `ai_helper_prefs` in standard SharedPreferences
-- **Configuration**: AIHelperConfig domain model
+- **Speaking Speed**: `KEY_SPEAKING_SPEED` (float, default 0.88)
+- **Proactive Level**: `KEY_PROACTIVE_LEVEL` (int, 0-3, default 0)
 
 ## Architecture
 
 ### Key Files
-- **AIHelperActivity.kt**: Main chat interface with approval dialogs
+- **ButlerVoiceManager.kt**: TTS voice selection, speed control, butler phrases
+- **ButlerPersonality.kt**: System prompts, greetings, locale-aware persona
 - **GeminiApiService.kt**: API communication layer
-- **GeminiApiModels.kt**: Request/response data models with Computer Use support
 - **SecureAIHelperDataSource.kt**: Local data persistence
-- **AIHelperConfig.kt**: Domain model for configuration
+- **OverlayService.kt**: Floating butler button management
+- **AIRescueRingAccessibilityService.kt**: Screen reading + gesture execution
+- **ComputerUseAgent.kt**: Agentic action execution loop
 
-### Function Call Flow
-1. User sends message
-2. API returns `GeminiContentResult` (text OR functionCall)
-3. If functionCall → show approval dialog (`showActionApprovalDialog`)
-4. User approves/denies → decision recorded in chat
-5. (Action execution not yet implemented)
+### Brand Colors
+- Primary (Navy): #1A1B3A
+- Accent (Gold): #D4AF37
+- Text: #F5F0E8 (warm white)
+- Success: #2E7D4F
+- Error: #C44D56
 
 ## Development Guidelines
 
 ### Git Workflow
 - Commit messages should be descriptive and follow conventional commits format
 - Include context in commit messages (what/why)
-- Test changes before committing when possible
-- Branch naming: Claude automatically creates branches with session IDs
 
 ### Code Conventions
 - **File Operations**: Always prefer `Edit` over `Write` for existing files
@@ -74,74 +89,18 @@ Android app providing AI-powered assistance through a floating rescue ring UI. U
 - **Kotlin Style**: Follow existing code patterns in the codebase
 - **Emojis**: Never use emojis unless explicitly requested by user
 - **Logging**: Use Android Log.d/Log.e with appropriate tags
-
-### Model Response Handling
-When handling Gemini API responses:
-```kotlin
-result.onSuccess { response ->
-    when {
-        response.hasText -> {
-            // Display text in chat
-        }
-        response.hasFunctionCall -> {
-            // Show approval dialog
-            showActionApprovalDialog(response.functionCall!!)
-        }
-    }
-}
-```
+- **Butler Voice**: All user-facing text should sound natural when spoken aloud
+- **Locale**: Always provide German (de) and English (en) versions of strings
 
 ## Important Constraints
 
-### Computer Use Tool
-- Tool must be included in API requests when using computer-use model
-- Format: `Tool(computerUse = ComputerUse(environment = "ENVIRONMENT_BROWSER"))`
-- Model expects tool definitions or will return error
+### Play Store Continuity
+- **CRITICAL**: Keep `applicationId = "ch.heuscher.airescuering"` 
+- Only the user-facing name changes to "J-AI-mes"
+- Existing users receive J-AI-mes as a seamless update
 
-### User Approval
-- **Critical**: NO action execution without explicit user approval
-- Approval dialog shows: action name, parameters, approve/deny buttons
-- User decisions recorded in chat history
-- Currently shows toast notification (execution not implemented)
-
-## Common Tasks
-
-### Changing AI Model
-Edit `DEFAULT_MODEL` in `SecureAIHelperDataSource.kt:33`
-
-### Modifying System Prompt
-Edit `systemPrompt` in `GeminiApiService.kt:157-176` (generateAssistanceSuggestion method)
-
-### Adding New Tool Definitions
-Add to `GeminiApiModels.kt` following the pattern of `Tool` and `ComputerUse` classes
-
-### Updating API Request Structure
-Modify `GeminiRequest` in `GeminiApiModels.kt` and corresponding serialization in `GeminiApiService.kt`
-
-## Testing Notes
-- Gradle builds may fail in sandboxed environments (network restrictions)
-- Focus on code correctness and architecture
-- Test compilation when possible, but network errors are expected
-
-## Recent Changes (Session: November 29, 2025)
-
-### Issues Fixed
-1. **Microphone Accessibility**: Voice button on overlay shows informative toast (Android doesn't allow RecognizerIntent from overlay apps). Users can use accessibility service instead.
-2. **Step Parsing**: Improved step parsing in ChatOverlayManager to use regex `findAll` instead of `split` - now correctly handles LLM responses with intro text before steps, preventing "success after one step" issue.
-3. **Settings Layout Consistency**: Fixed settings activity to have fixed orange header outside ScrollView (matching main activity and legal notice).
-4. **Step Hint Timing**: Fixed off-by-one issue - now shows confirmation for current step instead of announcing next step too early.
-5. **PiP Completion Flow**: Window now stays open with congratulations message when all steps completed, instead of immediately closing. User must tap X button to close.
-6. **UI Consistency**: All three main activities (main, settings, legal notice) now have consistent fixed orange headers.
-7. **Accessibility Text**: Shortened "allow_navigation_message" dialog from very long explanation to concise, elderly-friendly version.
-
-### Key Code Changes
-- **ChatOverlayManager.kt**: Improved step parsing with regex findAll to extract steps from any position in response. Voice button shows toast instead of trying RecognizerIntent.
-- **StepPipManager.kt**: Completion button now shows congratulations and disables further navigation instead of closing.
-- **activity_settings.xml**: Restructured to have fixed orange header outside ScrollView (matches activity_main.xml and activity_impressum.xml).
-- **activity_impressum.xml**: Already had fixed orange header outside ScrollView.
-- **strings.xml**: Shortened `allow_navigation_message` from ~15 lines to 4 lines.
-
-
-- API keys stored unencrypted for backup compatibility (documented in PRIVACY_POLICY.md)
+### Privacy
+- API keys stored unencrypted for backup compatibility (transitioning to Firebase proxy)
 - No telemetry or analytics
 - User messages not logged externally
+- NEVER publicly state the accessibility target audience

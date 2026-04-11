@@ -19,6 +19,11 @@ import ch.heuscher.airescuering.service.overlay.OrientationHandler
 import ch.heuscher.airescuering.service.overlay.OverlayViewManager
 import ch.heuscher.airescuering.service.overlay.PositionAnimator
 
+import ch.heuscher.airescuering.data.firebase.FirebaseAuthManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
 /**
  * Simple service locator for dependency injection.
  * Used during the refactoring transition before full Hilt migration.
@@ -26,10 +31,17 @@ import ch.heuscher.airescuering.service.overlay.PositionAnimator
 object ServiceLocator {
 
     private lateinit var applicationContext: Context
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     fun initialize(context: Context) {
         if (!::applicationContext.isInitialized) {
             applicationContext = context.applicationContext
+            
+            // Initialize Firebase for the API proxy
+            FirebaseAuthManager.initialize(applicationContext)
+            scope.launch {
+                FirebaseAuthManager.signInAnonymously()
+            }
         }
     }
 

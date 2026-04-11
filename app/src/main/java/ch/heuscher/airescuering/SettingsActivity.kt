@@ -5,37 +5,45 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.SeekBar
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.repository.AIHelperRepository
 import ch.heuscher.airescuering.domain.repository.SettingsRepository
+import ch.heuscher.airescuering.service.voice.ButlerVoiceManager
 import ch.heuscher.airescuering.util.AppConstants
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+/**
+ * J-AI-mes Settings Activity
+ * Organized into Voice & Speech, Butler Button, and Advanced sections.
+ */
 class SettingsActivity : AppCompatActivity() {
 
+    // Behavior switches
     private lateinit var keyboardAvoidanceSwitch: androidx.appcompat.widget.SwitchCompat
     private lateinit var vibrationSwitch: androidx.appcompat.widget.SwitchCompat
     private lateinit var longPressDragSwitch: androidx.appcompat.widget.SwitchCompat
     private lateinit var lockPositionSwitch: androidx.appcompat.widget.SwitchCompat
 
-    // Appearance fields
-    private lateinit var sizeSeekBar: android.widget.SeekBar
-    private lateinit var alphaSeekBar: android.widget.SeekBar
-    private lateinit var transparencyValue: android.widget.TextView
-    private lateinit var colorBlue: Button
-    private lateinit var colorRed: Button
-    private lateinit var colorGreen: Button
-    private lateinit var colorBlack: Button
+    // Appearance
+    private lateinit var sizeSeekBar: SeekBar
+    private lateinit var alphaSeekBar: SeekBar
+    private lateinit var transparencyValue: TextView
 
-    // AI Helper fields
-    private lateinit var apiKeyInput: EditText
+    // Voice & Speech
+    private lateinit var speakingSpeedSeekBar: SeekBar
+    private lateinit var speakingSpeedValue: TextView
     private lateinit var voiceInputSwitch: androidx.appcompat.widget.SwitchCompat
     private lateinit var voiceFirstModeSwitch: androidx.appcompat.widget.SwitchCompat
     private lateinit var autoSpeakSwitch: androidx.appcompat.widget.SwitchCompat
+
+    // API Key
+    private lateinit var apiKeyInput: EditText
 
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var aiHelperRepository: AIHelperRepository
@@ -64,9 +72,8 @@ class SettingsActivity : AppCompatActivity() {
         setupAdvancedFeatures()
         setupAIHelperControls()
         setupApiKeyHelpLink()
+        setupSpeakingSpeedControl()
     }
-
-
 
     override fun onPause() {
         super.onPause()
@@ -85,15 +92,15 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun setupApiKeyHelpLink() {
-        findViewById<android.widget.TextView>(R.id.api_key_help_link).setOnClickListener {
+        findViewById<TextView>(R.id.api_key_help_link).setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://ai.google.dev"))
             startActivity(intent)
         }
     }
 
     private fun setupAppearanceControls() {
-        sizeSeekBar.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+        sizeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
                     lifecycleScope.launch {
                         // Map 0-100 to 32dp-96dp
@@ -102,12 +109,12 @@ class SettingsActivity : AppCompatActivity() {
                     }
                 }
             }
-            override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
-        alphaSeekBar.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+        alphaSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 // Update the percentage display (min 25% = 64, max 100% = 255)
                 val percentage = (progress * 100 / 255)
                 transparencyValue.text = "$percentage%"
@@ -117,42 +124,73 @@ class SettingsActivity : AppCompatActivity() {
                     }
                 }
             }
-            override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
-
-        colorBlue.setOnClickListener { updateColor(0xFF2196F3.toInt()) }
-        colorRed.setOnClickListener { updateColor(0xFFF44336.toInt()) }
-        colorGreen.setOnClickListener { updateColor(0xFF4CAF50.toInt()) }
-        colorBlack.setOnClickListener { updateColor(0xFF000000.toInt()) }
     }
 
-    private fun updateColor(color: Int) {
+    /**
+     * Speaking speed slider: maps 0-100 to 0.5x-1.5x.
+     * Default 0.88x = progress 38.
+     */
+    private fun setupSpeakingSpeedControl() {
+        speakingSpeedSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val speed = progressToSpeed(progress)
+                speakingSpeedValue.text = String.format("%.1fx", speed)
+                if (fromUser) {
+                    lifecycleScope.launch {
+                        aiHelperRepository.setSpeakingSpeed(speed)
+                    }
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        // Initialize from saved value
         lifecycleScope.launch {
-            settingsRepository.setColor(color)
+            val speed = aiHelperRepository.getSpeakingSpeed().first()
+            val progress = speedToProgress(speed)
+            speakingSpeedSeekBar.progress = progress
+            speakingSpeedValue.text = String.format("%.1fx", speed)
         }
     }
 
+    /** Maps seekbar progress (0-100) to speed (0.5-1.5) */
+    private fun progressToSpeed(progress: Int): Float {
+        return ButlerVoiceManager.SPEECH_RATE_MIN + 
+            (progress / 100f) * (ButlerVoiceManager.SPEECH_RATE_MAX - ButlerVoiceManager.SPEECH_RATE_MIN)
+    }
+
+    /** Maps speed (0.5-1.5) to seekbar progress (0-100) */
+    private fun speedToProgress(speed: Float): Int {
+        return ((speed - ButlerVoiceManager.SPEECH_RATE_MIN) / 
+            (ButlerVoiceManager.SPEECH_RATE_MAX - ButlerVoiceManager.SPEECH_RATE_MIN) * 100).toInt()
+            .coerceIn(0, 100)
+    }
+
     private fun initializeViews() {
+        // Behavior switches
         keyboardAvoidanceSwitch = findViewById(R.id.keyboard_avoidance_switch)
         vibrationSwitch = findViewById(R.id.vibration_switch)
         longPressDragSwitch = findViewById(R.id.long_press_drag_switch)
         lockPositionSwitch = findViewById(R.id.lock_position_switch)
 
-        // Appearance views
+        // Appearance
         sizeSeekBar = findViewById(R.id.size_seekbar)
         alphaSeekBar = findViewById(R.id.alpha_seekbar)
         transparencyValue = findViewById(R.id.transparency_value)
-        colorBlue = findViewById(R.id.color_blue)
-        colorRed = findViewById(R.id.color_red)
-        colorGreen = findViewById(R.id.color_green)
-        colorBlack = findViewById(R.id.color_black)
 
-        // AI Helper views
-        apiKeyInput = findViewById(R.id.api_key_input)
+        // Voice & Speech
+        speakingSpeedSeekBar = findViewById(R.id.speaking_speed_seekbar)
+        speakingSpeedValue = findViewById(R.id.speaking_speed_value)
         voiceInputSwitch = findViewById(R.id.voice_input_switch)
         voiceFirstModeSwitch = findViewById(R.id.voice_first_mode_switch)
         autoSpeakSwitch = findViewById(R.id.auto_speak_switch)
+
+        // API Key
+        apiKeyInput = findViewById(R.id.api_key_input)
     }
 
     private fun setupBackButton() {
@@ -206,7 +244,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun setupAdvancedFeatures() {
         val header = findViewById<android.widget.LinearLayout>(R.id.advanced_features_header)
         val content = findViewById<android.widget.LinearLayout>(R.id.advanced_features_content)
-        val arrow = findViewById<android.widget.TextView>(R.id.advanced_features_arrow)
+        val arrow = findViewById<TextView>(R.id.advanced_features_arrow)
 
         header.setOnClickListener {
             if (content.visibility == android.view.View.GONE) {
@@ -297,7 +335,7 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
 
-        // Voice-first mode switch (elderly-friendly)
+        // Voice-first mode switch
         voiceFirstModeSwitch.setOnCheckedChangeListener { _, isChecked ->
             lifecycleScope.launch {
                 aiHelperRepository.setVoiceFirstMode(isChecked)
@@ -345,6 +383,17 @@ class SettingsActivity : AppCompatActivity() {
             aiHelperRepository.isAutoSpeakResponses().collect { enabled ->
                 if (autoSpeakSwitch.isChecked != enabled) {
                     autoSpeakSwitch.isChecked = enabled
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            // Observe speaking speed
+            aiHelperRepository.getSpeakingSpeed().collect { speed ->
+                val progress = speedToProgress(speed)
+                if (speakingSpeedSeekBar.progress != progress) {
+                    speakingSpeedSeekBar.progress = progress
+                    speakingSpeedValue.text = String.format("%.1fx", speed)
                 }
             }
         }

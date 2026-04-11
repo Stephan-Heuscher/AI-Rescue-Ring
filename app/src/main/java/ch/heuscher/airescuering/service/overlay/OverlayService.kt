@@ -21,6 +21,9 @@ import ch.heuscher.airescuering.domain.model.DotPosition
 import ch.heuscher.airescuering.domain.model.Gesture
 import ch.heuscher.airescuering.domain.model.OverlayMode
 import ch.heuscher.airescuering.domain.repository.SettingsRepository
+import ch.heuscher.airescuering.service.voice.ButlerPersonality
+import ch.heuscher.airescuering.service.voice.ButlerVoiceManager
+import ch.heuscher.airescuering.service.voice.VoiceConversationEngine
 import ch.heuscher.airescuering.util.AppConstants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,8 +56,12 @@ class OverlayService : Service() {
     private lateinit var keyboardManager: KeyboardManager
     private lateinit var positionAnimator: PositionAnimator
     private lateinit var orientationHandler: OrientationHandler
-    private var chatOverlayManager: ChatOverlayManager? = null
-    private var telestratorManager: TelestratorManager? = null
+
+    // J-AI-mes Voice Engine
+    private var butlerVoiceManager: ButlerVoiceManager? = null
+    private var voiceConversationEngine: VoiceConversationEngine? = null
+    private var speechBubbleOverlay: SpeechBubbleOverlay? = null
+    private val butlerPersonality = ButlerPersonality()
 
     // Service scope for coroutines
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -94,26 +101,6 @@ class OverlayService : Service() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_CONFIGURATION_CHANGED) {
                 handleOrientationChange()
-            }
-        }
-    }
-
-    // Broadcast receiver for Telestrator actions
-    private val telestratorReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d(TAG, "Telestrator broadcast received: ${intent?.action}")
-            when (intent?.action) {
-                AppConstants.ACTION_SHOW_INDICATOR -> {
-                    val x = intent.getIntExtra("x", 0)
-                    val y = intent.getIntExtra("y", 0)
-                    val duration = intent.getLongExtra("duration", 10000L)
-                    Log.d(TAG, "Showing indicator at $x, $y for ${duration}ms")
-                    telestratorManager?.showIndicator(x, y, duration)
-                }
-                AppConstants.ACTION_HIDE_INDICATOR -> {
-                    Log.d(TAG, "Hiding indicator")
-                    telestratorManager?.removeIndicator()
-                }
             }
         }
     }
@@ -167,19 +154,22 @@ class OverlayService : Service() {
         // Start keyboard monitoring
         keyboardManager.startMonitoring()
 
-        // Initialize chat overlay manager
-        initializeChatOverlay()
-
-        // Initialize Telestrator
-        telestratorManager = TelestratorManager(this, getSystemService(Context.WINDOW_SERVICE) as WindowManager)
+        // Initialize J-AI-mes Voice Engine
+        initializeButlerVoice()
     }
 
     override fun onDestroy() {
         super.onDestroy()
 
-        // Clean up
-        chatOverlayManager?.destroy()
-        chatOverlayManager = null
+        // Clean up J-AI-mes voice engine
+        voiceConversationEngine?.stopConversation()
+        voiceConversationEngine = null
+        butlerVoiceManager?.shutdown()
+        butlerVoiceManager = null
+        speechBubbleOverlay?.destroy()
+        speechBubbleOverlay = null
+
+        // Clean up legacy
         keyboardManager.stopMonitoring()
         positionAnimator.cancel()
         serviceScope.cancel()
@@ -188,7 +178,6 @@ class OverlayService : Service() {
         unregisterReceiver(settingsReceiver)
         unregisterReceiver(keyboardReceiver)
         unregisterReceiver(configurationReceiver)
-        unregisterReceiver(telestratorReceiver)
 
         viewManager.removeOverlayView()
     }
@@ -236,16 +225,11 @@ class OverlayService : Service() {
         val settingsFilter = IntentFilter(AppConstants.ACTION_UPDATE_SETTINGS)
         val keyboardFilter = IntentFilter(AppConstants.ACTION_UPDATE_KEYBOARD)
         val configFilter = IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED)
-        val telestratorFilter = IntentFilter().apply {
-            addAction(AppConstants.ACTION_SHOW_INDICATOR)
-            addAction(AppConstants.ACTION_HIDE_INDICATOR)
-        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(settingsReceiver, settingsFilter, Context.RECEIVER_NOT_EXPORTED)
             registerReceiver(keyboardReceiver, keyboardFilter, Context.RECEIVER_NOT_EXPORTED)
             registerReceiver(configurationReceiver, configFilter, Context.RECEIVER_NOT_EXPORTED)
-            registerReceiver(telestratorReceiver, telestratorFilter, Context.RECEIVER_EXPORTED)
         } else {
             @Suppress("DEPRECATION")
             registerReceiver(settingsReceiver, settingsFilter)
@@ -253,8 +237,6 @@ class OverlayService : Service() {
             registerReceiver(keyboardReceiver, keyboardFilter)
             @Suppress("DEPRECATION")
             registerReceiver(configurationReceiver, configFilter)
-            @Suppress("DEPRECATION")
-            registerReceiver(telestratorReceiver, telestratorFilter)
         }
     }
 
@@ -386,15 +368,122 @@ class OverlayService : Service() {
     }
 
     private fun handleTap() {
-        Log.d(TAG, "handleTap: Tap gesture detected on ring")
-        // Single tap toggles the chat overlay
-        toggleChatOverlay()
+        Log.d(TAG, "handleTap: Tap gesture detected on butler button")
+        // Single tap starts/stops voice conversation
+        if (voiceConversationEngine?.state != VoiceConversationEngine.State.IDLE) {
+            // Already in conversation - stop it
+            voiceConversationEngine?.stopConversation()
+            speechBubbleOverlay?.hide()
+        } else {
+            // Start new conversation: capture screenshot first, then greet
+            startButlerConversation()
+        }
     }
 
     private fun handleLongPress() {
         // Long press + drag repositions the button
         // The drag mode is already activated by GestureDetector's onDragModeChanged callback
-        Log.d(TAG, "Long press detected - drag mode activated (repositioning rescue ring)")
+        Log.d(TAG, "Long press detected - drag mode activated (repositioning J-AI-mes button)")
+    }
+
+    /**
+     * Initialize J-AI-mes butler voice engine with TTS, personality, and speech bubble.
+     */
+    private fun initializeButlerVoice() {
+        // Create speech bubble overlay
+        speechBubbleOverlay = SpeechBubbleOverlay(
+            this,
+            getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        )
+
+        // Create voice manager (TTS)
+        butlerVoiceManager = ButlerVoiceManager(this) {
+            Log.d(TAG, "Butler voice manager ready")
+
+            // Create conversation engine after TTS is ready
+            voiceConversationEngine = VoiceConversationEngine(
+                context = this,
+                voiceManager = butlerVoiceManager!!,
+                personality = butlerPersonality,
+                scope = serviceScope
+            ).apply {
+                onStateChanged = { state ->
+                    updateBubbleForState(state)
+                }
+                onResponse = { text ->
+                    val pos = viewManager.getCurrentPosition()
+                    speechBubbleOverlay?.showText(text, pos?.x ?: 200, pos?.y ?: 600)
+                }
+                onTranscription = { text ->
+                    val pos = viewManager.getCurrentPosition()
+                    speechBubbleOverlay?.showText("\"$text\"", pos?.x ?: 200, pos?.y ?: 600)
+                }
+                onError = { error ->
+                    Log.e(TAG, "Conversation error: $error")
+                }
+            }
+
+            // Set API config (key or proxy)
+            serviceScope.launch {
+                val apiKey = ServiceLocator.aiHelperRepository.getApiKey().first()
+                voiceConversationEngine?.setApiConfig(apiKey, AppConstants.GEMINI_PROXY_URL)
+
+                // Observe API key changes
+                ServiceLocator.aiHelperRepository.getApiKey().collect { newKey ->
+                    voiceConversationEngine?.setApiConfig(newKey, AppConstants.GEMINI_PROXY_URL)
+                }
+            }
+
+            // Observe speaking speed changes
+            serviceScope.launch {
+                ServiceLocator.aiHelperRepository.getSpeakingSpeed().collect { speed ->
+                    butlerVoiceManager?.setSpeechRate(speed)
+                }
+            }
+        }
+    }
+
+    /**
+     * Start a butler conversation with screenshot capture.
+     */
+    private fun startButlerConversation() {
+        Log.d(TAG, "Starting butler conversation")
+        val accessibilityService = AIRescueRingAccessibilityService.instance
+
+        if (accessibilityService != null) {
+            // Hide overlays before screenshot
+            speechBubbleOverlay?.hide()
+
+            updateHandler.postDelayed({
+                accessibilityService.takeScreenshot()
+                // Screenshot callback will trigger processScreenshotForConversation
+            }, 100)
+        } else {
+            // No accessibility service - start without screenshot
+            voiceConversationEngine?.startConversation(null, null)
+        }
+    }
+
+    /**
+     * Update the speech bubble based on conversation state.
+     */
+    private fun updateBubbleForState(state: VoiceConversationEngine.State) {
+        val pos = viewManager.getCurrentPosition()
+        val x = pos?.x ?: 200
+        val y = pos?.y ?: 600
+
+        when (state) {
+            VoiceConversationEngine.State.LISTENING -> {
+                speechBubbleOverlay?.showListening(x, y)
+            }
+            VoiceConversationEngine.State.PROCESSING -> {
+                speechBubbleOverlay?.showThinking(x, y)
+            }
+            VoiceConversationEngine.State.IDLE -> {
+                speechBubbleOverlay?.hide()
+            }
+            else -> { /* GREETING, SPEAKING, ACTING - bubble text set by onResponse */ }
+        }
     }
 
     private fun handleQuadrupleTap() {
@@ -406,98 +495,19 @@ class OverlayService : Service() {
         startActivity(intent)
     }
 
-    private fun initializeChatOverlay() {
-        serviceScope.launch {
-            try {
-                // Get API key from repository
-                val apiKey = ServiceLocator.aiHelperRepository.getApiKey().first()
-                if (apiKey.isEmpty()) {
-                    Log.w(TAG, "API key not set, chat overlay will show warning")
-                }
 
-                // Create chat overlay manager with AI helper repository for voice settings
-                chatOverlayManager = ChatOverlayManager(
-                    context = this@OverlayService,
-                    geminiApiKey = apiKey.ifEmpty { "dummy-key" },
-                    scope = serviceScope,
-                    aiHelperRepository = ServiceLocator.aiHelperRepository
-                ).apply {
-                    onHideRequest = {
-                        hideChatOverlay()
-                    }
-                    onScreenshotRequest = {
-                        requestScreenshot()
-                    }
-                    onVoiceInputRequest = {
-                        startVoiceInput()
-                    }
-                    onShowIndicator = { x, y ->
-                        Log.d(TAG, "Callback: Showing indicator at $x, $y")
-                        telestratorManager?.showIndicator(x, y, 0L)
-                    }
-                    onHideIndicator = {
-                        Log.d(TAG, "Callback: Hiding indicator")
-                        telestratorManager?.removeIndicator()
-                    }
-                }
-
-                // Set up screenshot callback in accessibility service
-                AIRescueRingAccessibilityService.instance?.let { accessibilityService ->
-                    accessibilityService.onScreenshotCaptured = { bitmap ->
-                        Log.d(TAG, "Screenshot captured, passing to chat overlay")
-                        chatOverlayManager?.processScreenshot(bitmap)
-                    }
-                    Log.d(TAG, "Screenshot callback registered with accessibility service")
-                } ?: run {
-                    Log.w(TAG, "Accessibility service not available for screenshots")
-                }
-
-                Log.d(TAG, "Chat overlay manager initialized")
-
-                // Observe API key changes to update the service
-                launch {
-                    ServiceLocator.aiHelperRepository.getApiKey().collect { newKey ->
-                        if (newKey.isNotEmpty()) {
-                             Log.d(TAG, "Updating API key in ChatOverlayManager")
-                             chatOverlayManager?.updateApiKey(newKey)
-                        }
-                    }
-                }
-
-            } catch (e: Exception) {
-                Log.e(TAG, "Error initializing chat overlay", e)
-            }
-        }
-    }
 
     private fun requestScreenshot(onComplete: (() -> Unit)? = null) {
         Log.d(TAG, "Screenshot requested")
         val accessibilityService = AIRescueRingAccessibilityService.instance
         if (accessibilityService != null) {
-            // Hide chat overlay before taking screenshot so it's not included in the image
-            val wasVisible = chatOverlayManager?.isShowing() == true
-            if (wasVisible) {
-                Log.d(TAG, "Hiding chat overlay before screenshot")
-                chatOverlayManager?.hide()
-            }
-
-            // Wait a bit for the overlay to fully hide, then take screenshot
+            // Give a short delay to ensure UI updates are processed
             updateHandler.postDelayed({
                 accessibilityService.takeScreenshot()
-
-                // Show chat overlay again after a short delay (screenshot should be captured by then)
-                if (wasVisible) {
-                    updateHandler.postDelayed({
-                        Log.d(TAG, "Showing chat overlay after screenshot")
-                        chatOverlayManager?.show()
-                        onComplete?.invoke()
-                    }, 200)
-                } else {
-                    // If overlay wasn't visible, call onComplete after screenshot is taken
-                    updateHandler.postDelayed({
-                        onComplete?.invoke()
-                    }, 200)
-                }
+                // Wait for screenshot to complete
+                updateHandler.postDelayed({
+                    onComplete?.invoke()
+                }, 200)
             }, 100)
         } else {
             Log.w(TAG, "Accessibility service not available for screenshot")
@@ -509,75 +519,6 @@ class OverlayService : Service() {
             ).show()
             onComplete?.invoke()
         }
-    }
-
-    private fun toggleChatOverlay() {
-        Log.d(TAG, "toggleChatOverlay: Toggling chat overlay")
-
-        // Check if overlay is currently visible
-        val isCurrentlyVisible = chatOverlayManager?.isShowing() == true
-
-        if (isCurrentlyVisible) {
-            // If visible, just hide it
-            Log.d(TAG, "Hiding chat overlay")
-            chatOverlayManager?.hide()
-        } else {
-            // If not visible, capture screenshot FIRST, then show overlay
-            Log.d(TAG, "Capturing screenshot before showing overlay")
-            requestScreenshot {
-                Log.d(TAG, "Screenshot captured, now showing overlay")
-                chatOverlayManager?.show()
-            }
-        }
-    }
-
-    private fun startVoiceInput() {
-        Log.d(TAG, "startVoiceInput: Requesting voice input")
-        try {
-            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-                putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
-                putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
-            }
-            
-            // Store the overlay manager reference so we can pass results back
-            intent.putExtra("return_to_overlay", true)
-            
-            // Start activity for result with flag to allow overlay
-            val flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
-            intent.flags = flags
-            
-            // Use a custom receiver to capture results
-            val receiver = object : BroadcastReceiver() {
-                override fun onReceive(context: Context?, intent: Intent?) {
-                    if (intent?.action == "voice_input_result") {
-                        val voiceText = intent.getStringExtra("voice_text") ?: ""
-                        Log.d(TAG, "Voice input received: $voiceText")
-                        chatOverlayManager?.processVoiceInput(voiceText)
-                    }
-                }
-            }
-            
-            // Register receiver
-            val filter = IntentFilter("voice_input_result")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
-            } else {
-                @Suppress("UnspecifiedRegisterReceiverFlag")
-                registerReceiver(receiver, filter)
-            }
-            
-            startActivity(intent)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error starting voice input", e)
-            Toast.makeText(this, "Voice input not available", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun hideChatOverlay() {
-        Log.d(TAG, "hideChatOverlay: Hiding chat overlay")
-        chatOverlayManager?.hide()
     }
 
     private fun isOnHomeScreen(): Boolean {

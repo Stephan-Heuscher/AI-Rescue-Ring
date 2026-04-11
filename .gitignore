@@ -15,3 +15,9 @@
 local.properties
 .kotlin/
 app/release/*.aab
+
+# Firebase secrets and dependencies
+firebase/functions/node_modules/
+firebase/functions/.env
+firebase/.firebaserc
+*.env

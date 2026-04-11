@@ -25,6 +25,7 @@ import ch.heuscher.airescuering.service.overlay.OverlayService
 import ch.heuscher.airescuering.SettingsActivity
 import ch.heuscher.airescuering.di.ServiceLocator
 import ch.heuscher.airescuering.domain.repository.SettingsRepository
+import ch.heuscher.airescuering.data.firebase.FirebaseAuthManager
 import ch.heuscher.airescuering.util.AppConstants
 import kotlinx.coroutines.launch
 
@@ -85,6 +86,12 @@ class MainActivity : AppCompatActivity() {
 
         settingsRepository = ServiceLocator.settingsRepository
         Log.d(TAG, "onCreate: SettingsRepository obtained")
+
+        // Initialize Firebase Authentication for API proxy
+        FirebaseAuthManager.initialize(applicationContext)
+        lifecycleScope.launch {
+            FirebaseAuthManager.signInAnonymously()
+        }
 
         initializeViews()
         setupClickListeners()

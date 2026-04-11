@@ -14,6 +14,8 @@ kotlinxSerialization = "1.6.3"
 kotlinxCoroutines = "1.8.0"
 security = "1.1.0-alpha06"
 lifecycleRuntime = "2.8.7"
+firebaseBom = "33.6.0"
+googleServicesPlugin = "4.4.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -31,8 +33,12 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "security" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntime" }
 
+# Firebase
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServicesPlugin" }

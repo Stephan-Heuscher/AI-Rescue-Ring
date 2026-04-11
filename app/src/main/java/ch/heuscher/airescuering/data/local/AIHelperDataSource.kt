@@ -34,4 +34,12 @@ interface AIHelperDataSource {
     
     fun isAutoSpeakResponses(): Flow<Boolean>
     suspend fun setAutoSpeakResponses(enabled: Boolean)
+
+    // J-AI-mes speaking speed (0.5 - 1.5, default 0.88)
+    fun getSpeakingSpeed(): Flow<Float>
+    suspend fun setSpeakingSpeed(speed: Float)
+
+    // Proactive monitoring level (0=passive, 1=notifications, 2=screen, 3=full)
+    fun getProactiveLevel(): Flow<Int>
+    suspend fun setProactiveLevel(level: Int)
 }

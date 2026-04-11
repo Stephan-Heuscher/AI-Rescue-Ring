@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
 }
 
 // Load version properties
@@ -133,6 +134,10 @@ dependencies {
     // Markdown rendering
     implementation("io.noties.markwon:core:4.6.2")
     implementation("io.noties.markwon:image:4.6.2")
+
+    // Firebase (Auth for proxy)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

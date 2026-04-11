@@ -30,10 +30,14 @@ class SecureAIHelperDataSource(
         private const val KEY_VOICE_INPUT = "ai_helper_voice_input"
         private const val KEY_AUTO_EXECUTE = "ai_helper_auto_execute"
         private const val KEY_MODEL = "ai_helper_model"
-        private const val DEFAULT_MODEL = "gemini-3-pro-preview"
+        private const val DEFAULT_MODEL = "gemini-3.1-flash-lite-preview"
         private const val KEY_MIGRATED = "migrated_from_encrypted"
         private const val KEY_VOICE_FIRST_MODE = "ai_helper_voice_first_mode"
         private const val KEY_AUTO_SPEAK_RESPONSES = "ai_helper_auto_speak_responses"
+        private const val KEY_SPEAKING_SPEED = "ai_helper_speaking_speed"
+        private const val KEY_PROACTIVE_LEVEL = "ai_helper_proactive_level"
+        private const val DEFAULT_SPEAKING_SPEED = 0.88f
+        private const val DEFAULT_PROACTIVE_LEVEL = 0 // 0=passive, 1=notifications, 2=screen, 3=full
     }
 
     // Standard SharedPreferences for backup-friendly storage
@@ -226,5 +230,23 @@ class SecureAIHelperDataSource(
 
     override suspend fun setAutoSpeakResponses(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_AUTO_SPEAK_RESPONSES, enabled).apply()
+    }
+
+    override fun getSpeakingSpeed(): Flow<Float> =
+        getPreferenceFlow(KEY_SPEAKING_SPEED, DEFAULT_SPEAKING_SPEED) { sharedPrefs, key, default ->
+            sharedPrefs.getFloat(key, default)
+        }
+
+    override suspend fun setSpeakingSpeed(speed: Float) {
+        prefs.edit().putFloat(KEY_SPEAKING_SPEED, speed).apply()
+    }
+
+    override fun getProactiveLevel(): Flow<Int> =
+        getPreferenceFlow(KEY_PROACTIVE_LEVEL, DEFAULT_PROACTIVE_LEVEL) { sharedPrefs, key, default ->
+            sharedPrefs.getInt(key, default)
+        }
+
+    override suspend fun setProactiveLevel(level: Int) {
+        prefs.edit().putInt(KEY_PROACTIVE_LEVEL, level).apply()
     }
 }

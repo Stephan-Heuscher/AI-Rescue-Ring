@@ -1,20 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- J-AI-mes Butler Button Overlay Layout -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="64dp"
-    android:layout_height="64dp"
+    android:layout_width="96dp"
+    android:layout_height="96dp"
     android:clickable="true"
     android:focusable="false">
 
-    <TextView
-        android:id="@+id/floating_dot"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+    <!-- Butler button background (navy circle with gold ring) -->
+    <View
+        android:id="@+id/butler_button_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:text="🛟"
-        android:textSize="40sp"
-        android:gravity="center"
+        android:background="@drawable/floating_dot_background" />
+
+    <!-- Butler icon (top hat silhouette) -->
+    <ImageView
+        android:id="@+id/floating_dot"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_butler"
+        android:scaleType="centerInside"
         android:clickable="true"
         android:focusable="false"
+        android:contentDescription="@string/assistipoint_app"
         android:visibility="visible" />
 
 </FrameLayout>

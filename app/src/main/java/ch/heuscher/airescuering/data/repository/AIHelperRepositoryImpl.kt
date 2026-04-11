@@ -60,4 +60,16 @@ class AIHelperRepositoryImpl(
     override suspend fun setAutoSpeakResponses(enabled: Boolean) {
         dataSource.setAutoSpeakResponses(enabled)
     }
+
+    override fun getSpeakingSpeed(): Flow<Float> = dataSource.getSpeakingSpeed()
+
+    override suspend fun setSpeakingSpeed(speed: Float) {
+        dataSource.setSpeakingSpeed(speed)
+    }
+
+    override fun getProactiveLevel(): Flow<Int> = dataSource.getProactiveLevel()
+
+    override suspend fun setProactiveLevel(level: Int) {
+        dataSource.setProactiveLevel(level)
+    }
 }

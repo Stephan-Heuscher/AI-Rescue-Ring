@@ -94,4 +94,7 @@ object AppConstants {
     // Voice-first mode defaults
     const val DEFAULT_VOICE_FIRST_MODE = true  // Voice-first for elderly
     const val DEFAULT_AUTO_SPEAK_RESPONSES = true  // Always speak AI responses
+    
+    // API Proxy
+    const val GEMINI_PROXY_URL = "https://europe-west1-jaimes-backend.cloudfunctions.net/geminiProxy"
 }

@@ -8,15 +8,15 @@
     android:background="@color/background"
     tools:context=".MainActivity">
 
-    <!-- Fixed Top Header Bar -->
+    <!-- J-AI-mes Premium Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="@color/rescue_orange"
-        android:paddingTop="20dp"
-        android:paddingBottom="20dp"
+        android:background="@color/primary"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp"
         android:paddingHorizontal="20dp">
 
         <ImageView
@@ -30,9 +30,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="@string/app_name"
-            android:textColor="@android:color/white"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textColor="@color/accent_gold"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -40,8 +41,7 @@
             android:layout_marginTop="4dp"
             android:gravity="center"
             android:text="@string/ai_assistant_subtitle"
-            android:textColor="@android:color/white"
-            android:alpha="0.9"
+            android:textColor="@color/text_secondary"
             android:textSize="13sp" />
     </LinearLayout>
 
@@ -66,7 +66,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:cardBackgroundColor="@color/rescue_orange"
+                app:cardBackgroundColor="@color/accent_gold"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="4dp"
                 app:strokeWidth="0dp">
@@ -88,7 +88,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/ai_assistant"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/primary"
                             android:textSize="20sp"
                             android:textStyle="bold" />
 
@@ -98,8 +98,8 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:text="@string/tap_to_enable"
-                            android:textColor="@android:color/white"
-                            android:alpha="0.8"
+                            android:textColor="@color/primary"
+                            android:alpha="0.7"
                             android:textSize="14sp" />
 
                     </LinearLayout>
@@ -108,8 +108,8 @@
                         android:id="@+id/overlay_switch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:thumbTint="@android:color/white"
-                        android:trackTint="@color/switch_track_tint" />
+                        android:thumbTint="@color/primary"
+                        android:trackTint="@color/primary_variant" />
 
                 </LinearLayout>
 
@@ -187,7 +187,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/grant"
-                            android:textColor="@color/rescue_orange" />
+                            android:textColor="@color/accent_gold" />
 
                     </LinearLayout>
 
@@ -215,7 +215,7 @@
                             android:layout_width="32dp"
                             android:layout_height="32dp"
                             android:gravity="center"
-                            android:text="♿"
+                            android:text="👁"
                             android:textSize="20sp" />
 
                         <LinearLayout
@@ -248,7 +248,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/grant"
-                            android:textColor="@color/rescue_orange" />
+                            android:textColor="@color/accent_gold" />
 
                     </LinearLayout>
 
@@ -276,7 +276,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/how_it_works"
-                        android:textColor="@color/text_primary"
+                        android:textColor="@color/accent_gold"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -302,23 +302,27 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:text="@string/settings"
+            android:textColor="@color/accent_gold"
+            android:backgroundTint="@color/surface"
             app:icon="@drawable/ic_settings"
+            app:iconTint="@color/accent_gold"
             app:iconGravity="start" />
 
-        <!-- Spacer to push action buttons to bottom -->
+        <!-- Spacer -->
         <View
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- Stop Service Button at Bottom -->
+        <!-- Stop Service Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/stop_service_button"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/stop_service"
-            android:textColor="@color/text_secondary" />
+            android:textColor="@color/text_secondary"
+            app:strokeColor="@color/surface_variant" />
 
         <!-- Version Info -->
         <TextView

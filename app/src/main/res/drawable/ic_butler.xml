@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Background circle (dark navy) -->
+    <path
+        android:fillColor="#1A1B3A"
+        android:pathData="M24,24m-22,0a22,22 0,1,1 44,0a22,22 0,1,1 -44,0"/>
+
+    <!-- Gold border ring -->
+    <path
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:pathData="M24,24m-22,0a22,22 0,1,1 44,0a22,22 0,1,1 -44,0"/>
+
+    <!-- Top hat - brim -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M14,20 L34,20 L33,22 L15,22 Z"/>
+
+    <!-- Top hat - crown -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M17,20 L17,11 Q17,9 19,9 L29,9 Q31,9 31,11 L31,20 Z"/>
+
+    <!-- Hat band -->
+    <path
+        android:fillColor="#1A1B3A"
+        android:pathData="M17,17 L31,17 L31,19 L17,19 Z"/>
+
+    <!-- Head (silhouette) -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M20,22 L28,22 Q30,22 30,24 L30,28 Q30,30 28,31 L20,31 Q18,30 18,28 L18,24 Q18,22 20,22 Z"/>
+
+    <!-- Bow tie - left -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M18,32 L23,34 L18,36 Z"/>
+
+    <!-- Bow tie - right -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M30,32 L25,34 L30,36 Z"/>
+
+    <!-- Bow tie - center knot -->
+    <path
+        android:fillColor="#B8941F"
+        android:pathData="M23,33 L25,33 L25,35 L23,35 Z"/>
+
+    <!-- Jacket lapels - left -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M16,34 L23,32 L22,40 L14,40 Q13,40 13,38 L14,34 Z"/>
+
+    <!-- Jacket lapels - right -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M32,34 L25,32 L26,40 L34,40 Q35,40 35,38 L34,34 Z"/>
+
+    <!-- Jacket center (shirt/vest) -->
+    <path
+        android:fillColor="#F5F0E8"
+        android:pathData="M22,34 L26,34 L26,40 L22,40 Z"/>
+
+    <!-- Vest buttons -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M24,36m-0.8,0a0.8,0.8 0,1,1 1.6,0a0.8,0.8 0,1,1 -1.6,0"/>
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M24,39m-0.8,0a0.8,0.8 0,1,1 1.6,0a0.8,0.8 0,1,1 -1.6,0"/>
+
+</vector>

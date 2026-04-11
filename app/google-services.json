@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "946112602585",
-    "project_id": "assistive-tap",
-    "storage_bucket": "assistive-tap.firebasestorage.app"
+    "project_number": "242484059999",
+    "project_id": "jaimes-backend",
+    "storage_bucket": "jaimes-backend.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:946112602585:android:4b14963cfc246ee3c0f9c8",
+        "mobilesdk_app_id": "1:242484059999:android:d908937d65d2361400a0ea",
         "android_client_info": {
           "package_name": "ch.heuscher.airescuering"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAll4arwJtakH2dmKJu8LYMHiUfVrrgBu0"
+          "current_key": "AIzaSyDMxTRodDEuWXkCEutT8YkpdyfDvlZuS1E"
         }
       ],
       "services": {

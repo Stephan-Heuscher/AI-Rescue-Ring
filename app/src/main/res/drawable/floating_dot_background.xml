@@ -1,52 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- AI Rescue Ring - Donut shaped ring with center hole -->
+<!-- J-AI-mes Butler Button - Elegant navy circle with gold accent ring -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Outer ring (main color) -->
-    <item>
-        <shape android:shape="oval">
-            <solid android:color="@color/floating_dot_color" />
-            <size
-                android:width="64dp"
-                android:height="64dp" />
-        </shape>
-    </item>
-
-    <!-- Inner hole (transparent center) -->
+    <!-- Outer glow ring (gold, subtle) -->
     <item
-        android:top="12dp"
-        android:bottom="12dp"
-        android:left="12dp"
-        android:right="12dp">
-        <shape android:shape="oval">
-            <solid android:color="#00000000" />
-        </shape>
-    </item>
-
-    <!-- White stripes for rescue ring effect -->
-    <item
-        android:top="2dp"
-        android:bottom="2dp"
-        android:left="2dp"
-        android:right="2dp">
-        <shape android:shape="oval">
-            <stroke
-                android:width="3dp"
-                android:color="@android:color/white"
-                android:dashWidth="8dp"
-                android:dashGap="8dp" />
-        </shape>
-    </item>
-
-    <!-- Outer border for definition -->
-    <item>
+        android:top="1dp"
+        android:bottom="1dp"
+        android:left="1dp"
+        android:right="1dp">
         <shape android:shape="oval">
             <stroke
                 android:width="2dp"
-                android:color="@android:color/white" />
+                android:color="@color/butler_button_gold" />
             <size
-                android:width="64dp"
-                android:height="64dp" />
+                android:width="96dp"
+                android:height="96dp" />
+        </shape>
+    </item>
+
+    <!-- Main circle (deep navy) -->
+    <item
+        android:top="3dp"
+        android:bottom="3dp"
+        android:left="3dp"
+        android:right="3dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/primary" />
+            <size
+                android:width="90dp"
+                android:height="90dp" />
+        </shape>
+    </item>
+
+    <!-- Inner accent ring (thin gold line for depth) -->
+    <item
+        android:top="6dp"
+        android:bottom="6dp"
+        android:left="6dp"
+        android:right="6dp">
+        <shape android:shape="oval">
+            <stroke
+                android:width="0.5dp"
+                android:color="@color/accent_gold_light" />
         </shape>
     </item>
 
