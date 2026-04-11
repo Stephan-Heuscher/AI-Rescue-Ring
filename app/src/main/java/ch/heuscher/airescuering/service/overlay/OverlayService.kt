@@ -454,9 +454,16 @@ class OverlayService : Service() {
             // Hide overlays before screenshot
             speechBubbleOverlay?.hide()
 
+            // Connect screenshot capture directly to J-AI-mes engine
+            accessibilityService.onScreenshotCaptured = { bitmap ->
+                Log.d(TAG, "Screenshot captured, passing to voice engine")
+                serviceScope.launch(Dispatchers.Main) {
+                    voiceConversationEngine?.startConversation(bitmap, null)
+                }
+            }
+
             updateHandler.postDelayed({
                 accessibilityService.takeScreenshot()
-                // Screenshot callback will trigger processScreenshotForConversation
             }, 100)
         } else {
             // No accessibility service - start without screenshot
