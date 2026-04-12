@@ -55,8 +55,21 @@ class GeminiApiService(
                 append("{\"model\":\"$model\",")
                 append(requestJson.substring(1)) // skip opening {
             }
-            val idToken = FirebaseAuthManager.getIdToken()
-                ?: throw Exception("Firebase authentication failed. Please check your connection.")
+            val idToken = try {
+                FirebaseAuthManager.getIdToken()
+            } catch (e: Exception) {
+                Log.e(TAG, "ID Token error: ${e.message}", e)
+                null
+            }
+
+            if (idToken == null) {
+                val errorMsg = if (FirebaseAuthManager.getCurrentUid() == null) {
+                    "Firebase authentication failed (Anonymous sign-in not working). Please check Firebase Console."
+                } else {
+                    "Failed to get auth token from Firebase."
+                }
+                throw Exception(errorMsg)
+            }
 
             Log.d(TAG, "Using proxy mode → $proxyUrl")
             return Request.Builder()
@@ -139,12 +152,6 @@ class GeminiApiService(
             }
 
             val tools = mutableListOf<Tool>()
-            if (model.contains("computer-use")) {
-                tools.add(Tool(computerUse = ComputerUse(
-                    environment = Environment.BROWSER,
-                    excludedPredefinedFunctions = ExcludedFunctions.MOBILE_EXCLUDED
-                )))
-            }
             if (!functionDeclarations.isNullOrEmpty()) {
                 tools.add(Tool(functionDeclarations = functionDeclarations))
             }

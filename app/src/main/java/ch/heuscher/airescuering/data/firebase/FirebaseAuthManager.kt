@@ -62,7 +62,10 @@ object FirebaseAuthManager {
             Log.d(TAG, "Signed in anonymously: uid=${user?.uid}")
             user
         } catch (e: Exception) {
-            Log.e(TAG, "Anonymous sign-in failed", e)
+            Log.e(TAG, "Anonymous sign-in failed: ${e.message}", e)
+            if (e.message?.contains("CONFIGURATION_NOT_FOUND") == true) {
+                Log.e(TAG, "CRITICAL: Anonymous Authentication is not enabled in Firebase Console!")
+            }
             null
         }
     }

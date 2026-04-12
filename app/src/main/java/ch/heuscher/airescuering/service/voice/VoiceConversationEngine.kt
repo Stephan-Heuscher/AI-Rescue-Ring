@@ -30,7 +30,7 @@ class VoiceConversationEngine(
     companion object {
         private const val TAG = "VoiceConversationEngine"
         private const val MAX_LISTENING_RETRIES = 10
-        private const val MODEL_NAME = "gemini-3-pro-preview-computer-use"
+        private const val MODEL_NAME = "gemini-3.1-flash-lite-preview"
     }
 
     enum class State {
@@ -60,9 +60,9 @@ class VoiceConversationEngine(
     private var currentJob: Job? = null
     private var apiKey: String = ""
     private var listeningRetryCount: Int = 0
+    private var apiRetryCount: Int = 0
     
     private val intentAgent = IntentExecutionAgent(context, aiHelperRepository)
-    private var computerUseAgent: ComputerUseAgent? = null
 
     /**
      * Set the API key and/or proxy URL for Gemini. 
@@ -71,7 +71,6 @@ class VoiceConversationEngine(
         apiKey = key
         val service = GeminiApiService(apiKey = key, proxyUrl = proxyUrl)
         geminiApiService = service
-        computerUseAgent = ComputerUseAgent(context, service, ScreenCaptureManager(context))
     }
 
     /**
@@ -131,6 +130,7 @@ class VoiceConversationEngine(
                 val response = callGemini(userMessage, currentScreenshot)
                 if (response != null) {
                     conversationHistory.add("assistant" to response)
+                    apiRetryCount = 0 // Reset on success
                     
                     withContext(Dispatchers.Main) {
                         setState(State.SPEAKING)
@@ -144,21 +144,31 @@ class VoiceConversationEngine(
                         }
                     }
                 } else {
+                    apiRetryCount++
                     withContext(Dispatchers.Main) {
                         val error = personality.getErrorMessage()
                         onError?.invoke(error)
-                        voiceManager.speak(error) {
-                            startListening()
+                        if (apiRetryCount >= 3) {
+                            retireGracefully()
+                        } else {
+                            voiceManager.speak(error) {
+                                startListening()
+                            }
                         }
                     }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error processing message", e)
+                apiRetryCount++
                 withContext(Dispatchers.Main) {
                     val error = personality.getErrorMessage()
                     onError?.invoke(error)
-                    voiceManager.speak(error) {
-                        startListening()
+                    if (apiRetryCount >= 3) {
+                        retireGracefully()
+                    } else {
+                        voiceManager.speak(error) {
+                            startListening()
+                        }
                     }
                 }
             }
@@ -331,9 +341,10 @@ class VoiceConversationEngine(
 
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
                 putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+                putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
                 putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000L)
                 putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 3000L)
             }
@@ -453,44 +464,6 @@ class VoiceConversationEngine(
                                 "Certainly, I am carrying that out for you."
                             }
                         }
-                    }
-                    
-                    // Handle Computer Use (Variant 1 Fallback)
-                    // If the model calls a UI action directly, we bridge it here
-                    val uiActions = listOf("click_at", "type_text_at", "scroll_at", "go_back", "go_home")
-                    if (uiActions.contains(functionCall.name)) {
-                        withContext(Dispatchers.Main) {
-                            setState(State.ACTING)
-                        }
-                        
-                        // We could use computerUseAgent.startAgentLoop here, 
-                        // but for a single response bridge, we'll narrate and execute
-                        val narration = if (Locale.getDefault().language == "de") {
-                            "Ich werde das für Sie auf dem Bildschirm erledigen."
-                        } else {
-                            "I will handle that on the screen for you."
-                        }
-                        
-                        // Start the full loop in background
-                        scope.launch {
-                            computerUseAgent?.startAgentLoop(message, object : ComputerUseAgent.AgentCallback {
-                                override fun onThinking(message: String) { Log.d(TAG, "CU: Thinking: $message") }
-                                override fun onActionExecuted(action: String, success: Boolean) { Log.d(TAG, "CU: Executed $action: $success") }
-                                override fun onCompleted(finalMessage: String) { 
-                                    scope.launch(Dispatchers.Main) {
-                                        onResponse?.invoke(finalMessage)
-                                        voiceManager.speak(stripMarkdownForTTS(finalMessage)) { startListening() }
-                                    }
-                                }
-                                override fun onError(error: String) { Log.e(TAG, "CU: Error: $error") }
-                                override fun onConfirmationRequired(message: String, onConfirm: () -> Unit, onDeny: () -> Unit) {
-                                    // Handle confirmation if needed
-                                    onConfirm() 
-                                }
-                            })
-                        }
-                        
-                        return@withContext narration
                     }
                 }
                 
