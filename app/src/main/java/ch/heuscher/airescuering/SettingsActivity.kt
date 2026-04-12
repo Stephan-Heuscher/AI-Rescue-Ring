@@ -3,9 +3,12 @@ package ch.heuscher.airescuering
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
 import android.widget.Button
 import android.widget.EditText
 import android.widget.SeekBar
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -44,6 +47,9 @@ class SettingsActivity : AppCompatActivity() {
 
     // API Key
     private lateinit var apiKeyInput: EditText
+
+    // Autonomy Level
+    private lateinit var autonomySpinner: Spinner
 
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var aiHelperRepository: AIHelperRepository
@@ -191,6 +197,9 @@ class SettingsActivity : AppCompatActivity() {
 
         // API Key
         apiKeyInput = findViewById(R.id.api_key_input)
+        
+        // Autonomy Level
+        autonomySpinner = findViewById(R.id.autonomy_spinner)
     }
 
     private fun setupBackButton() {
@@ -348,9 +357,27 @@ class SettingsActivity : AppCompatActivity() {
                 aiHelperRepository.setAutoSpeakResponses(isChecked)
             }
         }
+
+        // Autonomy level spinner
+        autonomySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                lifecycleScope.launch {
+                    aiHelperRepository.setAutonomyLevel(position)
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
     }
 
     private fun observeAIHelperSettings() {
+        lifecycleScope.launch {
+            // Observe autonomy level
+            aiHelperRepository.getAutonomyLevel().collect { level ->
+                if (autonomySpinner.selectedItemPosition != level) {
+                    autonomySpinner.setSelection(level)
+                }
+            }
+        }
         lifecycleScope.launch {
             // Observe API key
             aiHelperRepository.getApiKey().collect { apiKey ->

@@ -8,36 +8,29 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
-import ch.heuscher.airescuering.data.api.GeminiApiService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import ch.heuscher.airescuering.data.api.*
+import ch.heuscher.airescuering.service.intent.IntentExecutionAgent
+import ch.heuscher.airescuering.service.computeruse.ComputerUseAgent
+import ch.heuscher.airescuering.service.screencapture.ScreenCaptureManager
+import ch.heuscher.airescuering.domain.repository.AIHelperRepository
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 import java.util.Locale
 
 /**
  * Central engine managing J-AI-mes' conversation loop:
- * 
- * 1. User taps button → capture screenshot (J-AI-mes' "eyes")
- * 2. J-AI-mes greets user via TTS
- * 3. Auto-listen for speech input (STT)
- * 4. Send speech + screenshot to Gemini
- * 5. Speak response via TTS
- * 6. If action needed → delegate to ButlerActionAgent
- * 7. Continue conversation or retire
- * 
- * State machine: IDLE → GREETING → LISTENING → PROCESSING → SPEAKING → (loop or IDLE)
  */
 class VoiceConversationEngine(
     private val context: Context,
     private val voiceManager: ButlerVoiceManager,
     private val personality: ButlerPersonality,
+    private val aiHelperRepository: AIHelperRepository,
     private val scope: CoroutineScope
 ) {
     companion object {
         private const val TAG = "VoiceConversationEngine"
-        private const val MAX_LISTENING_RETRIES = 3
+        private const val MAX_LISTENING_RETRIES = 10
+        private const val MODEL_NAME = "gemini-3-pro-preview-computer-use"
     }
 
     enum class State {
@@ -57,6 +50,7 @@ class VoiceConversationEngine(
     var onTranscription: ((String) -> Unit)? = null
     var onResponse: ((String) -> Unit)? = null
     var onError: ((String) -> Unit)? = null
+    var onRequireConfirmation: ((String, Intent) -> Unit)? = null
 
     // API service for Gemini calls
     private var geminiApiService: GeminiApiService? = null
@@ -66,19 +60,22 @@ class VoiceConversationEngine(
     private var currentJob: Job? = null
     private var apiKey: String = ""
     private var listeningRetryCount: Int = 0
+    
+    private val intentAgent = IntentExecutionAgent(context, aiHelperRepository)
+    private var computerUseAgent: ComputerUseAgent? = null
 
     /**
      * Set the API key and/or proxy URL for Gemini. 
      */
     fun setApiConfig(key: String, proxyUrl: String = "") {
         apiKey = key
-        geminiApiService = GeminiApiService(apiKey = key, proxyUrl = proxyUrl)
+        val service = GeminiApiService(apiKey = key, proxyUrl = proxyUrl)
+        geminiApiService = service
+        computerUseAgent = ComputerUseAgent(context, service, ScreenCaptureManager(context))
     }
 
     /**
      * Start a new conversation. Called when user taps the butler button.
-     * @param screenshot Current screen capture (J-AI-mes' "eyes")
-     * @param foregroundApp Package name of the app currently in foreground
      */
     fun startConversation(screenshot: Bitmap? = null, foregroundApp: String? = null) {
         if (state != State.IDLE) {
@@ -101,13 +98,11 @@ class VoiceConversationEngine(
             personality.getGreeting()
         }
 
-        // Speak greeting, then auto-listen
+        // Speak greeting
+        onResponse?.invoke(greeting)
         voiceManager.speak(greeting) {
-            // After greeting finishes, start listening
             startListening()
         }
-
-        onResponse?.invoke(greeting)
     }
 
     /**
@@ -139,10 +134,12 @@ class VoiceConversationEngine(
                     
                     withContext(Dispatchers.Main) {
                         setState(State.SPEAKING)
-                        onResponse?.invoke(response)
+                        onResponse?.invoke(response) // Keep original for UI markdown rendering
                         
-                        voiceManager.speak(response) {
-                            // After speaking, listen for follow-up
+                        val ttsResponse = stripMarkdownForTTS(response)
+                        Log.d(TAG, "Stripped response for TTS: $ttsResponse")
+                        
+                        voiceManager.speak(ttsResponse) {
                             startListening()
                         }
                     }
@@ -169,8 +166,26 @@ class VoiceConversationEngine(
     }
 
     /**
-     * Handle voice commands like "speak slower", "speak faster".
-     * @return true if this was a voice command (handled internally)
+     * Strips Markdown characters (like #, *, _) to prevent TTS from reading them aloud
+     * (e.g., reading "###" as "hash hash hash").
+     */
+    private fun stripMarkdownForTTS(text: String): String {
+        return text
+            // Remove markdown links but keep the text: [text](url) -> text
+            .replace(Regex("\\[([^\\]]+)\\]\\([^)]+\\)"), "$1")
+            // Remove bold/italic markers
+            .replace(Regex("[*_]{1,3}([^*_]+)[*_]{1,3}"), "$1")
+            // Remove markdown headings (e.g. ### Heading -> Heading)
+            .replace(Regex("^(#{1,6})\\s+", RegexOption.MULTILINE), "")
+            // Remove backticks for inline code
+            .replace("`", "")
+            // Clean up any remaining isolated markdown symbols if necessary, but carefully
+            .replace(Regex("\\s+"), " ") // normalize spacing
+            .trim()
+    }
+
+    /**
+     * Handle voice commands.
      */
     private fun handleVoiceCommand(message: String): Boolean {
         val lower = message.lowercase()
@@ -194,11 +209,7 @@ class VoiceConversationEngine(
                 .coerceIn(ButlerVoiceManager.SPEECH_RATE_MIN, ButlerVoiceManager.SPEECH_RATE_MAX)
             voiceManager.setSpeechRate(newRate)
             
-            val confirmation = if (isGerman) {
-                "Selbstverständlich. Ist dieses Tempo besser?"
-            } else {
-                "Of course. Is this pace better?"
-            }
+            val confirmation = if (isGerman) "Selbstverständlich. Ist dieses Tempo besser?" else "Of course. Is this pace better?"
             
             setState(State.SPEAKING)
             voiceManager.speak(confirmation) { startListening() }
@@ -211,11 +222,7 @@ class VoiceConversationEngine(
                 .coerceIn(ButlerVoiceManager.SPEECH_RATE_MIN, ButlerVoiceManager.SPEECH_RATE_MAX)
             voiceManager.setSpeechRate(newRate)
             
-            val confirmation = if (isGerman) {
-                "Selbstverständlich. Ist dieses Tempo besser?"
-            } else {
-                "Of course. Is this pace better?"
-            }
+            val confirmation = if (isGerman) "Selbstverständlich. Ist dieses Tempo besser?" else "Of course. Is this pace better?"
             
             setState(State.SPEAKING)
             voiceManager.speak(confirmation) { startListening() }
@@ -225,9 +232,9 @@ class VoiceConversationEngine(
 
         // Dismissal commands
         val dismissPatterns = if (isGerman) {
-            listOf("danke", "nein danke", "das wars", "tschüss", "nichts weiter")
+            listOf("danke", "nein danke", "das wars", "tschüss", "nichts weiter", "vielen dank")
         } else {
-            listOf("thank you", "no thanks", "that's all", "goodbye", "nothing else", "I'm good")
+            listOf("thank you", "thankyou", "thanks", "no thanks", "that's all", "goodbye", "nothing else", "i'm good", "im good")
         }
 
         if (dismissPatterns.any { lower.contains(it) }) {
@@ -257,7 +264,6 @@ class VoiceConversationEngine(
         setState(State.LISTENING)
 
         try {
-            // Clean up previous recognizer
             speechRecognizer?.destroy()
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
             
@@ -270,7 +276,6 @@ class VoiceConversationEngine(
                     if (bestResult.isNotBlank()) {
                         processMessage(bestResult)
                     } else {
-                        // Empty result - retry a few times then retire
                         retryListening("Empty STT result")
                     }
                 }
@@ -280,36 +285,46 @@ class VoiceConversationEngine(
                         SpeechRecognizer.ERROR_NO_MATCH -> "no_match"
                         SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "timeout"
                         SpeechRecognizer.ERROR_AUDIO -> "audio_error"
+                        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "insufficient_permissions"
+                        SpeechRecognizer.ERROR_SERVER_DISCONNECTED -> "server_disconnected"
+                        SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "recognizer_busy"
                         else -> "error_$error"
                     }
-                    Log.d(TAG, "STT error: $errorMessage")
-                    
-                    // On timeout or no match, retire gracefully
-                    if (error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || 
-                        error == SpeechRecognizer.ERROR_NO_MATCH) {
-                        retireGracefully()
-                    } else {
-                        // Real error - keep listening until retry limit
-                        retryListening("STT error: $errorMessage")
+                    Log.e(TAG, "STT error occurred: $errorMessage (code: $error)")
+
+                    if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) {
+                        val msg = if (Locale.getDefault().language == "de") {
+                            "Ich benötige die Berechtigung für das Mikrofon, um Sie zu hören."
+                        } else {
+                            "I need microphone permission to hear you."
+                        }
+                        setState(State.SPEAKING)
+                        onResponse?.invoke(msg)
+                        voiceManager.speak(msg) {
+                            stopConversation()
+                        }
+                        return
                     }
+                    
+                    if (error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || error == SpeechRecognizer.ERROR_NO_MATCH) {
+                        if (error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || listeningRetryCount >= 1) {
+                            Log.d(TAG, "User didn't speak or too much noise. Retiring gracefully.")
+                            retireGracefully()
+                            return
+                        }
+                    }
+
+                    retryListening("STT error: $errorMessage")
                 }
 
-                override fun onReadyForSpeech(params: Bundle?) {
-                    Log.d(TAG, "STT ready for speech")
-                }
-                override fun onBeginningOfSpeech() {
-                    Log.d(TAG, "STT speech started")
-                }
-                override fun onRmsChanged(rmsdB: Float) { /* waveform level */ }
+                override fun onReadyForSpeech(params: Bundle?) { Log.d(TAG, "STT ready") }
+                override fun onBeginningOfSpeech() { Log.d(TAG, "STT started") }
+                override fun onRmsChanged(rmsdB: Float) {}
                 override fun onBufferReceived(buffer: ByteArray?) {}
-                override fun onEndOfSpeech() {
-                    Log.d(TAG, "STT speech ended")
-                }
+                override fun onEndOfSpeech() { Log.d(TAG, "STT ended") }
                 override fun onPartialResults(partialResults: Bundle?) {
                     val partial = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                    partial?.firstOrNull()?.let { text ->
-                        onTranscription?.invoke(text)
-                    }
+                    partial?.firstOrNull()?.let { onTranscription?.invoke(it) }
                 }
                 override fun onEvent(eventType: Int, params: Bundle?) {}
             })
@@ -319,32 +334,31 @@ class VoiceConversationEngine(
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
                 putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
                 putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
-                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 2000L)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000L)
+                putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 3000L)
             }
 
             speechRecognizer?.startListening(intent)
-            Log.d(TAG, "STT listening started (retry count: $listeningRetryCount)")
+            Log.d(TAG, "STT listening started (retry $listeningRetryCount)")
             
         } catch (e: Exception) {
-            Log.e(TAG, "Error starting speech recognition", e)
+            Log.e(TAG, "Error starting STT", e)
             setState(State.IDLE)
         }
-        } // end of main thread post
+        }
     }
 
     private fun retryListening(reason: String) {
         listeningRetryCount++
-        Log.d(TAG, "Retrying listening (count: $listeningRetryCount/$MAX_LISTENING_RETRIES). Reason: $reason")
+        Log.d(TAG, "Retrying ($listeningRetryCount/$MAX_LISTENING_RETRIES). Reason: $reason")
         
         if (listeningRetryCount < MAX_LISTENING_RETRIES) {
-            // Wait a short moment before retrying to avoid rapid cycles
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 if (state == State.LISTENING) {
                     startListening()
                 }
-            }, 500)
+            }, 1000)
         } else {
-            Log.w(TAG, "Max listening retries reached. Retiring.")
             retireGracefully()
         }
     }
@@ -352,6 +366,7 @@ class VoiceConversationEngine(
     private fun retireGracefully() {
         val farewell = personality.getFarewell()
         setState(State.SPEAKING)
+        onResponse?.invoke(farewell)
         voiceManager.speak(farewell) {
             stopConversation()
         }
@@ -377,41 +392,109 @@ class VoiceConversationEngine(
         setState(State.IDLE)
     }
 
-    /**
-     * Update the screenshot (e.g., after an action was performed).
-     */
     fun updateScreenshot(screenshot: Bitmap?) {
         currentScreenshot = screenshot
     }
 
-    /**
-     * Call Gemini API with the user message and optional screenshot.
-     * Uses generateAssistanceSuggestion for conversational responses.
-     */
     private suspend fun callGemini(message: String, screenshot: Bitmap?): String? {
-        if (apiKey.isEmpty()) {
-            Log.w(TAG, "No API key set")
-            return null
-        }
-
+        if (apiKey.isEmpty()) return null
         val service = geminiApiService ?: return null
-
+        
         return withContext(Dispatchers.IO) {
             try {
-                // Build context from conversation history
-                val historyContext = if (conversationHistory.size > 1) {
-                    conversationHistory.dropLast(1).joinToString("\n") { (role, content) ->
-                        if (role == "user") "User: $content" else "J-AI-mes: $content"
+                // Determine model based on whether we have a screenshot or need computer use
+                // For now, always use the main model name
+                val model = MODEL_NAME
+                
+                val messages = mutableListOf<Pair<String, String>>()
+                
+                // Add history context
+                if (conversationHistory.size > 1) {
+                    conversationHistory.dropLast(1).forEach { (role, content) ->
+                        messages.add(role to content)
                     }
-                } else ""
-
-                val result = service.generateAssistanceSuggestion(
-                    userRequest = message,
-                    screenshot = screenshot,
-                    context = historyContext
+                }
+                
+                // Add current message
+                messages.add("user" to message)
+                
+                val result = service.generateContentWithTools(
+                    model = model,
+                    messages = messages,
+                    systemPrompt = personality.getSystemPrompt(),
+                    functionDeclarations = intentAgent.getIntentTools(),
+                    screenshot = screenshot
                 )
-
-                result.getOrNull()
+                
+                val response = result.getOrNull() ?: return@withContext null
+                val candidate = response.candidates.firstOrNull() ?: return@withContext null
+                
+                // Check for function call
+                val functionCall = candidate.content.parts.firstOrNull { it.functionCall != null }?.functionCall
+                if (functionCall != null) {
+                    Log.d(TAG, "Gemini requested function call: ${functionCall.name}")
+                    
+                    // Handle Intent agent calls (Variant 2)
+                    if (intentAgent.getIntentTools().any { it.name == functionCall.name }) {
+                        val handled = intentAgent.executeIntent(
+                            functionName = functionCall.name,
+                            args = functionCall.args,
+                            onRequireConfirmation = { label, intent ->
+                                scope.launch(Dispatchers.Main) {
+                                    onRequireConfirmation?.invoke(label, intent)
+                                }
+                            }
+                        )
+                        
+                        if (handled) {
+                            return@withContext if (Locale.getDefault().language == "de") {
+                                "Selbstverständlich, ich führe das für Sie aus."
+                            } else {
+                                "Certainly, I am carrying that out for you."
+                            }
+                        }
+                    }
+                    
+                    // Handle Computer Use (Variant 1 Fallback)
+                    // If the model calls a UI action directly, we bridge it here
+                    val uiActions = listOf("click_at", "type_text_at", "scroll_at", "go_back", "go_home")
+                    if (uiActions.contains(functionCall.name)) {
+                        withContext(Dispatchers.Main) {
+                            setState(State.ACTING)
+                        }
+                        
+                        // We could use computerUseAgent.startAgentLoop here, 
+                        // but for a single response bridge, we'll narrate and execute
+                        val narration = if (Locale.getDefault().language == "de") {
+                            "Ich werde das für Sie auf dem Bildschirm erledigen."
+                        } else {
+                            "I will handle that on the screen for you."
+                        }
+                        
+                        // Start the full loop in background
+                        scope.launch {
+                            computerUseAgent?.startAgentLoop(message, object : ComputerUseAgent.AgentCallback {
+                                override fun onThinking(message: String) { Log.d(TAG, "CU: Thinking: $message") }
+                                override fun onActionExecuted(action: String, success: Boolean) { Log.d(TAG, "CU: Executed $action: $success") }
+                                override fun onCompleted(finalMessage: String) { 
+                                    scope.launch(Dispatchers.Main) {
+                                        onResponse?.invoke(finalMessage)
+                                        voiceManager.speak(stripMarkdownForTTS(finalMessage)) { startListening() }
+                                    }
+                                }
+                                override fun onError(error: String) { Log.e(TAG, "CU: Error: $error") }
+                                override fun onConfirmationRequired(message: String, onConfirm: () -> Unit, onDeny: () -> Unit) {
+                                    // Handle confirmation if needed
+                                    onConfirm() 
+                                }
+                            })
+                        }
+                        
+                        return@withContext narration
+                    }
+                }
+                
+                candidate.content.parts.firstOrNull { it.text != null }?.text
             } catch (e: Exception) {
                 Log.e(TAG, "Gemini API call failed", e)
                 null

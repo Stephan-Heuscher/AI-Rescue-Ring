@@ -101,6 +101,80 @@ class GeminiApiService(
     }
 
     /**
+     * Generate content with function calling tools support.
+     */
+    suspend fun generateContentWithTools(
+        model: String,
+        messages: List<Pair<String, String>>,
+        systemPrompt: String? = null,
+        functionDeclarations: List<FunctionDeclaration>? = null,
+        functionResponses: List<FunctionResponse>? = null,
+        screenshot: Bitmap? = null
+    ): Result<GeminiResponse> = withContext(Dispatchers.IO) {
+        try {
+            val contents = mutableListOf<Content>()
+            
+            // Add history messages
+            messages.dropLast(1).forEach { (role, text) ->
+                contents.add(Content(role = role, parts = listOf(Part(text = text))))
+            }
+            
+            // Add current message with optional screenshot
+            val currentMessage = messages.lastOrNull()
+            if (currentMessage != null) {
+                val parts = mutableListOf<Part>()
+                parts.add(Part(text = currentMessage.second))
+                
+                if (screenshot != null) {
+                    val base64 = bitmapToBase64(screenshot)
+                    parts.add(Part(inlineData = InlineData(mimeType = "image/jpeg", data = base64)))
+                }
+                
+                contents.add(Content(role = currentMessage.first, parts = parts))
+            }
+            
+            // Add function responses if any
+            functionResponses?.forEach { response ->
+                contents.add(Content(role = "user", parts = listOf(Part(functionResponse = response))))
+            }
+
+            val tools = mutableListOf<Tool>()
+            if (model.contains("computer-use")) {
+                tools.add(Tool(computerUse = ComputerUse(
+                    environment = Environment.BROWSER,
+                    excludedPredefinedFunctions = ExcludedFunctions.MOBILE_EXCLUDED
+                )))
+            }
+            if (!functionDeclarations.isNullOrEmpty()) {
+                tools.add(Tool(functionDeclarations = functionDeclarations))
+            }
+
+            val request = GeminiRequest(
+                contents = contents,
+                generationConfig = GenerationConfig(
+                    temperature = 0.7,
+                    maxOutputTokens = 8192
+                ),
+                systemInstruction = systemPrompt?.let {
+                    Content(role = "system", parts = listOf(Part(text = it)))
+                },
+                tools = if (tools.isNotEmpty()) tools else null
+            )
+
+            val httpRequest = buildHttpRequest(model, request)
+            client.newCall(httpRequest).execute().use { response ->
+                val responseBody = response.body?.string() ?: ""
+                if (!response.isSuccessful) {
+                    return@withContext Result.failure(Exception("API error: ${response.code}"))
+                }
+                Result.success(json.decodeFromString<GeminiResponse>(responseBody))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Generate content using the specified Gemini model.
      *
      * @param model The model to use (e.g., "gemini-3-pro-preview")
@@ -111,7 +185,8 @@ class GeminiApiService(
     suspend fun generateContent(
         model: String,
         messages: List<Pair<String, String>>, // role to text
-        systemPrompt: String? = null
+        systemPrompt: String? = null,
+        functionDeclarations: List<FunctionDeclaration>? = null
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
             val contents = messages.map { (role, text) ->
@@ -119,6 +194,21 @@ class GeminiApiService(
                     role = role,
                     parts = listOf(Part(text = text))
                 )
+            }
+
+            val tools = mutableListOf<Tool>()
+            
+            // Add Computer Use if model supports it
+            if (model.contains("computer-use")) {
+                tools.add(Tool(computerUse = ComputerUse(
+                    environment = Environment.BROWSER,
+                    excludedPredefinedFunctions = ExcludedFunctions.MOBILE_EXCLUDED
+                )))
+            }
+            
+            // Add custom Intent tools if provided
+            if (!functionDeclarations.isNullOrEmpty()) {
+                tools.add(Tool(functionDeclarations = functionDeclarations))
             }
 
             val request = GeminiRequest(
@@ -134,14 +224,7 @@ class GeminiApiService(
                         parts = listOf(Part(text = it))
                     )
                 },
-                tools = if (model.contains("computer-use")) {
-                    listOf(Tool(computerUse = ComputerUse(
-                        environment = Environment.BROWSER,
-                        excludedPredefinedFunctions = ExcludedFunctions.MOBILE_EXCLUDED
-                    )))
-                } else {
-                    null
-                }
+                tools = if (tools.isNotEmpty()) tools else null
             )
 
             val httpRequest = buildHttpRequest(model, request)

@@ -145,4 +145,10 @@
     <string name="contact_content">For questions, problems, or feedback:\n\nEmail: s.heuscher@gmail.com\nGitHub: https://github.com/Stephan-Heuscher/AI-Rescue-Ring\n\nI strive to respond to inquiries within 48 hours.</string>
     <string name="open_source_title">Open Source</string>
     <string name="open_source_content">This app is open source and licensed under the MIT License. The source code is available on GitHub:\n\nhttps://github.com/Stephan-Heuscher/AI-Rescue-Ring\n\nContributions and suggestions for improvement are welcome!</string>
+
+    <string-array name="autonomy_levels">
+        <item>Require Confirmation for All</item>
+        <item>Autonomous for Safe Intents</item>
+        <item>Fully Autonomous</item>
+    </string-array>
 </resources>

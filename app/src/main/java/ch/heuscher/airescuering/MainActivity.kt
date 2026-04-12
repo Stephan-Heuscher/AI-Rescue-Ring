@@ -62,24 +62,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         Log.d(TAG, "onCreate: Content view set")
 
-        // Set up keyboard detection
-        // Note: Keyboard detection is now handled by BackHomeAccessibilityService
-        // ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, insets ->
-        //     val imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
-        //     val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-
-        //     Log.d(TAG, "Keyboard insets: visible=$imeVisible, height=$imeHeight")
-
-        //     // Send broadcast to overlay service
-        //     val intent = Intent(AppConstants.ACTION_UPDATE_KEYBOARD)
-        //     intent.putExtra("keyboard_visible", imeVisible)
-        //     intent.putExtra("keyboard_height", imeHeight)
-        //     sendBroadcast(intent)
-
-        //     insets
-        // }
-        Log.d(TAG, "onCreate: Keyboard listener set")
-
         // Initialize service locator for dependency injection
         ServiceLocator.initialize(this)
         Log.d(TAG, "onCreate: ServiceLocator initialized")
@@ -98,7 +80,20 @@ class MainActivity : AppCompatActivity() {
         observeSettings()
         updateUI()
         
+        checkAndRequestMicrophonePermission()
+        
         Log.d(TAG, "onCreate: MainActivity initialization complete")
+    }
+
+    private fun checkAndRequestMicrophonePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Requesting RECORD_AUDIO permission")
+                requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), 100)
+            } else {
+                Log.d(TAG, "RECORD_AUDIO permission already granted")
+            }
+        }
     }
 
     override fun onResume() {

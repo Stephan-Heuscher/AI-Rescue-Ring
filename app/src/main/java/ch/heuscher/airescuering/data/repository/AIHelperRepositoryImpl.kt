@@ -72,4 +72,10 @@ class AIHelperRepositoryImpl(
     override suspend fun setProactiveLevel(level: Int) {
         dataSource.setProactiveLevel(level)
     }
+
+    override fun getAutonomyLevel(): Flow<Int> = dataSource.getAutonomyLevel()
+
+    override suspend fun setAutonomyLevel(level: Int) {
+        dataSource.setAutonomyLevel(level)
+    }
 }

@@ -52,6 +52,7 @@ class ButlerVoiceManager(
     private var isReady = false
     private var speechRate: Float = DEFAULT_SPEECH_RATE
     private var onSpeechDone: (() -> Unit)? = null
+    private var currentUtteranceId: String? = null
     
     // Track whether we're currently speaking
     var isSpeaking: Boolean = false
@@ -116,20 +117,26 @@ class ButlerVoiceManager(
             override fun onDone(utteranceId: String?) {
                 isSpeaking = false
                 Log.d(TAG, "Speaking done: $utteranceId")
-                invokeAndClearCallback()
+                if (utteranceId == currentUtteranceId) {
+                    invokeAndClearCallback()
+                }
             }
 
             override fun onStop(utteranceId: String?, interrupted: Boolean) {
                 isSpeaking = false
                 Log.d(TAG, "Speaking stopped: $utteranceId (interrupted=$interrupted)")
-                clearCallback()
+                if (utteranceId == currentUtteranceId) {
+                    invokeAndClearCallback()
+                }
             }
 
             @Deprecated("Deprecated in API")
             override fun onError(utteranceId: String?) {
                 isSpeaking = false
                 Log.e(TAG, "Speaking error: $utteranceId")
-                invokeAndClearCallback()
+                if (utteranceId == currentUtteranceId) {
+                    invokeAndClearCallback()
+                }
             }
         })
         
@@ -141,11 +148,13 @@ class ButlerVoiceManager(
     private fun invokeAndClearCallback() {
         val callback = onSpeechDone
         onSpeechDone = null
+        currentUtteranceId = null
         callback?.invoke()
     }
 
     private fun clearCallback() {
         onSpeechDone = null
+        currentUtteranceId = null
     }
 
     /**
@@ -235,8 +244,10 @@ class ButlerVoiceManager(
         
         if (text.isBlank()) return
         
-        this.onSpeechDone = onDone
         val utteranceId = "jaimes_${System.nanoTime()}"
+        this.currentUtteranceId = utteranceId
+        this.onSpeechDone = onDone
+        
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
         Log.d(TAG, "Speaking: \"$text\" (id=$utteranceId)")
     }
@@ -324,9 +335,9 @@ class ButlerVoiceManager(
     fun getFarewell(): String {
         val isGerman = Locale.getDefault().language == "de"
         return if (isGerman) {
-            "Sehr wohl. Ich bin jederzeit für Sie da."
+            "Gerne zu Diensten. Ich bin jederzeit für Sie da."
         } else {
-            "Very good. I'll be right here if you need me."
+            "Glad to be of service. I'll be right here if you need me."
         }
     }
 

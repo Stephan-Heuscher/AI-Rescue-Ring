@@ -405,6 +405,7 @@ class OverlayService : Service() {
                 context = this,
                 voiceManager = butlerVoiceManager!!,
                 personality = butlerPersonality,
+                aiHelperRepository = ServiceLocator.aiHelperRepository,
                 scope = serviceScope
             ).apply {
                 onStateChanged = { state ->
@@ -417,6 +418,9 @@ class OverlayService : Service() {
                 onTranscription = { text ->
                     val pos = viewManager.getCurrentPosition()
                     speechBubbleOverlay?.showText("\"$text\"", pos?.x ?: 200, pos?.y ?: 600)
+                }
+                onRequireConfirmation = { label, intent ->
+                    showIntentConfirmationDialog(label, intent)
                 }
                 onError = { error ->
                     Log.e(TAG, "Conversation error: $error")
@@ -503,6 +507,33 @@ class OverlayService : Service() {
     }
 
 
+
+    /**
+     * Show a dialog asking the user to confirm an intent action.
+     */
+    private fun showIntentConfirmationDialog(label: String, intent: Intent) {
+        val builder = android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+        builder.setTitle("J-AI-mes Action")
+        builder.setMessage("Would you like me to $label?")
+        builder.setPositiveButton("Execute") { _, _ ->
+            try {
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start activity from dialog", e)
+                Toast.makeText(this, "Failed to execute action", Toast.LENGTH_SHORT).show()
+            }
+        }
+        builder.setNegativeButton("Cancel", null)
+        
+        val dialog = builder.create()
+        dialog.window?.setType(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            else
+                @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
+        )
+        dialog.show()
+    }
 
     private fun requestScreenshot(onComplete: (() -> Unit)? = null) {
         Log.d(TAG, "Screenshot requested")

@@ -230,9 +230,9 @@ $contextNote
      */
     fun getFarewell(): String {
         return if (isGerman) {
-            "Sehr wohl. Ich bin jederzeit für Sie da."
+            "Gerne zu Diensten. Ich bin jederzeit für Sie da."
         } else {
-            "Very good. I'll be right here if you need me."
+            "Glad to be of service. I'll be right here if you need me."
         }
     }
 

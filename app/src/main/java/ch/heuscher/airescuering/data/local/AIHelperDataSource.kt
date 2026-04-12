@@ -42,4 +42,7 @@ interface AIHelperDataSource {
     // Proactive monitoring level (0=passive, 1=notifications, 2=screen, 3=full)
     fun getProactiveLevel(): Flow<Int>
     suspend fun setProactiveLevel(level: Int)
+    // Autonomy level (0=Require Confirmation, 1=Autonomous Safe Intents, 2=Fully Autonomous)
+    fun getAutonomyLevel(): Flow<Int>
+    suspend fun setAutonomyLevel(level: Int)
 }

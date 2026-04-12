@@ -36,8 +36,10 @@ class SecureAIHelperDataSource(
         private const val KEY_AUTO_SPEAK_RESPONSES = "ai_helper_auto_speak_responses"
         private const val KEY_SPEAKING_SPEED = "ai_helper_speaking_speed"
         private const val KEY_PROACTIVE_LEVEL = "ai_helper_proactive_level"
+        private const val KEY_AUTONOMY_LEVEL = "ai_helper_autonomy_level"
         private const val DEFAULT_SPEAKING_SPEED = 0.88f
         private const val DEFAULT_PROACTIVE_LEVEL = 0 // 0=passive, 1=notifications, 2=screen, 3=full
+        private const val DEFAULT_AUTONOMY_LEVEL = 1 // 0=Require Confirmation, 1=Autonomous Safe Intents, 2=Fully Autonomous
     }
 
     // Standard SharedPreferences for backup-friendly storage
@@ -248,5 +250,14 @@ class SecureAIHelperDataSource(
 
     override suspend fun setProactiveLevel(level: Int) {
         prefs.edit().putInt(KEY_PROACTIVE_LEVEL, level).apply()
+    }
+
+    override fun getAutonomyLevel(): Flow<Int> =
+        getPreferenceFlow(KEY_AUTONOMY_LEVEL, DEFAULT_AUTONOMY_LEVEL) { sharedPrefs, key, default ->
+            sharedPrefs.getInt(key, default)
+        }
+
+    override suspend fun setAutonomyLevel(level: Int) {
+        prefs.edit().putInt(KEY_AUTONOMY_LEVEL, level).apply()
     }
 }

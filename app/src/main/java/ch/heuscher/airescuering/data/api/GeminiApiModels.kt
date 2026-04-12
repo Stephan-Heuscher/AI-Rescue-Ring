@@ -99,7 +99,25 @@ data class GeminiError(
 @Serializable
 data class Tool(
     @SerialName("computer_use")
-    val computerUse: ComputerUse? = null
+    val computerUse: ComputerUse? = null,
+    @SerialName("function_declarations")
+    val functionDeclarations: List<FunctionDeclaration>? = null
+)
+
+@Serializable
+data class FunctionDeclaration(
+    val name: String,
+    val description: String,
+    val parameters: Schema? = null
+)
+
+@Serializable
+data class Schema(
+    val type: String,
+    val properties: Map<String, Schema>? = null,
+    val required: List<String>? = null,
+    val description: String? = null,
+    val items: Schema? = null
 )
 
 /**

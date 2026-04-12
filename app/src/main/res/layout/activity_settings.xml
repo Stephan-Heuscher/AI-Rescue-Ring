@@ -349,6 +349,40 @@
                     android:background="@color/surface_variant"
                     android:layout_marginVertical="8dp" />
 
+                <!-- Autonomy Level -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Autonomy Level"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Determine how independently J-AI-mes can act on your behalf."
+                        android:textSize="13sp"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:layout_marginBottom="8dp" />
+
+                    <Spinner
+                        android:id="@+id/autonomy_spinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="52dp"
+                        android:background="@drawable/edit_text_background"
+                        android:paddingHorizontal="8dp"
+                        android:entries="@array/autonomy_levels" />
+                </LinearLayout>
+
                 <!-- Behavior Switches -->
 
                 <!-- Keyboard Avoidance -->
@@ -651,15 +685,10 @@
                             android:minHeight="48dp"
                             android:minWidth="48dp" />
                     </LinearLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/surface_variant"
-                        android:layout_marginVertical="8dp" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
 
         <!-- Legal Notice Button -->
         <Button
