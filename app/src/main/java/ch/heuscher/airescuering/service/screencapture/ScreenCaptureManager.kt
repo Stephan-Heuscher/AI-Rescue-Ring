@@ -41,12 +41,19 @@ class ScreenCaptureManager(private val context: Context) {
     private val displayMetrics = DisplayMetrics()
 
     init {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            context.display?.getRealMetrics(displayMetrics)
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                context.display
+            } catch (e: UnsupportedOperationException) {
+                @Suppress("DEPRECATION")
+                windowManager.defaultDisplay
+            }
         } else {
             @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.getRealMetrics(displayMetrics)
+            windowManager.defaultDisplay
         }
+        
+        display?.getRealMetrics(displayMetrics)
     }
 
     /**
