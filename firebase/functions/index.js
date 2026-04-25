@@ -1,8 +1,12 @@
-const functions = require('firebase-functions');
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { setGlobalOptions } = require('firebase-functions/v2');
 const admin = require('firebase-admin');
 const fetch = require('node-fetch');
 
 admin.initializeApp();
+
+// Set global options to use the correct region
+setGlobalOptions({ region: 'europe-west1' });
 
 // In-memory rate limiting map
 // Key: uid, Value: { count: number, resetAt: number }
@@ -10,16 +14,17 @@ const rateLimits = new Map();
 const RATE_LIMIT_MAX = 30;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
-exports.geminiProxy = functions.https.onCall(async (data, context) => {
+exports.geminiProxy = onCall(async (request) => {
   // 1. Verify Authentication
-  if (!context.auth || !context.auth.uid) {
-    throw new functions.https.HttpsError(
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError(
       'unauthenticated',
       'User must be authenticated to call this function.'
     );
   }
 
-  const uid = context.auth.uid;
+  const uid = request.auth.uid;
+  const data = request.data;
 
   // 2. Rate Limiting Check
   const now = Date.now();
@@ -33,22 +38,20 @@ exports.geminiProxy = functions.https.onCall(async (data, context) => {
   rateLimits.set(uid, userLimit);
 
   if (userLimit.count > RATE_LIMIT_MAX) {
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'resource-exhausted',
       'Rate limit exceeded. Please try again later.'
     );
   }
 
   // 3. Prepare Request to Gemini API
-  // You should store GEMINI_API_KEY as an environment variable or Firebase config
-  // e.g., firebase functions:config:set gemini.api_key="YOUR_KEY"
-  // For local testing or newer syntax (v2), process.env.GEMINI_API_KEY might be used.
-  // Here we use functions.config() fallback.
-  const apiKey = process.env.GEMINI_API_KEY || functions.config().gemini?.api_key;
+  // Using environment variables or functions config fallback
+  // For Gen 2, it's recommended to use Secret Manager, but here we keep it simple
+  const apiKey = process.env.GEMINI_API_KEY;
   
   if (!apiKey) {
     console.error('GEMINI_API_KEY not configured on server.');
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'internal',
       'Server configuration error. API key missing.'
     );
@@ -84,7 +87,7 @@ exports.geminiProxy = functions.https.onCall(async (data, context) => {
 
     if (!response.ok) {
       console.error('Gemini API Error:', jsonResponse);
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'internal',
         `Gemini API returned an error: ${jsonResponse.error?.message || 'Unknown error'}`
       );
@@ -94,6 +97,6 @@ exports.geminiProxy = functions.https.onCall(async (data, context) => {
     return jsonResponse;
   } catch (error) {
     console.error('Fetch error:', error);
-    throw new functions.https.HttpsError('internal', 'Error communicating with Gemini API.');
+    throw new HttpsError('internal', 'Error communicating with Gemini API.');
   }
 });

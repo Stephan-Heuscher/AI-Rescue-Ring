@@ -38,10 +38,27 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreBase64 = System.getenv("ANDROID_KEYSTORE_BASE64")
+            if (keystoreBase64 != null) {
+                val keystoreFile = file("${project.buildDir}/release.jks")
+                keystoreFile.parentFile.mkdirs()
+                keystoreFile.writeBytes(java.util.Base64.getDecoder().decode(keystoreBase64))
+                
+                storeFile = keystoreFile
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -50,16 +67,6 @@ android {
         debug {
             isMinifyEnabled = false
         }
-    }
-
-    signingConfigs {
-        // TODO: Keystore für Release-Signierung erstellen
-        // create {
-        //     storeFile = file("path/to/your/keystore.jks")
-        //     storePassword = "your-keystore-password"
-        //     keyAlias = "your-key-alias"
-        //     keyPassword = "your-key-password"
-        // }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
