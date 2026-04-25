@@ -3,14 +3,11 @@ default_platform(:android)
 platform :android do
   desc "Deploy a new version to the Google Play Store"
   lane :deploy do
-    gradle(task: "assembleRelease")
+    gradle(task: "bundleRelease")
     
-    # We could also use bundleRelease for App Bundles (.aab)
-    # gradle(task: "bundleRelease")
-
     upload_to_play_store(
       track: 'internal',
-      apk: 'app/build/outputs/apk/release/app-release.apk',
+      aab: 'app/build/outputs/bundle/release/app-release.aab',
       json_key_data: ENV['SERVICE_ACCOUNT_JSON'],
       package_name: 'ch.heuscher.airescuering'
     )
