@@ -1,5 +1,6 @@
 import java.io.FileInputStream
 import java.util.Properties
+import java.util.Base64
 
 plugins {
     alias(libs.plugins.android.application)
@@ -42,9 +43,9 @@ android {
         create("release") {
             val keystoreBase64 = System.getenv("ANDROID_KEYSTORE_BASE64")
             if (keystoreBase64 != null) {
-                val keystoreFile = file("${project.buildDir}/release.jks")
+                val keystoreFile = file("${layout.buildDirectory.get().asFile}/release.jks")
                 keystoreFile.parentFile.mkdirs()
-                keystoreFile.writeBytes(java.util.Base64.getDecoder().decode(keystoreBase64))
+                keystoreFile.writeBytes(Base64.getDecoder().decode(keystoreBase64))
                 
                 storeFile = keystoreFile
                 storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
