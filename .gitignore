@@ -21,3 +21,6 @@ firebase/functions/node_modules/
 firebase/functions/.env
 firebase/.firebaserc
 *.env
+
+service-account.json
+gcp_key.json
