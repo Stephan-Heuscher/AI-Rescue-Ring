@@ -11,7 +11,8 @@ platform :android do
     upload_to_play_store(
       track: 'internal',
       apk: 'app/build/outputs/apk/release/app-release.apk',
-      json_key_data: ENV['SERVICE_ACCOUNT_JSON']
+      json_key_data: ENV['SERVICE_ACCOUNT_JSON'],
+      package_name: 'ch.heuscher.airescuering'
     )
   end
 end
