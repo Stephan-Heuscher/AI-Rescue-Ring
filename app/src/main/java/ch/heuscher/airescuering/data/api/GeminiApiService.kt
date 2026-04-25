@@ -168,11 +168,33 @@ class GeminiApiService(
                 tools = if (tools.isNotEmpty()) tools else null
             )
 
+            if (debug) {
+                Log.d(TAG, "Request to proxy: model=$model, messages=${messages.size}")
+                try {
+                    val jsonRequest = json.encodeToString(GeminiRequest.serializer(), request)
+                    Log.d(TAG, "Full Request JSON: $jsonRequest")
+                } catch (e: Exception) {
+                    Log.e(TAG, "JSON Encoding error: ${e.message}")
+                }
+            }
+
             val httpRequest = buildHttpRequest(model, request)
+            
+            if (debug) {
+                Log.d(TAG, "Final URL: ${httpRequest.url}")
+                Log.d(TAG, "Headers: ${httpRequest.headers}")
+            }
+
             client.newCall(httpRequest).execute().use { response ->
                 val responseBody = response.body?.string() ?: ""
+                
+                if (debug) {
+                    Log.d(TAG, "Response Code: ${response.code}")
+                    Log.d(TAG, "Response Body: $responseBody")
+                }
+
                 if (!response.isSuccessful) {
-                    return@withContext Result.failure(Exception("API error: ${response.code}"))
+                    return@withContext Result.failure(Exception("API error: ${response.code} - $responseBody"))
                 }
                 Result.success(json.decodeFromString<GeminiResponse>(responseBody))
             }

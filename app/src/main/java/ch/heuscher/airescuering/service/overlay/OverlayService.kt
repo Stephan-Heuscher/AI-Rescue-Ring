@@ -430,13 +430,15 @@ class OverlayService : Service() {
             // Set API config (key or proxy)
             serviceScope.launch {
                 val apiKey = ServiceLocator.aiHelperRepository.getApiKey().first()
-                voiceConversationEngine?.setApiConfig(apiKey, AppConstants.GEMINI_PROXY_URL)
+                voiceConversationEngine?.setApiConfig(apiKey, AppConstants.GEMINI_PROXY_URL, true)
 
                 // Observe API key changes
                 ServiceLocator.aiHelperRepository.getApiKey().collect { newKey ->
-                    voiceConversationEngine?.setApiConfig(newKey, AppConstants.GEMINI_PROXY_URL)
+                    Log.d(TAG, "API Key updated, re-configuring engine")
+                    voiceConversationEngine?.setApiConfig(newKey, AppConstants.GEMINI_PROXY_URL, true)
                 }
             }
+
 
             // Observe speaking speed changes
             serviceScope.launch {

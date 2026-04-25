@@ -28,18 +28,18 @@ class IntentExecutionAgent(
         return listOf(
             FunctionDeclaration(
                 name = "openUrl",
-                description = "Opens a website URL in the browser",
+                description = "Opens a specific website. ONLY use this if the user provides a full URL or if no other specialized tool fits. Never use this for general searches.",
                 parameters = Schema(
                     type = "object",
                     properties = mapOf(
-                        "url" to Schema(type = "string", description = "The URL to open, including https://")
+                        "url" to Schema(type = "string", description = "The full URL starting with https://")
                     ),
                     required = listOf("url")
                 )
             ),
             FunctionDeclaration(
                 name = "searchWeb",
-                description = "Searches the web for a query",
+                description = "Searches the web for general knowledge or information. Use this if no other tool (like Maps) is appropriate.",
                 parameters = Schema(
                     type = "object",
                     properties = mapOf(
@@ -50,7 +50,7 @@ class IntentExecutionAgent(
             ),
             FunctionDeclaration(
                 name = "callNumber",
-                description = "Dials a phone number",
+                description = "Dials a phone number using the phone app.",
                 parameters = Schema(
                     type = "object",
                     properties = mapOf(
@@ -61,7 +61,7 @@ class IntentExecutionAgent(
             ),
             FunctionDeclaration(
                 name = "openMaps",
-                description = "Opens Maps for a specific address or search term",
+                description = "Opens the Google Maps app for a specific address, business, or search term. ALWAYS use this for anything related to locations, navigation, or finding places.",
                 parameters = Schema(
                     type = "object",
                     properties = mapOf(
@@ -72,7 +72,7 @@ class IntentExecutionAgent(
             ),
             FunctionDeclaration(
                 name = "setTimer",
-                description = "Sets a timer for the specified duration in seconds",
+                description = "Sets a countdown timer in the clock app.",
                 parameters = Schema(
                     type = "object",
                     properties = mapOf(
@@ -84,7 +84,7 @@ class IntentExecutionAgent(
             ),
             FunctionDeclaration(
                 name = "setAlarm",
-                description = "Sets an alarm for a specific time of day",
+                description = "Sets a one-time alarm in the clock app.",
                 parameters = Schema(
                     type = "object",
                     properties = mapOf(

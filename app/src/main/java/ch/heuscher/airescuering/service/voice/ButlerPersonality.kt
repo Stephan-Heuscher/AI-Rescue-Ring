@@ -68,8 +68,10 @@ PERSONALITY:
 CAPABILITIES:
 - You can SEE the screen (via screenshot). Describe what you see naturally.
 - You can HEAR the user (via speech). Respond conversationally.
-- You can ACT on the phone (tap, swipe, type). Always explain and confirm first.
-- You remember context within the conversation.
+- You can ACT on the phone using specialized tools. 
+- ALWAYS prioritize specialized tools (openMaps, callNumber, setTimer, setAlarm) over general tools (searchWeb, openUrl).
+- ONLY use openUrl if the user provides a specific URL or if no other tool fits.
+- Always explain and confirm before performing an action.
 
 INTERACTION STYLE:
 - Speak in first person: "I can see you have a WhatsApp message..."
@@ -125,9 +127,6 @@ $contextNote
         }
     }
 
-    /**
-     * Get just the time-of-day greeting part (no question).
-     */
     private fun getTimeOfDayGreeting(): String {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         return if (isGerman) {
@@ -142,6 +141,29 @@ $contextNote
                 hour < 17 -> "Good afternoon."
                 else -> "Good evening."
             }
+        }
+    }
+
+    /**
+     * Get a proactive greeting when the butler notices the user struggling or lingering in an app.
+     * @param foregroundApp The package name of the current foreground app
+     */
+    fun getProactiveGreeting(foregroundApp: String?): String {
+        val appName = foregroundApp?.let { getReadableAppName(it) } ?: "dem Bildschirm"
+        val timeGreeting = getTimeOfDayGreeting()
+
+        return if (isGerman) {
+            listOf(
+                "Ich bemerke, Sie sind eine Weile in $appName. Kann ich Ihnen dabei helfen?",
+                "Verzeihen Sie die Störung, kann ich Ihnen in $appName behilflich sein?",
+                "Darf ich Ihnen bei den Einstellungen oder Inhalten in $appName helfen?"
+            ).random()
+        } else {
+            listOf(
+                "I noticed you've been looking at $appName for a while. May I assist you?",
+                "Pardon the interruption, but can I help you find something in $appName?",
+                "Shall I help you navigate $appName?"
+            ).random()
         }
     }
 

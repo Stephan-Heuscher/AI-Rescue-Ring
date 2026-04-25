@@ -67,9 +67,9 @@ class VoiceConversationEngine(
     /**
      * Set the API key and/or proxy URL for Gemini. 
      */
-    fun setApiConfig(key: String, proxyUrl: String = "") {
+    fun setApiConfig(key: String, proxyUrl: String = "", debug: Boolean = false) {
         apiKey = key
-        val service = GeminiApiService(apiKey = key, proxyUrl = proxyUrl)
+        val service = GeminiApiService(apiKey = key, proxyUrl = proxyUrl, debug = debug)
         geminiApiService = service
     }
 
@@ -408,7 +408,6 @@ class VoiceConversationEngine(
     }
 
     private suspend fun callGemini(message: String, screenshot: Bitmap?): String? {
-        if (apiKey.isEmpty()) return null
         val service = geminiApiService ?: return null
         
         return withContext(Dispatchers.IO) {

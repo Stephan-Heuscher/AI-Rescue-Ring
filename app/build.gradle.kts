@@ -138,6 +138,7 @@ dependencies {
     // Firebase (Auth for proxy)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.functions.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
