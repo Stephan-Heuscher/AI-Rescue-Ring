@@ -25,10 +25,14 @@ jobs:
         working-directory: firebase/functions
         run: npm ci
 
+      - name: Install Firebase Tools
+        run: npm install -g firebase-tools
+
+      - name: Create Key File
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > ${{ github.workspace }}/gcp_key.json
+
       - name: Deploy to Firebase
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy --only functions
-          working_directory: firebase
+        working-directory: firebase
+        run: firebase deploy --only functions --non-interactive
         env:
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcp_key.json
