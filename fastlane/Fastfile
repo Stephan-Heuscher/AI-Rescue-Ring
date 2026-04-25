@@ -1,0 +1,18 @@
+default_platform(:android)
+
+platform :android do
+  desc "Deploy a new version to the Google Play Store"
+  lane :deploy do
+    gradle(task: "assembleRelease")
+    
+    # We could also use bundleRelease for App Bundles (.aab)
+    # gradle(task: "bundleRelease")
+
+    upload_to_play_store(
+      track: 'internal',
+      apk: 'app/build/outputs/apk/release/app-release.apk'
+      # If using App Bundle:
+      # aab: 'app/build/outputs/bundle/release/app-release.aab'
+    )
+  end
+end
